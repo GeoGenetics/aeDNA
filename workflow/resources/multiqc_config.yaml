@@ -1,0 +1,141 @@
+
+custom_logo: 'BraiDECentrC27a-A05aT01a-Z_mdm.jpg'
+custom_logo_url: 'https://globe.ku.dk/research/lundbeck-foundation-geogenetics-centre/'
+custom_logo_title: 'Center for Ancient Environmental Genomics'
+subtitle: 'aeDNA pipeline'
+intro_text: 'QC report'
+plots_force_interactive: True
+max_table_rows: 10000
+log_filesize_limit: 50000000
+
+
+
+sp:
+  fastp:
+    fn_re: ".+_[sp]e.json$"
+
+
+
+extra_fn_clean_exts:
+  - '_se.settings'  ## AdapterRemoval
+  - '_pe.settings'  ## AdapterRemoval
+  - '_pe'           ## FastP
+  - '.add_rg'       ## AddReplaceReadGroups
+  - '.metrics.txt'  ## BamSorMaDup / Picard MarkDuplicates
+  - '.grp'          ## GATK BQSR
+  - '.cram'
+
+
+
+table_cond_formatting_rules:
+  mqc-generalstats-picard-PCT_PF_READS_ALIGNED:
+    warn:
+      - lt: 0.9
+    fail:
+      - lt: 0.5
+  mqc-generalstats-bamsormadup-PERCENT_DUPLICATION:
+    warn:
+      - gt: 25
+    fail:
+      - gt: 50
+  mqc-generalstats-fastqc_trimmed-percent_duplicates:
+    warn:
+      - gt: 25
+    fail:
+      - gt: 50
+
+
+
+table_cond_formatting_colours:
+  - blue: '#337ab7'
+  - lbue: '#5bc0de'
+  - pass: '#5cb85c'
+  - warn: '#f0ad4e'
+  - fail: '#d9534f'
+
+
+
+## To remove a section of a module
+# https://multiqc.info/docs/#removing-modules-or-sections
+module_order:
+  - samtools
+
+  - picard
+
+  - biobambam2:
+      name: 'BamSorMaDup'
+      path_filters:
+        - '*.metrics.txt'
+
+  - bowtie2
+
+  - fastqc:
+      name: 'FastQC (trimmed)'
+      info: 'FastQC results AFTER adapter trimming and QC.'
+      path_filters:
+        - '*/fastqc_trim/*'
+
+  - adapterRemoval
+
+  - bbmap:
+      path_filters:
+        - '*/bbduk/*'
+
+  - cutadapt
+
+  - fastp
+
+  - trimmomatic
+
+  - fastqc:
+      name: 'FastQC (raw)'
+      path_filters:
+        - '*/fastqc_raw/*'
+
+
+
+table_columns_visible:
+  picard:
+    PCT_PF_READS_ALIGNED:    True
+    file_validation_status:  False
+  Samtools Flagstat:
+    mapped_passed:           True
+  FastQC (trimmed):
+    percent_duplicates:      False
+    avg_sequence_length:     True
+    median_sequence_length:  False
+  FastQC (raw):
+    percent_duplicates:      False
+    avg_sequence_length:     False
+    median_sequence_length:  False
+    percent_gc:              False
+    total_sequences:         False
+
+
+
+table_columns_placement:
+  Picard:
+    file_validation_status:  2130
+    summed_median:           2140
+    summed_mean:             2150
+    file_validation_status:  2160
+    WARNING_count:           2190
+    ERROR_count:             2190
+  BamSorMaDup:
+    PERCENT_DUPLICATION:     2300
+  Samtools Flagstat:
+    mapped_passed:           2400
+  FastQC (trimmed):
+    percent_duplicates:      2600
+    percent_gc:              2610
+    avg_sequence_length:     2620
+    median_sequence_length:  2630
+    percent_fails:           2640
+    total_sequences:         2650
+  FastQC (raw):
+    percent_duplicates:      2700
+    percent_gc:              2710
+    avg_sequence_length:     2720
+    median_sequence_length:  2730
+    percent_fails:           2740
+    total_sequences:         2750

@@ -1,0 +1,20 @@
+$schema: "http://json-schema.org/draft-04/schema#"
+
+description: an entry in the sample sheet
+properties:
+  sample:
+    type: string
+    pattern: "^[a-zA-Z_0-9-]+$"
+    description: sample name/identifier
+  alias:
+    type: string
+    pattern: "^[a-zA-Z_0-9-]+$"
+    description: sample alias or short form
+  group:
+    type: string
+    pattern: "^[a-zA-Z_0-9-]+$"
+    description: group of samples to be processed jointly
+
+required:
+  - sample
+  - group

@@ -1,0 +1,130 @@
+from snakemake.utils import min_version
+min_version("7.25.0")
+
+# Define wrapper versions
+wrapper_ver = "v2.13.0"
+
+# Load modules
+module workflow_trim:
+    snakefile:
+        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.1")
+    config:
+        config
+use rule * from workflow_trim as trim_*
+
+module workflow_derep:
+    snakefile:
+        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.1")
+    config:
+        config
+use rule * from workflow_derep as derep_*
+
+module workflow_taxon:
+    snakefile:
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.1")
+    config:
+        config
+use rule * from workflow_taxon as taxon_*
+
+
+
+include: "rules/utils.smk"
+include: "rules/setup.smk"
+
+
+
+##################
+### PRINT INFO ###
+##################
+import pwd
+repo = git.Repo(base_dir.parent)
+snakemake.logger.info("BETA VERSION!!!")
+snakemake.logger.info("Git commit: {commit_hash} ({commit_time})".format(
+        commit_hash = repo.heads.main.commit.hexsha,
+        commit_time = repo.heads.main.commit.committed_datetime.strftime("%Y-%m-%d %H:%M:%S")
+))
+snakemake.logger.info("Run started: {time} ({user})".format(time = str(datetime.datetime.now()), user = pwd.getpwuid(os.getuid())[0]))
+snakemake.logger.info(f"Base dir: {base_dir}")
+snakemake.logger.info(f"Executing in: {workflow.workdir_init}")
+# Log current samples
+snakemake.logger.info("Samples:")
+snakemake.logger.info(samples.to_string(index=False))
+snakemake.logger.info("Units:")
+snakemake.logger.info(units.index)
+
+
+
+####################
+### Target Rules ###
+####################
+
+rule multiqc_trim:
+    input:
+        rules.trim_multiqc.input,
+    output:
+        html = "reports/multiqc.trim.html",
+        data = "reports/multiqc_data.trim.zip",
+    log:
+        "logs/reports/multiqc.trim.log"
+    benchmark:
+        "benchmarks/reports/multiqc.trim.log"
+    params:
+        extra = f"--verbose --zip-data-dir --config {base_dir}/resources/multiqc_config.yaml",
+    localrule: True
+    threads: 1
+    resources:
+        mem = lambda w, attempt: f"{10 * attempt} GiB",
+        runtime = lambda w, attempt: f"{30 * attempt} m",
+    wrapper:
+        wrapper_ver + "/bio/multiqc"
+
+rule target_trim:
+    input:
+        rules.multiqc_trim.output,
+        rules.trim_all.input.res,
+    message:
+        "Read trimming finished successfully!"
+
+
+
+use rule multiqc_trim as multiqc_derep with:
+    input:
+        rules.trim_multiqc.input,
+        rules.derep_multiqc.input,
+    output:
+        html = "reports/multiqc.derep.html",
+        data = "reports/multiqc_data.derep.zip",
+    log:
+        "logs/reports/multiqc.derep.log"
+    benchmark:
+        "benchmarks/reports/multiqc.derep.log"
+
+rule target_derep:
+    input:
+        rules.multiqc_derep.output,
+        rules.derep_all.input.res,
+    message:
+        "Read dereplication finished successfully!"
+
+
+
+use rule multiqc_derep as multiqc_taxon with:
+    input:
+        rules.trim_multiqc.input,
+        rules.derep_multiqc.input,
+        rules.taxon_multiqc.input,
+    output:
+        html = "reports/multiqc.taxon.html",
+        data = "reports/multiqc_data.taxon.zip",
+    log:
+        "logs/reports/multiqc.taxon.log"
+    benchmark:
+        "benchmarks/reports/multiqc.taxon.log"
+
+rule target_taxon:
+    input:
+        rules.multiqc_taxon.output,
+        rules.taxon_all.input.res,
+    message:
+        "Taxonomic assignment finished successfully!"
+    default_target: True

@@ -1,0 +1,114 @@
+
+# - Only tested with Phred33 quality scores
+
+samples: config/samples.tsv
+
+units: config/units.tsv
+
+
+
+#############
+### READS ###
+#############
+reads:
+  trim:
+    activate: true
+    tool: fastp
+    params: "--verbose --detect_adapter_for_pe --dedup --dup_calc_accuracy 5 --trim_poly_g --trim_poly_x --qualified_quality_phred 30 --average_qual 25 --length_required 30 --low_complexity_filter --complexity_threshold 30 --overrepresentation_analysis --correction --overlap_len_require 30 --overlap_diff_limit 5 --overlap_diff_percent_limit 20"
+
+  # Ignored for SE
+  collapse:
+    activate: true
+    params: "--merge"
+
+  extension:
+    activate: false
+    k: 17
+    params: "mode=extend ibb=f prefilter=0 el=100 er=100 overwrite=true trimends=9 ecc=t ecco=f conservative=t ignorebadquality"
+
+  derep:
+    activate: true
+    # vsearch or seqkit
+    tool: vsearch
+    params: "--strand both --minseqlength 30"
+
+
+
+#############
+### ALIGN ###
+#############
+ref:
+  refseq_archaea_fungi_virus:
+    n_chunks: 1
+    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/archaea_fungi_virus/archaea_fungi_virus.fa"
+  refseq_invertebrate:
+    n_chunks: 3
+    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/invertebrate/invert.{n_chunk}"
+  refseq_mitochondrion:
+    bt2l: False
+    n_chunks: 1
+    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/mitochondrion/mitochondrion.fa"
+  refseq_plant:
+    n_chunks: 5
+    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/plant/plant.{n_chunk}"
+  refseq_plastid:
+    bt2l: False
+    n_chunks: 1
+    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/plastid/plastid.fa"
+  refseq_protozoa:
+    bt2l: False
+    n_chunks: 1
+    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/protozoa/protozoa.fa"
+  refseq_vertebrate_mammal:
+    n_chunks: 10
+    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/vertebrate_mammal/vert_mam.{n_chunk}"
+  refseq_vertebrate_other:
+    n_chunks: 8
+    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/vertebrate_other/vert_other.{n_chunk}"
+  nt:
+    n_chunks: 9
+    path: "/projects/caeg/data/db/mikkels/ncbi_nt_Sept2022/nt.{n_chunk}"
+  norway:
+    n_chunks: 7
+    path: "/projects/caeg/data/db/mikkels/norway_plant_ctgenoms/norPlantCom.{n_chunk}"
+  polar_b3:
+    n_chunks: 1
+    path: "/projects/caeg/data/db/mikkels/polar_animals/arctic_animal_b3.fa"
+  polar:
+    n_chunks: 1
+    path: "/projects/caeg/data/db/mikkels/polar_animals/arctic_animals.fa"
+  polar_other:
+    n_chunks: 1
+    path: "/projects/caeg/data/db/mikkels/polar_animals/arctic_animals_other.fa"
+
+align:
+  map:
+    params: "-k 1000 -D 15 -R 2 -N 1 -L 22 -i S,1,1.15 --np 1 --mp '1,1' --rdg '0,1' --rfg '0,1' --score-min 'L,0,-0.1' --no-unal"
+
+  bam_filter:
+    activate: false
+    params: "--min-read-ani 94 --min-read-count 100 --min-expected-breadth-ratio 0.75 --min-normalized-entropy auto --min-normalized-gini auto --min-coverage-evenness 0.4 --min-avg-read-ani 90 --include-low-detection --min-breadth 0.01"
+
+  mark_duplicates:
+    activate: false
+    tool: markduplicates
+    params: "--OPTICAL_DUPLICATE_PIXEL_DISTANCE 12000 --TAGGING_POLICY All"
+
+  calmd:
+    activate: false
+    params: "-e -E"
+
+taxonomy:
+  nodes: "/projects/caeg/data/db/aeDNA-refs/resources/20230825/ncbi/taxonomy/nodes.dmp"
+  names: "/projects/caeg/data/db/aeDNA-refs/resources/20230825/ncbi/taxonomy/names.dmp"
+  acc2taxid: "/projects/caeg/data/db/mikkels/combined_accession2taxid_20221112.gz"
+
+metadmg:
+  damage:
+    params: "--min_length 30 --print_length 30"
+
+  lca:
+    params: "--weight_type 1 --fix_ncbi 0 --sim_score_low 0.95 --sim_score_high 1.0 --min_mapq 30 --how_many 30 --lca_rank genus"
+
+  dfit:
+    params: "--nopt 10 --doboot 1 --nbootstrap 20 --showfits 2 --lib ds"

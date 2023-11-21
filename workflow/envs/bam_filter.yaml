@@ -1,0 +1,11 @@
+channels:
+  - genomewalker
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - bam-filter =1.2.1
+  - pip
+  - pip:
+#    - sorted-nearest >=0.0.38
+    - git+https://github.com/genomewalker/bam-filter.git@custom-index
