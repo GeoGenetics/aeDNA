@@ -57,7 +57,6 @@ if args.snakeface:
     command += " --wms-monitor http://127.0.0.1:5555"
     os.environ["WMS_MONITOR_TOKEN"] = args.snakeface
 
-command += f" --wms-monitor-arg name={Path().cwd().name}"
 
 if extra_args:
     command += f" {extra_args}"
