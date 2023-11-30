@@ -10,6 +10,15 @@ log_filesize_limit: 50000000
 
 
 
+report_header_info:
+  - Contact E-mail: "cggbinf@list.ku.dk"
+#  - Application Type: "RNA-seq"
+  - Project Type: "aeDNA"
+  - Sequencing Platform: "NovaSeq 6000"
+#  - Sequencing Setup: "2x100"
+
+
+
 sp:
   fastp:
     fn_re: ".+_[sp]e.json$"
@@ -71,6 +80,7 @@ module_order:
 
   - fastqc:
       name: 'FastQC (trimmed)'
+      anchor: 'fastqc_trimmed'
       info: 'FastQC results AFTER adapter trimming and QC.'
       path_filters:
         - '*/fastqc_trim/*'
@@ -89,6 +99,7 @@ module_order:
 
   - fastqc:
       name: 'FastQC (raw)'
+      anchor: 'fastqc_raw'
       path_filters:
         - '*/fastqc_raw/*'
 
