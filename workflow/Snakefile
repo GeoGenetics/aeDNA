@@ -2,7 +2,7 @@ from snakemake.utils import min_version
 min_version("7.25.0")
 
 # Define wrapper versions
-wrapper_ver = "v2.13.0"
+wrapper_ver = "v3.0.2"
 
 # Load modules
 module workflow_trim:
@@ -73,7 +73,7 @@ rule multiqc_trim:
     localrule: True
     threads: 1
     resources:
-        mem = lambda w, attempt: f"{10 * attempt} GiB",
+        mem = lambda w, attempt: f"{10 * attempt} GB",
         runtime = lambda w, attempt: f"{30 * attempt} m",
     wrapper:
         wrapper_ver + "/bio/multiqc"

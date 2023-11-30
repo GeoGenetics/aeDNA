@@ -193,10 +193,6 @@ def get_tmp(
     return(str(path) + "/")
 
 
-def get_input_size_mb(input, factor=1, min=0):
-    size_mb = sum(f.size for f in input) / 1024 / 1024
-    return int(max(size_mb * factor, min))
-
 
 def check_cmd(
     cmd: str,
