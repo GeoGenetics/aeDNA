@@ -10,25 +10,62 @@ import resource
 from pathlib import Path
 
 
-
 basedir = Path(__file__).parent
 
 # Parse command-line arguments
-parser = argparse.ArgumentParser(description="Generic snakemake wrapper",
-                                 allow_abbrev=False,
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("-s", "--snakefile", action="store", type=Path, default=basedir / "workflow" / "Snakefile", help="Path to Snakefile.")
-parser.add_argument("-d", "--workdir", "--directory",  action="store", type=Path, help="Path to working dir.")
-parser.add_argument("--target", action="store", nargs="*", default=[""], help="Snakemake target rules or files.")
-parser.add_argument("--log-handler-script",  action="store", type=Path, default=basedir / "workflow" / "scripts" / "log_handler.py", help="Path to log-handler script.")
-parser.add_argument("--snakeface",  action="store", default="", help="Snakeface token.")
-parser.add_argument("--cache-dir", action="store", default=Path.home() / ".cache" / "snakemake", type=Path, help="Path for cache storage (both conda and workflow's).")
-parser.add_argument("--common-args", action="store", default="--local-cores 10 --configfile config/config.yaml --rerun-incomplete --keep-going --latency-wait 60 --printshellcmds --reason --max-jobs-per-second 2 --max-status-checks-per-second 2 --use-conda --conda-cleanup-pkgs tarballs", help="")
+parser = argparse.ArgumentParser(
+    description="Generic snakemake wrapper",
+    allow_abbrev=False,
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+)
+parser.add_argument(
+    "-s",
+    "--snakefile",
+    action="store",
+    type=Path,
+    default=basedir / "workflow" / "Snakefile",
+    help="Path to Snakefile.",
+)
+parser.add_argument(
+    "-d",
+    "--workdir",
+    "--directory",
+    action="store",
+    type=Path,
+    help="Path to working dir.",
+)
+parser.add_argument(
+    "--target",
+    action="store",
+    nargs="*",
+    default=[""],
+    help="Snakemake target rules or files.",
+)
+parser.add_argument(
+    "--log-handler-script",
+    action="store",
+    type=Path,
+    default=basedir / "workflow" / "scripts" / "log_handler.py",
+    help="Path to log-handler script.",
+)
+parser.add_argument("--snakeface", action="store", default="", help="Snakeface token.")
+parser.add_argument(
+    "--cache-dir",
+    action="store",
+    default=Path.home() / ".cache" / "snakemake",
+    type=Path,
+    help="Path for cache storage (both conda and workflow's).",
+)
+parser.add_argument(
+    "--common-args",
+    action="store",
+    default="--local-cores 10 --configfile config/config.yaml --rerun-incomplete --keep-going --latency-wait 60 --printshellcmds --reason --max-jobs-per-second 2 --max-status-checks-per-second 2 --use-conda --conda-cleanup-pkgs tarballs",
+    help="",
+)
 
 
 args, extra_args = parser.parse_known_args()
 extra_args = " ".join(extra_args)
-
 
 
 # Set workdir
@@ -74,7 +111,9 @@ try:
     if limit_nofile_soft < 10240 and limit_nofile_hard > 10240:
         resource.setrlimit(resource.RLIMIT_NOFILE, (10240, limit_nofile_hard))
     # Run workflow
-    process = subprocess.Popen(shlex.split(command), stdout=sys.stdout, stderr=sys.stderr)
+    process = subprocess.Popen(
+        shlex.split(command), stdout=sys.stdout, stderr=sys.stderr
+    )
     out = process.communicate()
 except KeyboardInterrupt:
     process.send_signal(signal.SIGINT)

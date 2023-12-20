@@ -54,25 +54,29 @@ from threading import Lock
 from datetime import datetime
 
 
-
 log_path = Path(".snakemake") / "log"
 log_path.mkdir(parents=True, exist_ok=True)
-log_file = datetime.now().isoformat(timespec="minutes").replace(":", "") + ".snakemake.json"
+log_file = (
+    datetime.now().isoformat(timespec="minutes").replace(":", "") + ".snakemake.json"
+)
 
-LOG_FILE = open(log_path / log_file, "w", encoding = "utf-8")
+LOG_FILE = open(log_path / log_file, "w", encoding="utf-8")
 LOCK = Lock()
+
 
 def log_handler(record):
     with LOCK:
         json.dump(
             record,
             LOG_FILE,
-            allow_nan = False,
-            separators = ",:",
-            default = serialize,
-            sort_keys = True)
+            allow_nan=False,
+            separators=",:",
+            default=serialize,
+            sort_keys=True,
+        )
         LOG_FILE.write("\n")
         LOG_FILE.flush()
+
 
 def serialize(obj):
     if isinstance(obj, snakemake.jobs.Job):
