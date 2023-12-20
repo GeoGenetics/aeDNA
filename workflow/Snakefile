@@ -37,15 +37,22 @@ include: "rules/setup.smk"
 ### PRINT INFO ###
 ##################
 import pwd
+import json
+import hashlib
+from snakemake.common import __version__
 repo = git.Repo(base_dir.parent)
-snakemake.logger.info("BETA VERSION!!!")
-snakemake.logger.info("Git commit: {commit_hash} ({commit_time})".format(
-        commit_hash = repo.heads.main.commit.hexsha,
-        commit_time = repo.heads.main.commit.committed_datetime.strftime("%Y-%m-%d %H:%M:%S")
+snakemake.logger.info(f"Snakemake version: {__version__}")
+snakemake.logger.info("Git commit: {commit_hash} [{tag_flag} {commit_tag}] ({commit_time}) - BETA VERSION!!!".format(
+        commit_hash = repo.head.commit.hexsha,
+        commit_time = repo.head.commit.committed_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+        tag_flag = next(("" for tag in repo.tags if tag.commit == repo.head.commit), ">"),
+        commit_tag = repo.git.tag(),
 ))
 snakemake.logger.info("Run started: {time} ({user})".format(time = str(datetime.datetime.now()), user = pwd.getpwuid(os.getuid())[0]))
 snakemake.logger.info(f"Base dir: {base_dir}")
 snakemake.logger.info(f"Executing in: {workflow.workdir_init}")
+config_json = json.dumps(config, sort_keys=True).encode('utf-8')
+snakemake.logger.info("Config JSON MD5: {md5sum} ({json})".format(md5sum = hashlib.md5(config_json).hexdigest(), json = config_json))
 # Log current samples
 snakemake.logger.info("Samples:")
 snakemake.logger.info(samples.to_string(index=False))
