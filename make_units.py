@@ -65,7 +65,6 @@ parser.add_argument(
 parser.add_argument(
     "--out-path",
     action="store",
-#    default="{sample}/{date}_{flowcell}_{library}/config",
     default="{sample[0]}{sample[1]}{sample[2]}{sample[3]}/{sample[4]}{sample[5]}{sample[6]}{sample[7]}/{sample}/{date}_{flowcell}_{library}/config",
     help="Output folder structure.",
 )
@@ -76,11 +75,9 @@ parser.add_argument(
     help="Extra file (e.g. config.yaml) to be copied to the final folder.",
 )
 parser.add_argument(
-    "-f",
     "--force",
-    action="store_const",
-    default="x",
-    const="w",
+    action="store_true",
+    default=False,
     help=argparse.SUPPRESS,
 )
 parser.add_argument(
@@ -170,7 +167,9 @@ col_order = {
 units = units[sorted(units.columns.values, key=lambda x: col_order.get(x, 999))]
 logging.debug(units)
 if not units.shape[0]:
-    raise ValueError("No valid data files found!")
+    logging.warning("No valid data files found!")
+    exit(0)
+
 # Reset index and sort data
 units = units.reset_index(drop=True).sort_values(by=["data"])
 # Collapse PE libraries
@@ -185,7 +184,17 @@ units.loc[mask, "data"] = units.loc[mask, "data"].str.replace(
 units.drop_duplicates(inplace=True)
 units.sort_values(by=list(units.columns.values), inplace=True)
 # Fix values
-fix_cols = ["sample","library","barcode","date","machine","run_n","flowcell","lane","sample_n"]
+fix_cols = [
+    "sample",
+    "library",
+    "barcode",
+    "date",
+    "machine",
+    "run_n",
+    "flowcell",
+    "lane",
+    "sample_n",
+]
 units[fix_cols] = units[fix_cols].replace(args.rm_chars, value="", regex=True)
 logging.info(units)
 
@@ -200,9 +209,12 @@ samples.sort_values(by=["sample"], inplace=True)
 logging.info(samples)
 
 
-
-keys = list(set([key.split("}")[0].split("[")[0] for key in args.out_path.split("{")[1:]]))
+# Define grouping
+keys = list(
+    set([key.split("}")[0].split("[")[0] for key in args.out_path.split("{")[1:]])
+)
 logging.debug(f"Keys: {keys}")
+datasets = list()
 if keys:
     for name, group in units.groupby(keys, group_keys=True):
         logging.debug(group)
@@ -212,41 +224,51 @@ if keys:
         logging.debug(f"Group samples: {sample}")
         # Create output path
         out_path = Path(args.out_path.format(**name))
-        logging.debug(out_path)
         print(out_path.parent)
-        if not args.dryrun:
-            out_path.mkdir(parents=True, exist_ok=True)
-            # Save units.tsv file
-            group.to_csv(out_path / "units.tsv", sep="\t", index=False, mode=args.force)
-            # Save samples.tsv file
-            samples[samples["sample"].isin(sample)].to_csv(
-                out_path / "samples.tsv", sep="\t", index=False, mode=args.force
-            )
-            # Copy extra file
-            if args.extra_file:
-                open(out_path / args.extra_file.name, args.force).write(
-                    open(args.extra_file, "r").read()
-                )
-        else:
-            logging.debug("Dry-run finished successfully.")
+        logging.debug(out_path)
+        datasets.append((out_path, samples[samples["sample"].isin(sample)], group))
 else:
     # Create output path
     out_path = Path(args.out_path)
     print(out_path.parent)
     logging.debug(out_path)
-    if not args.dryrun:
-        out_path.mkdir(parents=True, exist_ok=True)
-        # Save units.tsv file
-        units.to_csv(out_path / "units.tsv", sep="\t", index=False, mode=args.force)
+    datasets.append((out_path, samples, units))
+
+logging.debug(datasets)
+
+
+# Check if groups exist
+datasets_exist = [out_path.is_dir() for out_path, _, _ in datasets]
+assert args.force or not any(
+    datasets_exist
+), f"Some of the datasets already exist ({datasets_exist})!"
+
+
+# Create files/fodlers
+if args.dryrun:
+    logging.debug("Dry-run finished successfully.")
+else:
+    for out_path, samples, units in datasets:
+        out_path.mkdir(parents=True, exist_ok=args.force)
         # Save samples.tsv file
-        samples.to_csv(out_path / "samples.tsv", sep="\t", index=False, mode=args.force)
+        samples.to_csv(
+            out_path / "samples.tsv",
+            sep="\t",
+            index=False,
+            mode="w" if args.force else "x",
+        )
+        # Save units.tsv file
+        units.to_csv(
+            out_path / "units.tsv",
+            sep="\t",
+            index=False,
+            mode="w" if args.force else "x",
+        )
         # Copy extra file
         if args.extra_file:
-            open(out_path / args.extra_file.name, args.force).write(
+            open(out_path / args.extra_file.name, "w" if args.force else "x").write(
                 open(args.extra_file, "r").read()
             )
-    else:
-        logging.debug("Dry-run finished successfully.")
 
 
 exit(0)
