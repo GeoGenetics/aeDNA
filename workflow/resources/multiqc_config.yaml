@@ -4,9 +4,11 @@ custom_logo_url: 'https://globe.ku.dk/research/lundbeck-foundation-geogenetics-c
 custom_logo_title: 'Center for Ancient Environmental Genomics'
 subtitle: 'aeDNA pipeline'
 intro_text: 'QC report'
+no_version_check: true
 plots_force_interactive: True
 max_table_rows: 10000
 log_filesize_limit: 50000000
+ignore_images: False
 
 
 
@@ -77,6 +79,35 @@ module_order:
         - '*.metrics.txt'
 
   - bowtie2
+
+  - nonpareil:
+      name: 'nonpareil (represent read)'
+      anchor: 'nonpareil_repres'
+      info: 'nonpareil results for representative reads.'
+      path_filters:
+        - '*/represent/grep/*'
+
+  - nonpareil:
+      name: 'nonpareil (dereplicated)'
+      anchor: 'nonpareil_derep'
+      info: 'nonpareil results for dereplicated reads.'
+      path_filters:
+        - '*/derep/seqkit/*'
+        - '*/derep/vsearch/*'
+
+  - nonpareil:
+      name: 'nonpareil (extension)'
+      anchor: 'nonpareil_extension'
+      info: 'nonpareil results for extended reads.'
+      path_filters:
+        - '*/derep/tadpole/*'
+
+  - nonpareil:
+      name: 'nonpareil (trimmed)'
+      anchor: 'nonpareil_trimmed'
+      info: 'nonpareil results for trimmed reads.'
+      path_filters:
+        - '*/derep/merge_lanes/*'
 
   - fastqc:
       name: 'FastQC (trimmed)'
@@ -150,3 +181,11 @@ table_columns_placement:
     median_sequence_length:  2730
     percent_fails:           2740
     total_sequences:         2750
+
+
+
+## Module specific configs
+nonpareil:
+  plot_observed: True
+  plot_model: True
+  plot_dispersion: 'ci95'
