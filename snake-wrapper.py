@@ -57,9 +57,17 @@ parser.add_argument(
     help="Path for cache storage (both conda and workflow's).",
 )
 parser.add_argument(
-    "--common-args",
+    "--extra",
     action="store",
-    default="--local-cores 10 --configfile config/config.yaml --rerun-incomplete --keep-going --latency-wait 60 --printshellcmds --reason --max-jobs-per-second 2 --max-status-checks-per-second 2 --use-conda --conda-cleanup-pkgs tarballs",
+    default="--local-cores 10 --keep-going --rerun-incomplete --printshellcmds --latency-wait 60 --configfile config/config.yaml --use-conda --conda-cleanup-pkgs cache",
+#    default="--local-cores 10 --keep-going --rerun-incomplete --printshellcmds --latency-wait 60 --configfile config/config.yaml --software-deployment-method conda --conda-cleanup-pkgs cache",
+    help="",
+)
+parser.add_argument(
+    "--extra-slurm",
+    action="store",
+    default="--slurm --restart-times 2 --max-jobs-per-second 2 --max-status-checks-per-second 2 --default-resources slurm_account=caeg slurm_partition=comppriority slurm_extra=\"'--qos=hipri'\" tmpdir=temp/large_temp",
+#    default="--executor slurm --restart-times 2 --max-jobs-per-second 2 --max-status-checks-per-second 2 --default-resources slurm_account=caeg slurm_partition=comppriority slurm_extra=\"'--qos=hipri'\" tmpdir=temp/large_temp",
     help="",
 )
 
@@ -75,7 +83,7 @@ if args.workdir:
 
 # Build Snakemake command
 args.target = " ".join(args.target)
-command = f"snakemake {args.target} {args.common_args}"
+command = f"snakemake {args.target} {args.extra} {args.extra_slurm}"
 
 for key in ["snakefile", "log_handler_script"]:
     value = getattr(args, key)
