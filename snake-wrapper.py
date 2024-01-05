@@ -60,15 +60,13 @@ parser.add_argument(
     "--extra",
     action="store",
     default="--local-cores 10 --keep-going --rerun-incomplete --printshellcmds --latency-wait 60 --configfile config/config.yaml --use-conda --conda-cleanup-pkgs cache",
-#    default="--local-cores 10 --keep-going --rerun-incomplete --printshellcmds --latency-wait 60 --configfile config/config.yaml --software-deployment-method conda --conda-cleanup-pkgs cache",
-    help="",
+    help="Extra Snakemake arguments.",
 )
 parser.add_argument(
     "--extra-slurm",
     action="store",
-    default="--slurm --restart-times 2 --max-jobs-per-second 2 --max-status-checks-per-second 2 --default-resources slurm_account=caeg slurm_partition=comppriority slurm_extra=\"'--qos=hipri'\" tmpdir=temp/large_temp",
-#    default="--executor slurm --restart-times 2 --max-jobs-per-second 2 --max-status-checks-per-second 2 --default-resources slurm_account=caeg slurm_partition=comppriority slurm_extra=\"'--qos=hipri'\" tmpdir=temp/large_temp",
-    help="",
+    default="--slurm --restart-times 2 --max-jobs-per-second 2 --max-status-checks-per-second 2 --default-resources slurm_account=caeg slurm_partition=comppriority tmpdir=temp/large_temp",
+    help="Extra Snakemake arguments for SLURM submission.",
 )
 
 
