@@ -96,6 +96,7 @@ parser.add_argument(
     help="Dry run",
 )
 args = parser.parse_args()
+print(f"# {args}")
 fq_files = sys.stdin.readlines()
 units = pd.DataFrame()
 
@@ -224,15 +225,15 @@ if keys:
         logging.debug(f"Group samples: {sample}")
         # Create output path
         out_path = Path(args.out_path.format(**name))
-        print(out_path.parent)
-        logging.debug(out_path)
         datasets.append((out_path, samples[samples["sample"].isin(sample)], group))
 else:
     # Create output path
     out_path = Path(args.out_path)
-    print(out_path.parent)
-    logging.debug(out_path)
     datasets.append((out_path, samples, units))
+
+
+for out_path, _, _ in sorted(datasets):
+    print(out_path.parent)
 
 logging.debug(datasets)
 
