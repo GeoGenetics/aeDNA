@@ -55,8 +55,8 @@ if args.workdir:
 args.target = " ".join(args.target)
 command = f"snakemake {args.target}"
 
-for key in ["snakefile"]:
-    value = getattr(args, key)
+for key in ["place_holder"]:
+    value = getattr(args, key, False)
     if value:
         command += f" --{key.replace('_','-')} {value.resolve()}"
 
