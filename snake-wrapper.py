@@ -19,14 +19,6 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument(
-    "-s",
-    "--snakefile",
-    action="store",
-    type=Path,
-    default=basedir / "workflow" / "Snakefile",
-    help="Path to Snakefile.",
-)
-parser.add_argument(
     "-d",
     "--workdir",
     "--directory",
@@ -41,13 +33,6 @@ parser.add_argument(
     default=[""],
     help="Snakemake target rules or files.",
 )
-parser.add_argument(
-    "--log-handler-script",
-    action="store",
-    type=Path,
-    default=basedir / "workflow" / "scripts" / "log_handler.py",
-    help="Path to log-handler script.",
-)
 parser.add_argument("--snakeface", action="store", default="", help="Snakeface token.")
 parser.add_argument(
     "--cache-dir",
@@ -56,19 +41,6 @@ parser.add_argument(
     type=Path,
     help="Path for cache storage (both conda and workflow's).",
 )
-parser.add_argument(
-    "--extra",
-    action="store",
-    default="--local-cores 10 --keep-going --rerun-incomplete --printshellcmds --latency-wait 60 --configfile config/config.yaml --use-conda --conda-cleanup-pkgs cache",
-    help="Extra Snakemake arguments.",
-)
-parser.add_argument(
-    "--extra-slurm",
-    action="store",
-    default="--slurm --restart-times 2 --max-jobs-per-second 2 --max-status-checks-per-second 2 --default-resources slurm_account=caeg slurm_partition=comppriority tmpdir=temp/large_temp",
-    help="Extra Snakemake arguments for SLURM submission.",
-)
-
 
 args, extra_args = parser.parse_known_args()
 extra_args = " ".join(extra_args)
@@ -81,16 +53,16 @@ if args.workdir:
 
 # Build Snakemake command
 args.target = " ".join(args.target)
-command = f"snakemake {args.target} {args.extra} {args.extra_slurm}"
+command = f"snakemake {args.target}"
 
-for key in ["snakefile", "log_handler_script"]:
+for key in ["snakefile"]:
     value = getattr(args, key)
     if value:
         command += f" --{key.replace('_','-')} {value.resolve()}"
 
 if args.cache_dir:
     conda_cache = args.cache_dir / "conda"
-    command += f" --conda-prefix {conda_cache}"
+    command += f" --use-conda --conda-prefix {conda_cache}"
 
     workflow_cache = args.cache_dir / "workflow"
     workflow_cache.mkdir(parents=True, exist_ok=True)
