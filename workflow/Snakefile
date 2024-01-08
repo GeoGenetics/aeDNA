@@ -47,7 +47,7 @@ logger.info("Git commit: {commit_hash} [{tag_flag} {commit_tag}] ({commit_time})
         commit_hash = repo.head.commit.hexsha,
         commit_time = repo.head.commit.committed_datetime.strftime("%Y-%m-%d %H:%M:%S"),
         tag_flag = next(("" for tag in repo.tags if tag.commit == repo.head.commit), ">"),
-        commit_tag = repo.git.tag(),
+        commit_tag = repo.tags[-1].name,
 ))
 logger.info("Run started: {time} ({user})".format(time = str(datetime.datetime.now()), user = pwd.getpwuid(os.getuid())[0]))
 logger.info(f"Base dir: {base_dir}")
