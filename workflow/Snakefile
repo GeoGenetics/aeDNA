@@ -3,7 +3,7 @@ from snakemake.utils import min_version
 min_version("7.25.0")
 
 # Define wrapper versions
-wrapper_ver = "v3.3.2"
+wrapper_ver = "v3.3.3"
 
 # Load modules
 module workflow_trim:
@@ -22,7 +22,7 @@ use rule * from workflow_derep as derep_*
 
 module workflow_taxon:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.2.1")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.2.2")
     config:
         config
 use rule * from workflow_taxon as taxon_*
