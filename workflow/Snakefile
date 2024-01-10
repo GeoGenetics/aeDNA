@@ -22,7 +22,7 @@ use rule * from workflow_derep as derep_*
 
 module workflow_taxon:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.2.2")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.2.3")
     config:
         config
 use rule * from workflow_taxon as taxon_*
