@@ -14,7 +14,7 @@ reads:
   trim:
     activate: true
     tool: fastp
-    params: "--verbose --detect_adapter_for_pe --dedup --dup_calc_accuracy 5 --trim_poly_g --trim_poly_x --qualified_quality_phred 30 --average_qual 25 --length_required 30 --low_complexity_filter --complexity_threshold 30 --overrepresentation_analysis --correction --overlap_len_require 30 --overlap_diff_limit 5 --overlap_diff_percent_limit 20"
+    params: "--verbose --detect_adapter_for_pe --dont_eval_duplication --trim_poly_g --trim_poly_x --qualified_quality_phred 30 --average_qual 25 --length_required 30 --low_complexity_filter --complexity_threshold 30 --overrepresentation_analysis --correction --overlap_len_require 30 --overlap_diff_limit 5 --overlap_diff_percent_limit 20"
 
   # Ignored for SE
   collapse:
@@ -29,8 +29,8 @@ reads:
   derep:
     activate: true
     # vsearch or seqkit
-    tool: vsearch
-    params: "--strand both --minseqlength 30"
+    tool: seqkit
+    params: ""
 
 
 
@@ -83,7 +83,7 @@ ref:
 
 align:
   map:
-    params: "-k 1000 -D 15 -R 2 -N 1 -L 22 -i S,1,1.15 --np 1 --mp '1,1' --rdg '0,1' --rfg '0,1' --score-min 'L,0,-0.1' --no-unal"
+    params: "-k 1000 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp '1,1' --rdg '0,1' --rfg '0,1' --score-min 'L,0,-0.1' --no-unal"
 
   bam_filter:
     activate: false
@@ -108,7 +108,10 @@ metadmg:
     params: "--min_length 30 --print_length 30"
 
   lca:
-    params: "--weight_type 1 --fix_ncbi 0 --sim_score_low 0.95 --sim_score_high 1.0 --min_mapq 30 --how_many 30 --lca_rank genus"
+    params: "--weight_type 1 --fix_ncbi 0 --sim_score_low 0.95 --how_many 30"
 
   dfit:
-    params: "--nopt 10 --doboot 1 --nbootstrap 20 --showfits 2 --lib ds"
+    params: "--nopt 10 --doboot 1 --nbootstrap 20 --showfits 2"
+
+report:
+  multiqc: "--verbose"

@@ -22,12 +22,31 @@ properties:
     type: string
     pattern: "^[a-zA-Z_0-9-]+$"
     description: lane ID
+  date:
+    type: string
+    format: date
+    minLength: 6
+    description: Sequencing date (YYYY-MM-DD)
   platform:
     type: string
     enum: ["CAPILLARY", "LS454", "ILLUMINA", "SOLID", "HELICOS", "IONTORRENT", "ONT", "PACBIO"]
-  type:
+    description: Sequencing platform
+  platform_model:
+    type: string
+    enum: ["HiSeq", "NovaSeq 6000"]
+    description: Sequencing platform model
+  material:
+    type: string
+    enum: ["DNA", "RNA", "RNAu", "RNAsf", "RNAsr"]
+    description: Sequencing material
+  seq_type:
     type: string
     enum: ["PE", "SE", "pe", "se"]
+    description: Sequencing type
+  library_type:
+    type: string
+    enum: ["ss", "ds"]
+    description: Library type
   data:
     type: string
     pattern: "^[a-zA-Z_0-9-/.:]+({Read}[a-zA-Z_0-9-/.]+)?$"
@@ -40,7 +59,8 @@ properties:
 required:
   - sample
   - library
+  - flowcell
   - lane
-  - platform
-  - type
+  - seq_type
+  - library_type
   - data

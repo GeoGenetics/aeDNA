@@ -236,11 +236,11 @@ def get_rule_stats(rule_name):
     r = re.compile("^stats/")
     return set(filter(r.match, getattr(rules, rule_name).output))
 
-def get_samples(type=".", material=".", all=True):
+def get_samples(seq_type=".", material=".", all=True):
     # Get state where all samples are TRUE
     bool_true = units["sample"].str.match(".")
 
-    type_cond = units.type.str.match(type, case=False) if "type" in units.columns else bool_true
+    type_cond = units.seq_type.str.match(seq_type, case=False) if "seq_type" in units.columns else bool_true
     material_cond = units.material.str.match(material, case=False) if "material" in units.columns else bool_true
     tot_cond = (type_cond & material_cond).groupby(level="sample")
     if all:
@@ -268,7 +268,7 @@ def is_units_align(units):
     return units.data.str.endswith(".cram")
 
 def get_units_pe(reverse = False):
-    units_pe = units.type.isin(["pe", "hic"])
+    units_pe = units.seq_type.isin(["pe", "hic"])
 
     if reverse:
         return units[~units_pe]

@@ -1,6 +1,6 @@
 # Adapter list: https://gist.github.com/photocyte/3edd9401d0b13476e60f8b104c2575f8
-sample	library	barcode	flowcell	lane	platform	type	data	adapters
-CGG-3-013222-DB	LV3003056409-Q5U	CTCGAATATAxTCGACATCTC	HJGT3DSX3	L001	ILLUMINA	PE	/projects/wintherpedersen/scratch/robot_tests/CGG-3-013222-DB-LV3003056409-Q5U_S81_L001_R{Read}_001.fastq.gz	
-CGG-3-013222-DB	LV3003056409-Q5U	CTCGAATATAxTCGACATCTC	HJGT3DSX3	L002	ILLUMINA	PE	/projects/wintherpedersen/scratch/robot_tests/CGG-3-013222-DB-LV3003056409-Q5U_S81_L002_R{Read}_001.fastq.gz	
-CGG-3-013222-DB	LV3003056409-Q5U	CTCGAATATAxTCGACATCTC	HJGT3DSX3	L003	ILLUMINA	PE	/projects/wintherpedersen/scratch/robot_tests/CGG-3-013222-DB-LV3003056409-Q5U_S81_L003_R{Read}_001.fastq.gz	
-CGG-3-013222-DB	LV3003056409-Q5U	CTCGAATATAxTCGACATCTC	HJGT3DSX3	L004	ILLUMINA	PE	/projects/wintherpedersen/scratch/robot_tests/CGG-3-013222-DB-LV3003056409-Q5U_S81_L004_R{Read}_001.fastq.gz	
+sample	library	barcode	flowcell	lane	platform	seq_type	library_type	data	adapters
+CGG-3-013222-DB	LV3003056409-Q5U	CTCGAATATAxTCGACATCTC	HJGT3DSX3	L001	ILLUMINA	PE	ds	/projects/wintherpedersen/scratch/robot_tests/CGG-3-013222-DB-LV3003056409-Q5U_S81_L001_R{Read}_001.fastq.gz	
+CGG-3-013222-DB	LV3003056409-Q5U	CTCGAATATAxTCGACATCTC	HJGT3DSX3	L002	ILLUMINA	PE	ds	/projects/wintherpedersen/scratch/robot_tests/CGG-3-013222-DB-LV3003056409-Q5U_S81_L002_R{Read}_001.fastq.gz	
+CGG-3-013222-DB	LV3003056409-Q5U	CTCGAATATAxTCGACATCTC	HJGT3DSX3	L003	ILLUMINA	PE	ds	/projects/wintherpedersen/scratch/robot_tests/CGG-3-013222-DB-LV3003056409-Q5U_S81_L003_R{Read}_001.fastq.gz	
+CGG-3-013222-DB	LV3003056409-Q5U	CTCGAATATAxTCGACATCTC	HJGT3DSX3	L004	ILLUMINA	PE	ds	/projects/wintherpedersen/scratch/robot_tests/CGG-3-013222-DB-LV3003056409-Q5U_S81_L004_R{Read}_001.fastq.gz	
