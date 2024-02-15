@@ -56,17 +56,17 @@ export GITHUB_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 5. Test your configuration by performing a dry-run via:
 ```
-snake-wrapper.py --dry-run
+snakemake --configfile config/config.yaml --dry-run
 ```
 
 and confirm workflow analyses by checking the DAG:
 ```
-snake-wrapper.py --dag | dot -Tsvg > dag.svg
+snakemake --configfile config/config.yaml --dag | dot -Tsvg > dag.svg
 ```
 
 You can also create all needed `conda` environments beforehand:
 ```
-snake-wrapper.py --jobs 1 --conda-create-envs-only
+snakemake --configfile config/config.yaml --jobs 1 --conda-create-envs-only
 ```
 
 #### Step 3: Execute workflow
@@ -74,22 +74,17 @@ snake-wrapper.py --jobs 1 --conda-create-envs-only
 
   6.1. locally via:
 ```
-snake-wrapper.py --jobs $N
+snakemake --configfile config/config.yaml --use-conda --jobs $N
 ```
 
   6.2. in a [SLURM](https://slurm.schedmd.com/overview.html) cluster environment via:
 ```
-snake-wrapper.py --jobs $N --slurm
-```
-
-  6.3. under a singularity container (if you not only want to fix the software stack but also the underlying OS), in combination with any of the modes above:
-```
-snake-wrapper.py --use-singularity
+snakemake --configfile config/config.yaml --use-conda --jobs $N --slurm
 ```
 
 #### Step 4: Check results
 
 7. After successful execution, you can create a self-contained interactive HTML report:
 ```
-snake-wrapper.py --report report.html
+snakemake --configfile config/config.yaml --report report.html
 ```
