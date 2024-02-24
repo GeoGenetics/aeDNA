@@ -12,7 +12,7 @@ from pathlib import Path
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(
-    description="Prepare `sample` and `unit` files from list of FASTQ files (on stdin).",
+    description="Generate `sample` and `unit` files from list of FASTQ files (on stdin).",
     allow_abbrev=False,
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
@@ -20,7 +20,7 @@ parser.add_argument(
     "-r",
     "--regex",
     action="store",
-    default=r"\/(?P<date>\d{8})_A.+\/(?P<library>LV\d+)-LV\d+-(?P<sample>LV\d+)",
+    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell>\w{10}).+\/(?P<library>LV\d{10})-LV\d{10}-(?P<sample>(LV\d{10}|CGG\d{7}))",
     help="Regex to extract sample and library identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
@@ -32,46 +32,42 @@ parser.add_argument(
     help="Material type.",
 )
 parser.add_argument(
-    "-p",
-    "--platform",
+    "--library-type",
     action="store",
-    default="ILLUMINA",
-    choices=[
-        "CAPILLARY",
-        "LS454",
-        "ILLUMINA",
-        "SOLID",
-        "HELICOS",
-        "IONTORRENT",
-        "ONT",
-        "PACBIO",
-    ],
-    help="Sequencing platform.",
-)
-parser.add_argument(
-    "-m",
-    "--material",
-    action="store",
-    default="DNA",
-    choices=["DNA", "RNA"],
-    help="Material type.",
+    default="ss",
+    choices=["ss", "ds"],
+    help="Library type.",
 )
 parser.add_argument(
     "--rm-chars",
     action="store",
-    default="[\s_\-/\/]",
+    default=r"[\s\-_\/\\]",
     help="Invalid characters (will be removed).",
+)
+parser.add_argument(
+    "--no-header-info",
+    action="store_true",
+    default=False,
+    help="Do not parse info from read header.",
+)
+parser.add_argument(
+    "--extra-info",
+    action="store",
+    nargs="+",
+    default=["center=CAEG", "platform=ILLUMINA", "material=DNA"],
+    help="Do not parse info from read header.",
 )
 parser.add_argument(
     "--out-path",
     action="store",
-    default="{sample[0]}{sample[1]}{sample[2]}{sample[3]}/{sample[4]}{sample[5]}{sample[6]}{sample[7]}/{sample}/{date}_{flowcell}_{library}/config",
+    default="{sample[0]}{sample[1]}{sample[2]}{sample[3]}/{sample[4]}{sample[5]}{sample[6]}{sample[7]}/{sample}/{date:%Y%m%d}_{flowcell}_{library}/config",
     help="Output folder structure.",
 )
 parser.add_argument(
     "--extra-file",
     action="store",
     type=Path,
+    default=Path("/projects/caeg/data/resources/config/config.yaml"),
     help="Extra file (e.g. config.yaml) to be copied to the final folder.",
 )
 parser.add_argument(
@@ -111,15 +107,18 @@ for fq_file in sorted(fq_files):
     fq_file = Path(fq_file.rstrip())
     row["data"] = str(fq_file.resolve(strict=True))
     # Get info from read IDs
-    with gzip.open(row["data"], "rt") as gz:
-        read_id = gz.readline().lstrip("@").rstrip().split(":")
-    row["machine"] = read_id[0]
-    row["run_n"] = read_id[1]
-    row["flowcell"] = read_id[2]
+    if not args.no_header_info:
+        with gzip.open(row["data"], "rt") as gz:
+            read_id = gz.readline().lstrip("@").rstrip().split(":")
+            row["machine"] = read_id[0]
+            row["run_n"] = read_id[1]
+            row["flowcell"] = read_id[2]
     # Get info from arguments
-    row["platform"] = args.platform
-    row["material"] = args.material
-    row["type"] = "SE"
+    row["library_type"] = args.library_type
+    for extra_info in args.extra_info:
+        extra_info, value = extra_info.split("=")
+        row[extra_info] = value
+    row["seq_type"] = "SE"
     row["adapters"] = np.nan
     # Get info from file name
     fq_prefix = (
@@ -133,40 +132,42 @@ for fq_file in sorted(fq_files):
     row["lane"] = fq_prefix.rsplit("_", 2)[1]
     row["sample_n"] = fq_prefix.rsplit("_", 3)[1]
     # Get info from regexp
-    match = re.search(args.regex, fq_prefix.rsplit("_", 3)[0])
-    if not match:
+    matches = re.search(args.regex, fq_prefix.rsplit("_", 3)[0])
+    if not matches:
         logging.warning(f"cannot match regex to sample {fq_prefix}. Skipping...")
         continue
-    match = match.groupdict()
-    row["sample"] = match.get("sample")
-    row["library"] = match.get("library")
-    row["barcode"] = match.get("barcode")
-    row["date"] = match.get("date")
+    matches = matches.groupdict()
+    for key, value in matches.items():
+        logging.debug(f"adding {key} information: {value}")
+        if key in row:
+            assert value.endswith(
+                row[key]
+            ), f"{key} information does not match: {value} != {row[key]}."
+        row[key] = value
 
     row = pd.DataFrame([row])
     logging.debug(row)
     units = pd.concat([units, row])
 
 
+# Format date column (if present)
+if "date" in units.columns.values:
+    units["date"] = pd.to_datetime(units["date"])
+
 # Reorder columns
 col_order = {
-    "sample": 0,
-    "library": 1,
-    "barcode": 2,
-    "date": 3,
-    "machine": 4,
-    "run_n": 5,
-    "flowcell": 6,
-    "lane": 7,
-    "sample_n": 8,
-    "platform": 9,
-    "type": 10,
-    "material": 11,
-    "data": 12,
-    "adapters": 13,
+    "sample": 1,
+    "library": 2,
+    "flowcell": 3,
+    "lane": 4,
+    "seq_type": 5,
+    "library_type": 6,
+    "material": 7,
+    "data": 8,
 }
 units = units[sorted(units.columns.values, key=lambda x: col_order.get(x, 999))]
 logging.debug(units)
+logging.debug(units.dtypes)
 if not units.shape[0]:
     logging.warning("No valid data files found!")
     exit(0)
@@ -175,29 +176,20 @@ if not units.shape[0]:
 units = units.reset_index(drop=True).sort_values(by=["data"])
 # Collapse PE libraries
 units["data"] = units["data"].str.replace(r"_R[12]_", "_R{Read}_", regex=True)
-units.loc[units["data"].duplicated(keep=False), "type"] = "PE"
+units.loc[units["data"].duplicated(keep=False), "seq_type"] = "PE"
 del units["read"]
 # Fix data for SE
-mask = units["type"].eq("SE")
+mask = units["seq_type"].eq("SE")
 units.loc[mask, "data"] = units.loc[mask, "data"].str.replace(
     "_R{Read}_", "_R1_", regex=False
 )
 units.drop_duplicates(inplace=True)
 units.sort_values(by=list(units.columns.values), inplace=True)
-# Fix values
-fix_cols = [
-    "sample",
-    "library",
-    "barcode",
-    "date",
-    "machine",
-    "run_n",
-    "flowcell",
-    "lane",
-    "sample_n",
-]
+# Fix invalid values
+fix_cols = units.columns.drop("data")
 units[fix_cols] = units[fix_cols].replace(args.rm_chars, value="", regex=True)
 logging.info(units)
+logging.debug(units.dtypes)
 
 
 # Make samples DF
@@ -211,8 +203,10 @@ logging.info(samples)
 
 
 # Define grouping
+from string import Formatter
+
 keys = list(
-    set([key.split("}")[0].split("[")[0] for key in args.out_path.split("{")[1:]])
+    set([key.split("[")[0] for _, key, _, _ in Formatter().parse(args.out_path) if key])
 )
 logging.debug(f"Keys: {keys}")
 datasets = list()
