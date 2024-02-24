@@ -1,28 +1,26 @@
-from snakemake.logging import logger
-from snakemake.utils import min_version
-min_version("7.25.0")
+snakemake.utils.min_version("7.25.0")
 
 # Define wrapper versions
-wrapper_ver = "v3.3.3"
+wrapper_ver = "v3.3.6"
 
 # Load modules
 module workflow_trim:
     snakefile:
-        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.2")
+        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.3")
     config:
         config
 use rule * from workflow_trim as trim_*
 
 module workflow_derep:
     snakefile:
-        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.2.1")
+        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.3")
     config:
         config
 use rule * from workflow_derep as derep_*
 
 module workflow_taxon:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.2.3")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.3b")
     config:
         config
 use rule * from workflow_taxon as taxon_*
@@ -38,12 +36,14 @@ include: "rules/setup.smk"
 ### PRINT INFO ###
 ##################
 import pwd
+import git
 import json
 import hashlib
-from snakemake.common import __version__
+import datetime
+from snakemake.logging import logger
 repo = git.Repo(base_dir.parent)
-logger.info(f"Snakemake version: {__version__}")
-logger.info("Git commit: {commit_hash} [{tag_flag} {commit_tag}] ({commit_time}) - BETA VERSION!!!".format(
+logger.info(f"Snakemake version: {snakemake.common.__version__}")
+logger.info("Git commit: {commit_hash} [{tag_flag}{commit_tag}] ({commit_time}) - BETA VERSION!!!".format(
         commit_hash = repo.head.commit.hexsha,
         commit_time = repo.head.commit.committed_datetime.strftime("%Y-%m-%d %H:%M:%S"),
         tag_flag = next(("" for tag in repo.tags if tag.commit == repo.head.commit), ">"),
@@ -77,11 +77,11 @@ rule multiqc_trim:
     benchmark:
         "benchmarks/reports/multiqc.trim.log"
     params:
-        extra = f"--verbose --zip-data-dir --config {base_dir}/resources/multiqc_config.yaml",
+        extra = f"--force --config {base_dir}/resources/multiqc_config.yaml " + check_cmd(config["report"]["multiqc"], forbidden_args = ["-n", "--filename", "-o", "--outdir", "--data-dir", "--no-data-dir", "-z", "--zip-data-dir", "--no-report", "--pdf", "--version", "-h", "--help"]),
     localrule: True
     threads: 1
     resources:
-        mem = lambda w, attempt: f"{10 * attempt} GB",
+        mem = lambda w, attempt: f"{10 * attempt} GiB",
         runtime = lambda w, attempt: f"{30 * attempt} m",
     wrapper:
         wrapper_ver + "/bio/multiqc"
