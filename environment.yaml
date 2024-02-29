@@ -4,4 +4,5 @@ channels:
   - nodefaults
 dependencies:
   - snakemake
+  - snakemake-executor-plugin-slurm
   - mamba
