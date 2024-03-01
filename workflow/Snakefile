@@ -1,7 +1,7 @@
 snakemake.utils.min_version("7.25.0")
 
 # Define wrapper versions
-wrapper_ver = "v3.4.0"
+wrapper_ver = "v3.4.1"
 
 # Load modules
 module workflow_trim:
