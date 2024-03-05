@@ -239,25 +239,20 @@ def main():
 
     # Print summary
     for level, jobids in status.items():
-        logging.info("{}: {}".format(level, len(jobids)))
+        print(f"{level}: {args.snakemake_logs.absolute()}")
+        logging.info(f"{level}: {len(jobids)}")
 
         if getattr(args, level) > 0:
-            if getattr(args, level) == 1:
-                for name, cnt in Counter(
-                    [jobs[jobid]["name"] for jobid in jobids]
-                ).items():
-                    logging.info(f"\t{name}: {cnt}")
-            else:
-                for jobid in jobids:
-                    logging.info(
-                        "\t{} ({}): {}".format(
-                            jobs[jobid]["name"], jobid, len(jobids[jobid])
-                        )
-                    )
+            for name, cnt in Counter([jobs[jobid]["name"] for jobid in jobids]).items():
+                logging.info(f"\t{name}: {cnt}")
 
-                    if getattr(args, level) > 2:
-                        for entry in jobids[jobid]:
-                            logging.info("\t\t{}".format(entry))
+                if getattr(args, level) > 1:
+                    for jobid in jobids:
+                        if jobs[jobid]["name"] == name:
+                            logging.info(f"\t\t{jobid}: {len(jobids[jobid])}")
+
+                            if getattr(args, level) > 2:
+                                logging.info("\t\t\t".join([""] + jobids[jobid]))
 
 
 if __name__ == "__main__":
