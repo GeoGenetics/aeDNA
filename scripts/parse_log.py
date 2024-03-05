@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 #
 # Copyright Filipe G. Vieira (2021)
+import logging
+
+logging.basicConfig(
+    encoding="utf-8",
+    format="[%(asctime)s]:%(levelname)s:%(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 
 def flatten(list_of_lists: list) -> list:
@@ -31,7 +38,7 @@ def flatten(list_of_lists: list) -> list:
 def merge_jobs(job1, job2):
     from datetime import datetime
 
-    level = job2.pop("level")
+    status = job2.pop("level")
     timestamp = job2.pop("timestamp")
     timestamp_posix = str(datetime.fromtimestamp(timestamp))
     reason = job2.pop("reason", None)
@@ -39,14 +46,13 @@ def merge_jobs(job1, job2):
     # Merge jobs
     job = job1 | job2
 
-    # Add level info
-    level_info = dict()
-    for k in ["timestamp", "timestamp_posix", "reason"]:
+    # Add status info
+    status_info = dict()
+    for k in ["status", "timestamp", "timestamp_posix", "reason"]:
         if eval(k):
-            level_info[k] = eval(k)
-    if level not in job["level"]:
-        job["level"][level] = list()
-    job["level"][level].append(level_info)
+            status_info[k] = eval(k)
+    # Add status to job info
+    job["status"][timestamp] = status_info
 
     return job
 
@@ -102,9 +108,11 @@ def rename_keys(d, keys):
         k = "_".join(
             flatten(
                 [
-                    list(dict(sorted(v[key].items())).values())
-                    if isinstance(v[key], dict)
-                    else v[key]
+                    (
+                        list(dict(sorted(v[key].items())).values())
+                        if isinstance(v[key], dict)
+                        else v[key]
+                    )
                     for key in keys
                 ]
             )
@@ -120,7 +128,7 @@ def parse_snakemake_log_dir(snakemake_logs):
     jobs_all = defaultdict(dict)
 
     for log in sorted(snakemake_logs.glob("*.json")):
-        print(f"\tParsing file {log} ...")
+        logging.debug(f"\tParsing file {log} ...")
         for jobid, job in rename_keys(
             parse_snakemake_log_json(log), ["name", "wildcards"]
         ).items():
@@ -144,7 +152,7 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "-l",
+        "-s",
         "--logs",
         "--snake_logs",
         "--snakemake_logs",
@@ -180,62 +188,76 @@ def main():
         help="Verbose info errors.",
     )
     parser.add_argument(
-        "-d", "--debug", action="store_true", default=False, help="Debug mode."
+        "--out_json", action="store", type=Path, help="Output parsed LOG files as JSON."
     )
     parser.add_argument(
-        "--out_json", action="store", type=Path, help="Output parsed LOG files as JSON."
+        "-l",
+        "--log-level",
+        action="store",
+        default="WARNING",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="Log verbosity level",
     )
     args = parser.parse_args()
 
-    # Parse LOG
+    # LOG
+    log_level = getattr(logging, args.log_level.upper(), None)
+    logging.getLogger().setLevel(log_level)
+
+    # Parse Snakemake's LOG
     if args.snakemake_logs.exists():
         if args.snakemake_logs.is_dir():
-            print(f"Parsing all LOGs in folder ({args.snakemake_logs}) ...")
+            logging.info(f"Parsing all LOGs in folder ({args.snakemake_logs}) ...")
             jobs = parse_snakemake_log_dir(args.snakemake_logs)
         else:
-            print(f"Parsing LOG file ({args.snakemake_logs}) ...")
+            logging.info(f"Parsing LOG file ({args.snakemake_logs}) ...")
             jobs = parse_snakemake_log_json(args.snakemake_logs)
     else:
         raise ValueError("LOG file/folder does not exist!")
+    logging.debug(jobs)
 
     # Output JSON
     if args.out_json:
         with open(args.out_json, "w", encoding="utf-8") as f:
             json.dump(jobs, f, ensure_ascii=True, indent=4)
 
-    # Build levels dict
-    levels = defaultdict(lambda: defaultdict(list))
+    # Build status dict
+    status = defaultdict(lambda: defaultdict(list))
     for jobid, job in jobs.items():
-        for level, timestamps in job["level"].items():
-            for timestamp in timestamps:
-                levels[level][jobid].append(timestamp["timestamp"])
+        for timestamp, entry in sorted(
+            job["status"].items(), key=lambda x: x[1]["timestamp"]
+        ):
+            # If a new job, remove previous errors
+            if entry["status"] == "job_info" and jobid in status["job_error"]:
+                status["job_info"].pop(jobid)
+                status["job_error"].pop(jobid)
+            # Add entry
+            status[entry["status"]][jobid].append(entry["timestamp_posix"])
+    # Clean empty keys
+    status = {key: val for key, val in status.items() if val}
+    logging.debug(status)
 
-    if args.debug:
-        from pprint import pprint
-
-        pprint(levels)
-        pprint(jobs)
-
-    for level, jobids in levels.items():
-        print("{}: {}".format(level, len(jobids)))
+    # Print summary
+    for level, jobids in status.items():
+        logging.info("{}: {}".format(level, len(jobids)))
 
         if getattr(args, level) > 0:
             if getattr(args, level) == 1:
                 for name, cnt in Counter(
                     [jobs[jobid]["name"] for jobid in jobids]
                 ).items():
-                    print(f"\t{name}: {cnt}")
+                    logging.info(f"\t{name}: {cnt}")
             else:
                 for jobid in jobids:
-                    print(
+                    logging.info(
                         "\t{} ({}): {}".format(
-                            jobs[jobid]["name"], jobid, len(jobs[jobid]["level"][level])
+                            jobs[jobid]["name"], jobid, len(jobids[jobid])
                         )
                     )
 
                     if getattr(args, level) > 2:
-                        for entry in jobs[jobid]["level"][level]:
-                            print("\t\t{}".format(entry["timestamp_posix"]))
+                        for entry in jobids[jobid]:
+                            logging.info("\t\t{}".format(entry))
 
 
 if __name__ == "__main__":
