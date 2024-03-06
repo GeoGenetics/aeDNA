@@ -111,7 +111,7 @@ metadmg:
     params: "--weight_type 1 --fix_ncbi 0 --sim_score_low 0.95 --how_many 30"
 
   dfit:
-    params: "--nopt 10 --doboot 1 --nbootstrap 20 --showfits 2"
+    params: "--nopt 10 --nbootstrap 20 --showfits 2"
 
 report:
   multiqc: "--verbose"
