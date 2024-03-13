@@ -207,10 +207,10 @@ def main():
     # Parse Snakemake's LOG
     if args.snakemake_logs.exists():
         if args.snakemake_logs.is_dir():
-            logging.info(f"Parsing all LOGs in folder ({args.snakemake_logs}) ...")
+            logging.debug(f"Parsing all LOGs in folder ({args.snakemake_logs}) ...")
             jobs = parse_snakemake_log_dir(args.snakemake_logs)
         else:
-            logging.info(f"Parsing LOG file ({args.snakemake_logs}) ...")
+            logging.debug(f"Parsing LOG file ({args.snakemake_logs}) ...")
             jobs = parse_snakemake_log_json(args.snakemake_logs)
     else:
         raise ValueError("LOG file/folder does not exist!")
@@ -240,18 +240,19 @@ def main():
     # Print summary
     for level, jobids in status.items():
         print(f"{level}: {args.snakemake_logs.absolute()}")
-        logging.info(f"{level}: {len(jobids)}")
-
         if getattr(args, level) > 0:
+            logging.info(f"{level}: {len(jobids)}")
+
+        if getattr(args, level) > 1:
             for name, cnt in Counter([jobs[jobid]["name"] for jobid in jobids]).items():
                 logging.info(f"\t{name}: {cnt}")
 
-                if getattr(args, level) > 1:
+                if getattr(args, level) > 2:
                     for jobid in jobids:
                         if jobs[jobid]["name"] == name:
                             logging.info(f"\t\t{jobid}: {len(jobids[jobid])}")
 
-                            if getattr(args, level) > 2:
+                            if getattr(args, level) > 3:
                                 logging.info("\t\t\t".join([""] + jobids[jobid]))
 
 
