@@ -66,6 +66,21 @@ properties:
           - tool
           - params
 
+      low_complex:
+        type: object
+        properties:
+          params:
+            type: string
+        required:
+          - params
+
+    required:
+      - trim
+      - collapse
+      - extension
+      - derep
+      - low_complex
+
   ref:
     type: object
     patternProperties:

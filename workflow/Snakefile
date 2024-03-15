@@ -1,26 +1,26 @@
 snakemake.utils.min_version("7.25.0")
 
 # Define wrapper versions
-wrapper_ver = "v3.4.1"
+wrapper_ver = "v3.5.0"
 
 # Load modules
 module workflow_trim:
     snakefile:
-        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.3")
+        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.4")
     config:
         config
 use rule * from workflow_trim as trim_*
 
 module workflow_derep:
     snakefile:
-        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.3")
+        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.4")
     config:
         config
 use rule * from workflow_derep as derep_*
 
 module workflow_taxon:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.3.1")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.4")
     config:
         config
 use rule * from workflow_taxon as taxon_*
@@ -69,6 +69,7 @@ logger.info(units.index)
 rule multiqc_trim:
     input:
         rules.trim_multiqc.input,
+        config = base_dir / "resources/multiqc_config.yaml",
     output:
         html = "reports/multiqc.trim.html",
         data = "reports/multiqc_data.trim.zip",
@@ -77,7 +78,7 @@ rule multiqc_trim:
     benchmark:
         "benchmarks/reports/multiqc.trim.log"
     params:
-        extra = f"--force --config {base_dir}/resources/multiqc_config.yaml " + check_cmd(config["report"]["multiqc"], forbidden_args = ["-n", "--filename", "-o", "--outdir", "--data-dir", "--no-data-dir", "-z", "--zip-data-dir", "--no-report", "--pdf", "--version", "-h", "--help"]),
+        extra = f"--force " + check_cmd(config["report"]["multiqc"], forbidden_args = ["-n", "--filename", "-o", "--outdir", "--data-dir", "--no-data-dir", "-z", "--zip-data-dir", "--no-report", "--pdf", "--version", "-h", "--help"]),
     localrule: True
     threads: 1
     resources:
@@ -99,6 +100,7 @@ use rule multiqc_trim as multiqc_derep with:
     input:
         rules.trim_multiqc.input,
         rules.derep_multiqc.input,
+        config = base_dir / "resources/multiqc_config.yaml",
     output:
         html = "reports/multiqc.derep.html",
         data = "reports/multiqc_data.derep.zip",
@@ -121,6 +123,7 @@ use rule multiqc_derep as multiqc_taxon with:
         rules.trim_multiqc.input,
         rules.derep_multiqc.input,
         rules.taxon_multiqc.input,
+        config = base_dir / "resources/multiqc_config.yaml",
     output:
         html = "reports/multiqc.taxon.html",
         data = "reports/multiqc_data.taxon.zip",

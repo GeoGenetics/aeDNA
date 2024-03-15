@@ -77,15 +77,29 @@ module_order:
   - bowtie2
 
   - nonpareil:
-      name: 'nonpareil (represent read)'
-      anchor: 'nonpareil_repres'
+      name: 'nonpareil (low complexity)'
+      anchor: 'low_complexity'
+      info: 'nonpareil results after removing low complexity reads.'
+      path_filters:
+        - '*/low_complexity/*'
+
+  - bbmap:
+      name: 'BBDuk'
+      anchor: 'low_complexity'
+      info: 'Remove low complexity reads.'
+      path_filters:
+        - '*/low_complexity/*'
+
+  - nonpareil:
+      name: 'nonpareil (represent. read)'
+      anchor: 'repres'
       info: 'nonpareil results for representative reads.'
       path_filters:
         - '*/represent/grep/*'
 
   - nonpareil:
       name: 'nonpareil (dereplicated)'
-      anchor: 'nonpareil_derep'
+      anchor: 'derep'
       info: 'nonpareil results for dereplicated reads.'
       path_filters:
         - '*/derep/seqkit/*'
@@ -93,17 +107,17 @@ module_order:
 
   - nonpareil:
       name: 'nonpareil (extension)'
-      anchor: 'nonpareil_extension'
+      anchor: 'extension'
       info: 'nonpareil results for extended reads.'
       path_filters:
-        - '*/derep/tadpole/*'
+        - '*/extend/tadpole/*'
 
   - nonpareil:
-      name: 'nonpareil (trimmed)'
-      anchor: 'nonpareil_trimmed'
-      info: 'nonpareil results for trimmed reads.'
+      name: 'nonpareil'
+      anchor: 'initial'
+      info: 'nonpareil results for starting reads.'
       path_filters:
-        - '*/derep/merge_lanes/*'
+        - '*/merge_lanes/*'
 
   - fastqc:
       name: 'FastQC (trimmed)'
@@ -115,8 +129,9 @@ module_order:
   - adapterRemoval
 
   - bbmap:
+      name: 'BBDuk'
       path_filters:
-        - '*/bbduk/*'
+        - '*/trim/*'
 
   - cutadapt
 
@@ -127,6 +142,7 @@ module_order:
   - fastqc:
       name: 'FastQC (raw)'
       anchor: 'fastqc_raw'
+      info: 'FastQC results BEFORE adapter trimming and QC.'
       path_filters:
         - '*/fastqc_raw/*'
 
