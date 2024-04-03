@@ -201,8 +201,8 @@ def main():
     args = parser.parse_args()
 
     # LOG
-    log_level = getattr(logging, args.log_level.upper(), None)
-    logging.getLogger().setLevel(log_level)
+    logging.getLogger().setLevel(args.log_level.upper())
+    logging.debug(args)
 
     # Parse Snakemake's LOG
     if args.snakemake_logs.exists():
