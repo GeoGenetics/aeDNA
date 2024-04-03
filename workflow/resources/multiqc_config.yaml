@@ -121,7 +121,7 @@ module_order:
 
   - fastqc:
       name: 'FastQC (trimmed)'
-      anchor: 'fastqc_trimmed'
+      anchor: 'trimmed'
       info: 'FastQC results AFTER adapter trimming and QC.'
       path_filters:
         - '*/fastqc_trim/*'
@@ -141,7 +141,7 @@ module_order:
 
   - fastqc:
       name: 'FastQC (raw)'
-      anchor: 'fastqc_raw'
+      anchor: 'raw'
       info: 'FastQC results BEFORE adapter trimming and QC.'
       path_filters:
         - '*/fastqc_raw/*'
