@@ -24,6 +24,12 @@ parser.add_argument(
     help="Regex to extract sample and library identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
+    "--min-file-size",
+    action="store",
+    default=1,
+    help="Minimum file size (MiB).",
+)
+parser.add_argument(
     "-c",
     "--condition",
     action="store",
@@ -204,36 +210,44 @@ logging.info(samples)
 
 # Define grouping
 from string import Formatter
-
-keys = list(
+wildcards = list(
     set([key.split("[")[0] for _, key, _, _ in Formatter().parse(args.out_path) if key])
 )
-logging.debug(f"Keys: {keys}")
+logging.debug(f"Wildcards: {wildcards}")
+
 datasets = list()
-if keys:
-    for name, group in units.groupby(keys, group_keys=True):
-        logging.debug(group)
-        name = dict(zip(keys, name))
-        logging.debug(f"Group name: {name}")
-        sample = group["sample"].unique()
+if wildcards:
+    for keys, units in units.groupby(wildcards, group_keys=True):
+        name = dict(zip(wildcards, keys))
+        logging.debug(f"Group wildcards: {name}")
+        sample = units["sample"].unique()
         logging.debug(f"Group samples: {sample}")
+        logging.debug(units)
         # Create output path
         out_path = Path(args.out_path.format(**name))
-        datasets.append((out_path, samples[samples["sample"].isin(sample)], group))
+        datasets.append((out_path, samples[samples["sample"].isin(sample)], units))
 else:
     # Create output path
     out_path = Path(args.out_path)
     datasets.append((out_path, samples, units))
 
 
-for out_path, _, _ in sorted(datasets):
-    print(out_path.parent)
+datasets_keep = []
+for out_path, sample, units in sorted(datasets):
+    units_small = [Path(data.format(Read=1)).stat().st_size < args.min_file_size * 1024**2 for data in units["data"]]
+    if all(units_small):
+        print(f"#{out_path.parent} # - All R1 files smaller than {args.min_file_size} MiB")
+    elif any(units_small):
+        print(f"#{out_path.parent} # - At least one R1 file smaller than {args.min_file_size} MiB")
+    else:
+        print(out_path.parent)
+        datasets_keep.append((out_path, sample, units))
 
-logging.debug(datasets)
+logging.debug(datasets_keep)
 
 
 # Check if groups exist
-datasets_exist = [out_path.is_dir() for out_path, _, _ in datasets]
+datasets_exist = [out_path.is_dir() for out_path, _, _ in datasets_keep]
 assert args.force or not any(
     datasets_exist
 ), f"Some of the datasets already exist ({datasets_exist})!"
@@ -243,7 +257,7 @@ assert args.force or not any(
 if args.dryrun:
     logging.debug("Dry-run finished successfully.")
 else:
-    for out_path, samples, units in datasets:
+    for out_path, samples, units in datasets_keep:
         out_path.mkdir(parents=True, exist_ok=args.force)
         # Save samples.tsv file
         samples.to_csv(
