@@ -17,10 +17,17 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument(
+    "-i",
+    "--fq-files",
+    action="store",
+    nargs="*",
+    help="Regex to extract sample and library identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
+)
+parser.add_argument(
     "-r",
     "--regex",
     action="store",
-    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell>\w{10}).+\/(?P<library>LV\d{10})-LV\d{10}-(?P<sample>(LV\d{10}|CGG\d{7}))",
+    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell>\w{10}).+\/(?P<library>LV\d{10})-LV\d{10}-(?P<sample>(LV\d{10}|CGG[\d-]{7,9}))",
     help="Regex to extract sample and library identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
@@ -98,17 +105,18 @@ parser.add_argument(
     help="Dry run",
 )
 args = parser.parse_args()
+if not args.fq_files:
+    args.fq_files = [fq_file.strip() for fq_file in sys.stdin.readlines()]
 print(f"# {args}")
-fq_files = sys.stdin.readlines()
 units = pd.DataFrame()
 
 
 loglevel = getattr(logging, args.loglevel.upper(), None)
 logging.basicConfig(encoding="utf-8", level=loglevel)
-logging.info("Found {} input files".format(len(fq_files)))
+logging.info(f"Found {len(args.fq_files)} input files")
 
 
-for fq_file in sorted(fq_files):
+for fq_file in sorted(args.fq_files):
     row = dict()
     fq_file = Path(fq_file.rstrip())
     row["data"] = str(fq_file.resolve(strict=True))
@@ -274,7 +282,8 @@ else:
             mode="w" if args.force else "x",
         )
         # Copy extra file
-        if args.extra_file:
+        if args.extra_file.exists():
+            logging.debug("Copying extra file.")
             open(out_path / args.extra_file.name, "w" if args.force else "x").write(
                 open(args.extra_file, "r").read()
             )
