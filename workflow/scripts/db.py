@@ -1,100 +1,400 @@
-
 import logging
+import json
+import copy
+from packaging import version
+
+from models import (
+    Report,
+    ReportMeta,
+    PlotConfig,
+    PlotData,
+    PlotCategory,
+    SampleDataType,
+    SampleData,
+    Sample,
+)
 
 
-def upload_reports (db_url, reports):
+def delete_report(report_id):
+    #
+    PlotData.query.filter(PlotData.report_id == report_id).delete()
+    session.commit()
+    #
+    PlotCategory.query.filter(
+        PlotCategory.plot_category_id.in_(
+            session.query(PlotCategory.plot_category_id)
+            .outerjoin(PlotData)
+            .filter(PlotData.plot_data_id == None)
+        )
+    ).delete(synchronize_session="fetch")
+    session.commit()
+    # 
+    PlotConfig.query.filter(
+        PlotConfig.config_id.in_(
+            session.query(PlotConfig.config_id)
+            .outerjoin(PlotData)
+            .outerjoin(PlotCategory, PlotCategory.config_id == PlotConfig.config_id)
+            .filter(
+                and_(
+                    PlotData.plot_data_id == None, PlotCategory.plot_category_id == None
+                )
+            )
+        )
+    ).delete(synchronize_session="fetch")
+    session.commit()
+    # 
+    SampleData.query.filter(SampleData.report_id == report_id).delete()
+    session.commit()
+    #
+    SampleDataType.query.filter(
+        SampleDataType.sample_data_type_id.in_(
+            session.query(SampleDataType.sample_data_type_id)
+            .outerjoin(SampleData)
+            .filter(SampleData.sample_data_id == None)
+        )
+    ).delete(synchronize_session="fetch")
+    session.commit()
+    #
+    ReportMeta.query.filter(ReportMeta.report_id == report_id).delete()
+    session.commit()
+    #
+    Sample.query.filter(Sample.report_id == report_id).delete()
+    session.commit()
+    #
+    Report.query.filter(Report.report_id == report_id).delete()
+    session.commit()
+
+
+
+def upload_report(db_url, report, overwrite=False):
     from sqlalchemy import create_engine
     from sqlalchemy_utils import database_exists
     from sqlalchemy.orm import Session
 
-
     # Create SQLAlchemy emgine
     engine = create_engine(db_url)
 
-
     # Check if DB exists
-    if database_exists(engine.url):
-        logging.info(f"DB {engine.url} exists.")
-    else:
-        # Create DB
-        from models import Base
-        Base.metadata.create_all(engine)
+    from models import Base
 
+    if database_exists(engine.url):
+        if overwrite:
+            logging.info(f"DB {engine.url} exists; overwriting DB.")
+            Base.metadata.drop_all(engine)
+        else:
+            logging.info(f"DB {engine.url} exists; using existing DB.")
+    # Create DB
+    Base.metadata.create_all(engine)
 
     # Open session
     with Session(engine) as session:
+        import getpass
         import datetime
         import pandas as pd
-        from models import Report, Sample, SampleDataType, SampleData
 
-        for report in reports:
-            # Check if report exists
-            if (
-                session.query(Report)
-                .filter(Report.report_hash == report["metadata"]["report_hash"])
-	        .first()
-            ):
-                logging.info("Report already exists in DB. Skipping...")
-                continue
-
-            # Add to main report table
-            new_report = Report(
-                report_hash=report["metadata"].pop("report_hash"),
-	        created_at=datetime.datetime.strptime(
-                    report["metadata"]["config_creation_date"], "%Y-%m-%d, %H:%M %Z"
-                ),
+        logging.info(f"Adding report v{report['config_version']} to DB")
+        # Check if report exists by hash
+        report_exists = (
+            session.query(Report)
+            .filter(Report.report_hash == report["config_report_hash"])
+            .first()
+        )
+        if report_exists:
+            logging.warning(
+                f"Report {report_exists.report_id} in DB has the same hash ({report['config_report_hash']}). Skipping..."
             )
-            session.add(new_report)
-            session.commit()
-            report_id = new_report.report_id
+            return None
+        # Check if report exists by output folder
+        report_exists = (
+            session.query(ReportMeta)
+            .filter(
+                ReportMeta.report_meta_key == "config_output_dir",
+                ReportMeta.report_meta_value == report["config_output_dir"],
+            )
+            .first()
+        )
+        if report_exists:
+            logging.warning(
+                f"Report {report_exists.report_id} in DB has the same output dir ({report['config_output_dir']}). Overwriting..."
+            )
+            delete_report(report_exists.report_id)
 
-            # Add to report metadata table
-            df = pd.DataFrame.from_dict(report["metadata"], orient="index").reset_index()
-            df.columns = ["report_meta_key", "report_meta_value"]
-            df["report_id"] = report_id
-            df.to_sql(name="report_meta", con=engine, if_exists="append", index=False)
+        new_report = Report(
+            report_hash=report["config_report_hash"],
+            created_at=datetime.datetime.strptime(
+                report["config_creation_date"], "%Y-%m-%d, %H:%M %Z"
+            ),
+        )
+        session.add(new_report)
+        session.commit()
+        report_id = new_report.report_id
 
-            # Add samples
-            for sample_id, sample_data in report["data"].items():
+        logging.info("Adding report metadata to DB")
+        # Add user name
+        new_report_meta = ReportMeta(report_meta_key="username", report_meta_value=getpass.getuser(), report_id=report_id)
+        session.add(new_report_meta)
+        # Add config info
+        for key, value in report.items():
+            if (
+                key.startswith("config_")
+                and not isinstance(value, list)
+                and not isinstance(value, dict)
+                and value
+            ):
+                new_report_meta = ReportMeta(
+                    report_meta_key=key,
+                    report_meta_value=value,
+                    report_id=report_id,
+                )
+                session.add(new_report_meta)
+        session.commit()
+
+        # Add RAW data to DB
+        for section_key, section_data in report.get(
+            "report_saved_raw_data", {}
+        ).items():
+            logging.info(f"Parsing section {section_key}")
+            section_name = section_key.replace("multiqc_", "")
+            for sample_key, sample_data in section_data.items():
                 # Check if sample exists
                 report_sample = (
-                    session.query(Sample).filter(Sample.sample_name == sample_id).first()
+                    session.query(Sample)
+                    .filter(Sample.sample_name == sample_key)
+                    .first()
                 )
-                if not report_sample:
-                    report_sample = Sample(sample_name=sample_id, report_id=report_id)
+                if report_sample:
+                    logging.debug(f"Sample {sample_key} already exists in DB")
+                else:
+                    logging.debug(f"Adding sample {sample_key} to DB")
+                    report_sample = Sample(sample_name=sample_key, report_id=report_id)
                     session.add(report_sample)
                     session.commit()
                 sample_id = report_sample.sample_id
 
-                if not sample_data.get("raw"):
-                    logging.info(f"RAW data section not found for sample {sample_id}. Skipping...")
-                    continue
-
                 # Go through each data key
-                for section_id, section_data in sample_data["raw"].items():
-                    for data_id, data_value in section_data.items():
-                        # Save / load the data type
-                        key_type = (
-                            session.query(SampleDataType)
-                            .filter(SampleDataType.data_id == data_id and SampleDataType.data_section == section_id)
+                for data_key, data_value in sample_data.items():
+                    # Save / load the data type
+                    key_type = (
+                        session.query(SampleDataType)
+                        .filter(
+                            SampleDataType.data_id == data_key,
+                            SampleDataType.data_section == section_name,
+                        )
+                        .first()
+                    )
+                    if key_type:
+                        logging.debug(
+                            f"Sample data type {data_key} already exists in DB"
+                        )
+                    else:
+                        logging.debug(f"Adding sample data type {data_key} to DB")
+                        key_type = SampleDataType(
+                            data_id=data_key,
+                            data_section=section_name,
+                            data_key=f"{section_name}__{data_key}",
+                        )
+                        session.add(key_type)
+                        session.commit()
+                    type_id = key_type.sample_data_type_id
+
+                    # Save the data value
+                    data_value = SampleData(
+                        report_id=report_id,
+                        sample_data_type_id=type_id,
+                        sample_id=sample_id,
+                        value=str(data_value),
+                    )
+                    session.add(data_value)
+                    session.commit()
+
+        # Add plot data to DB
+        for plot_id, plot_data in report.get("report_plot_data", {}).items():
+            logging.info(f"Parsing plot {plot_id}")
+            #  skip custom plots
+            if plot_id.startswith("mqc_hcplot_"):
+                logging.warning("Skipping custom plot")
+                continue
+            if plot_data["plot_type"] not in ["bar_graph", "xy_line"]:
+                logging.warning(f"Plot type {plot_data['plot_type']} is not supported")
+                continue
+
+            for dst_idx, dataset in enumerate(plot_data["datasets"]):
+                # MultiQC 1.20 stores "categories" per-dataset, so need to re-add it into
+                # the main pconfig for MegaQC:
+                plot_config = copy.deepcopy(plot_data["config"])
+                dls = None
+                dataset_name = None
+                if "data_labels" in plot_config and dst_idx < len(
+                    plot_config["data_labels"]
+                ):
+                    dls = plot_config["data_labels"][dst_idx]
+                    if isinstance(dls, dict):
+                        if "ylab" in dls:
+                            dataset_name = dls["ylab"]
+                        for k, v in dls.items():
+                            plot_config[k] = v
+                    else:
+                        dataset_name = dls
+                if not dataset_name and "ylab" in plot_config:
+                    dataset_name = plot_config["ylab"]
+                elif not dataset_name and "title" in plot_config:
+                    dataset_name = plot_config["title"]
+
+                plot_configX = (
+                    session.query(PlotConfig)
+                    .filter(
+                        PlotConfig.config_type == plot_data["plot_type"],
+                        PlotConfig.config_name == plot_id,
+                        PlotConfig.config_dataset == dataset_name,
+                    )
+                    .first()
+                )
+                if plot_configX:
+                    logging.debug("Plot config already exists in DB")
+                else:
+                    logging.debug("Adding plot config to DB")
+                    plot_configX = PlotConfig(
+                        config_type=plot_data["plot_type"],
+                        config_name=plot_id,
+                        config_dataset=dataset_name,
+                        data=json.dumps(plot_config),
+                    )
+                    session.add(plot_configX)
+                    session.commit()
+                plot_config_id = plot_configX.config_id
+
+                # Save bar graph data
+                if plot_data["plot_type"] == "bar_graph":
+                    for cat_data in (
+                        dataset
+                        if version.parse(report["config_version"])
+                        <= version.parse("1.19")
+                        else dataset["cats"]
+                    ):
+                        data_key = str(cat_data["name"])
+                        category = (
+                            session.query(PlotCategory)
+                            .filter(PlotCategory.category_name == data_key)
                             .first()
                         )
-                        if not key_type:
-                            key_type = SampleDataType(
-                                data_id=data_id,
-                                data_section=section_id,
-                                data_key=f"{section_id}__{data_id}",
-                            )
-                            session.add(key_type)
-                            session.commit()
-                        type_id = key_type.sample_data_type_id
-
-                        # Save the data value
-                        new_data = SampleData(
-                            report_id=report_id,
-                            sample_data_type_id=type_id,
-                            sample_id=sample_id,
-                            value=str(data_value),
+                        data = json.dumps(
+                            {
+                                x: y
+                                for x, y in list(cat_data.items())
+                                if x not in ["data", "data_pct"]
+                            }
                         )
-                        session.add(new_data)
+                        if category:
+                            logging.debug("Plot category already exists in DB")
+                            category.data = data
+                        else:
+                            logging.debug("Adding plot category to DB")
+                            category = PlotCategory(
+                                report_id=report_id,
+                                config_id=plot_config_id,
+                                category_name=data_key,
+                                data=data,
+                            )
+                        session.add(category)
+                        session.commit()
+                        plot_category_id = category.plot_category_id
+
+                        for sname, actual_data in zip(
+                            (
+                                plot_data["samples"][dst_idx]
+                                if version.parse(report["config_version"])
+                                <= version.parse("1.19")
+                                else dataset["samples"]
+                            ),
+                            cat_data["data"],
+                        ):
+                            sample = (
+                                session.query(Sample)
+                                .filter(Sample.sample_name == sname)
+                                .first()
+                            )
+                            if sample:
+                                logging.debug(f"Sample {sname} already exists in DB")
+                            else:
+                                sample = Sample(sample_name=sname, report_id=report_id)
+                                session.add(sample)
+                                session.commit()
+                            sample_id = sample.sample_id
+
+                            new_dataset_row = PlotData(
+                                report_id=report_id,
+                                config_id=plot_config_id,
+                                sample_id=sample_id,
+                                plot_category_id=plot_category_id,
+                                data=json.dumps(actual_data),
+                            )
+                            session.add(new_dataset_row)
+                            session.commit()
+
+                # Save line plot data
+                elif plot_data["plot_type"] == "xy_line":
+                    for line_data in (
+                        dataset
+                        if version.parse(report["config_version"])
+                        <= version.parse("1.19")
+                        else dataset["lines"]
+                    ):
+                        try:
+                            data_key = plot_data["config"]["data_labels"][dst_idx][
+                                "ylab"
+                            ]
+                        except (KeyError, TypeError):
+                            try:
+                                data_key = plot_data["config"]["ylab"]
+                            except KeyError:
+                                data_key = plot_data["config"]["title"]
+
+                        category = (
+                            session.query(PlotCategory)
+                            .filter(PlotCategory.category_name == data_key)
+                            .first()
+                        )
+                        data = json.dumps(
+                            {x: y for x, y in list(line_data.items()) if x != "data"}
+                        )
+                        if category:
+                            logging.debug("Plot category already exists in DB")
+                            category.data = data
+                        else:
+                            logging.debug("Adding plot category to DB")
+                            category = PlotCategory(
+                                report_id=report_id,
+                                config_id=plot_config_id,
+                                category_name=data_key,
+                                data=data,
+                            )
+                        session.add(category)
+                        session.commit()
+                        plot_category_id = category.plot_category_id
+
+                        sample_name = line_data["name"]
+                        sample = (
+                            session.query(Sample)
+                            .filter(Sample.sample_name == sample_name)
+                            .first()
+                        )
+                        if sample:
+                            logging.debug(f"Sample {sample_name} already exists in DB")
+                        else:
+                            logging.debug(f"Adding sample {sample_name} to DB")
+                            sample = Sample(
+                                sample_name=sample_name, report_id=report_id
+                            )
+                            session.add(sample)
+                            session.commit()
+                        sample_id = sample.sample_id
+
+                        new_dataset_row = PlotData(
+                            report_id=report_id,
+                            config_id=plot_config_id,
+                            sample_id=sample_id,
+                            plot_category_id=plot_category_id,
+                            data=json.dumps(actual_data),
+                        )
+                        session.add(new_dataset_row)
                         session.commit()

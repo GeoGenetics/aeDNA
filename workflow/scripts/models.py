@@ -12,7 +12,6 @@ class Report(Base):
     """
     A MultiQC report.
     """
-
     __tablename__ = "report"
     report_id = Column(Integer, primary_key=True)
     report_hash = Column(UnicodeText, index=True, unique=True)
@@ -38,6 +37,34 @@ class ReportMeta(Base):
         nullable=False,
     )
     report = relationship("Report", back_populates="meta")
+
+
+class PlotConfig(Base):
+    __tablename__ = "plot_config"
+    config_id = Column(Integer, primary_key=True)
+    config_type = Column(UnicodeText, nullable=False)
+    config_name = Column(UnicodeText, nullable=False)
+    config_dataset = Column(UnicodeText, nullable=True)
+    data = Column(UnicodeText, nullable=False)
+
+
+class PlotData(Base):
+    __tablename__ = "plot_data"
+    plot_data_id = Column(Integer, primary_key=True)
+    report_id = Column(Integer, ForeignKey("report.report_id"), index=True)
+    config_id = Column(Integer, ForeignKey("plot_config.config_id"))
+    plot_category_id = Column(Integer(), ForeignKey("plot_category.plot_category_id"))
+    sample_id = Column(Integer, ForeignKey("sample.sample_id"), index=True)
+    data = Column(UnicodeText, nullable=False)
+
+
+class PlotCategory(Base):
+    __tablename__ = "plot_category"
+    plot_category_id = Column(Integer, primary_key=True)
+    report_id = Column(Integer, ForeignKey("report.report_id"))
+    config_id = Column(Integer, ForeignKey("plot_config.config_id"))
+    category_name = Column(UnicodeText, nullable=True)
+    data = Column(UnicodeText, nullable=False)
 
 
 class SampleDataType(Base):
