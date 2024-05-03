@@ -33,7 +33,7 @@ reads:
     params: ""
 
   low_complex:
-    params: "maxns=25 minlen=30 entropy=0.6 entropywindow=30 entropyk=6"
+    params: "maxns=25 minlen=30 entropy=0.7 entropywindow=30 entropyk=4"
 
 
 
@@ -88,17 +88,21 @@ align:
   map:
     params: "-k 1000 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp '1,1' --rdg '0,1' --rfg '0,1' --score-min 'L,0,-0.1' --no-unal"
 
-  bam_filter:
-    activate: false
+  reassign:
+    activate: true
+    params: "--iters 0 --min-read-ani 94 --min-read-count 3"
+
+  filter:
+    activate: true
     params: "--min-read-ani 94 --min-read-count 3 --min-expected-breadth-ratio 0.5 --min-normalized-entropy auto --min-normalized-gini auto --min-breadth 0 --min-avg-read-ani 90 --min-coverage-evenness 0.4 --min-coverage-mean 0 --include-low-detection"
 
   mark_duplicates:
-    activate: false
+    activate: true
     tool: markduplicates
     params: "--OPTICAL_DUPLICATE_PIXEL_DISTANCE 12000 --TAGGING_POLICY All"
 
   calmd:
-    activate: false
+    activate: true
     params: "-e -E"
 
 taxonomy:

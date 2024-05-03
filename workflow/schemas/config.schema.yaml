@@ -107,15 +107,28 @@ properties:
         properties:
           params:
             type: string
+            pattern: "^((?!\b--?(threads|mm|t|time|q|U|1|2|interleaved|x|b|S|rd-id|rg)[ =]).)*$"
         required:
           - params
-      bam_filter:
+      reassign:
         type: object
         properties:
           activate:
             type: boolean
           params:
             type: string
+            pattern: "^((?!\b--?(t|threads|bam|m|sort-memory|N|sort-by-name|r|reference-lengths|p|prefix)[ =]).)*$"
+        required:
+          - activate
+          - params
+      filter:
+        type: object
+        properties:
+          activate:
+            type: boolean
+          params:
+            type: string
+            pattern: "^((?!\b--?(t|threads|bam|low-memory|m|sort-memory|N|sort-by-name|disable-sort|r|reference-lengths|tmp-dir|bam-filtered|stats|stats-filtered|read-length-freqs|read-hits-count|only-stats|only-stats-filtered|knee-plot|plot|p|prefix)[ =]).)*$"
         required:
           - activate
           - params
@@ -129,6 +142,7 @@ properties:
             enum: ["markduplicates", "markduplicatesspark", "markduplicateswithmatecigar", "bamsormadup"]
           params:
             type: string
+            pattern: "^((?!\b(--)?(input|INPUT|tmp-dir|TMP_DIR|SO|ASO|ASSUME_SORT_ORDER|coordinate|create-output-bam-splitting-index|output|OUTPUT|metrics-file|METRICS_FILE)[ =]).)*$"
         required:
           - activate
           - tool
@@ -140,12 +154,14 @@ properties:
             type: boolean
           params:
             type: string
+            pattern: "^((?!\b--?(@|threads|b) ).)*$"
         required:
           - activate
           - params
     required:
       - map
-      - bam_filter
+      - reassign
+      - filter
       - mark_duplicates
       - calmd
 
@@ -171,6 +187,7 @@ properties:
         properties:
           params:
             type: string
+            pattern: "^((?!\b--?(n|threads|r|run_mode|o|out_prefix)[ =]).)*$"
         required:
           - params
       lca:
@@ -178,6 +195,7 @@ properties:
         properties:
           params:
             type: string
+            pattern: "^((?!\b--?(n|threads|bam|nodes|names|acc2tax|temp|out|out_prefix)[ =]).)*$"
         required:
           - params
       dfit:
@@ -185,6 +203,7 @@ properties:
         properties:
           params:
             type: string
+            pattern: "^((?!\b--?(n|nthreads|nodes|names|doboot|lib|out|out_prefix)[ =]).)*$"
         required:
           - params
     required:

@@ -1,6 +1,6 @@
 # aeDNA - a customizable Snakemake workflow for ancient environmental DNA
 
-[![Snakemake](https://img.shields.io/badge/snakemake-≥7.25.0-brightgreen.svg)](https://snakemake.bitbucket.io)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥8.11.2-brightgreen.svg)](https://snakemake.bitbucket.io)
 
 This workflow combines several modules to build a workflow for ancient environmental DNA (aeDNA) analyses and QC:
 - [Read trimming](https://github.com/GeoGenetics/ngs-trim)
