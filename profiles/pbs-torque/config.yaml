@@ -1,8 +1,0 @@
-# Cluster options
-cluster: "pbs-submit.py -W group_list=geogenetics -A geogenetics -j oe -o logs/cluster/ -v PATH,CONDA_DEFAULT_ENV,CONDA_PREFIX,XML_CATALOG_FILES,GITHUB_TOKEN"
-jobscript: "pbs-jobscript.sh"
-jobname: "snakejob.{name}.{jobid}"
-cluster-status: "pbs-status.py"
-
-# Cluster
-max-status-checks-per-second: 1

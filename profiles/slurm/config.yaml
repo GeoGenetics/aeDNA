@@ -1,5 +1,0 @@
-# Cluster options
-cluster: "slurm-submit.py"
-jobscript: "slurm-jobscript.sh"
-jobname: "snakejob.{name}.{jobid}"
-cluster-status: "slurm-status.py"
