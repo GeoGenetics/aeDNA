@@ -1,7 +1,7 @@
 snakemake.utils.min_version("8.11.2")
 
 # Define wrapper versions
-wrapper_ver = "v3.10.1"
+wrapper_ver = "v3.11.0"
 
 # Load modules
 module workflow_trim:
@@ -86,7 +86,7 @@ rule multiqc_trim:
         mem = lambda w, attempt: f"{10 * attempt} GiB",
         runtime = lambda w, attempt: f"{30 * attempt} m",
     wrapper:
-        wrapper_ver + "/bio/multiqc"
+        f"{wrapper_ver}/bio/multiqc"
 
 rule target_trim:
     input:
