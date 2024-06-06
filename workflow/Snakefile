@@ -88,14 +88,34 @@ rule multiqc_trim:
     wrapper:
         f"{wrapper_ver}/bio/multiqc"
 
+rule multiqc_trim_upload:
+    input:
+        json=rules.multiqc_trim.output.data,
+    output:
+        touch("stats/reports/multiqc_trim.upload.flag"),
+    log:
+        "logs/reports/multiqc_trim.upload.log"
+    params:
+        db_url=config["report"]["multiqc_db_url"],
+    conda:
+        "../envs/multiqc_upload.yaml"
+    localrule: True
+    threads: 1
+    resources:
+        mem = lambda w, attempt: f"{1 * attempt} GiB",
+        runtime = lambda w, attempt: f"{30 * attempt} m",
+    shell:
+        "python scripts/multiqc_upload.py --json {input.json} --db-url {params.db_url} --log-level INFO 2> {log}"
+
 rule target_trim:
     input:
-        rules.multiqc_trim.output,
+        rules.multiqc_trim_upload.output if config["report"]["multiqc_db_url"] else rules.multiqc_trim.output,
         rules.trim_all.input.res,
     message:
         "Read trimming finished successfully!"
 
 
+#####
 
 use rule multiqc_trim as multiqc_derep with:
     input:
@@ -110,14 +130,23 @@ use rule multiqc_trim as multiqc_derep with:
     benchmark:
         "benchmarks/reports/multiqc.derep.log"
 
+use rule multiqc_trim_upload as multiqc_derep_upload with:
+    input:
+        json=rules.multiqc_derep.output.data,
+    output:
+        touch("stats/reports/multiqc_derep.upload.flag"),
+    log:
+        "logs/reports/multiqc_derep.upload.log"
+
 rule target_derep:
     input:
-        rules.multiqc_derep.output,
+        rules.multiqc_derep_upload.output if config["report"]["multiqc_db_url"] else rules.multiqc_derep.output,
         rules.derep_all.input.res,
     message:
         "Read dereplication finished successfully!"
 
 
+#####
 
 use rule multiqc_derep as multiqc_taxon with:
     input:
@@ -133,9 +162,17 @@ use rule multiqc_derep as multiqc_taxon with:
     benchmark:
         "benchmarks/reports/multiqc.taxon.log"
 
+use rule multiqc_trim_upload as multiqc_taxon_upload with:
+    input:
+        json=rules.multiqc_taxon.output.data,
+    output:
+        touch("stats/reports/multiqc_taxon.upload.flag"),
+    log:
+        "logs/reports/multiqc_taxon.upload.log"
+
 rule target_taxon:
     input:
-        rules.multiqc_taxon.output,
+        rules.multiqc_taxon_upload.output if config["report"]["multiqc_db_url"] else rules.multiqc_taxon.output,
         rules.taxon_all.input.res,
     message:
         "Taxonomic assignment finished successfully!"

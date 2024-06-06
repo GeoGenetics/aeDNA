@@ -127,3 +127,4 @@ metadmg:
 
 report:
   multiqc: "--verbose"
+  multiqc_db_url: ""
