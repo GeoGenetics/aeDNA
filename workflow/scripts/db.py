@@ -2,6 +2,8 @@ import logging
 import json
 import copy
 from packaging import version
+from sqlalchemy import select, delete
+from sqlalchemy.sql import and_, not_, or_
 
 from models import (
     Report,
@@ -15,21 +17,15 @@ from models import (
 )
 
 
-def delete_report(report_id):
-    #
-    PlotData.query.filter(PlotData.report_id == report_id).delete()
+def delete_report(session, report_id):
+    # Delete plot data
+    session.query(PlotData).filter(PlotData.report_id == report_id).delete()
     session.commit()
-    #
-    PlotCategory.query.filter(
-        PlotCategory.plot_category_id.in_(
-            session.query(PlotCategory.plot_category_id)
-            .outerjoin(PlotData)
-            .filter(PlotData.plot_data_id == None)
-        )
-    ).delete(synchronize_session="fetch")
+    # Delete plot category
+    session.query(PlotCategory).filter(PlotCategory.report_id == report_id).delete()
     session.commit()
-    # 
-    PlotConfig.query.filter(
+    # Delete plot config
+    session.query(PlotConfig).filter(
         PlotConfig.config_id.in_(
             session.query(PlotConfig.config_id)
             .outerjoin(PlotData)
@@ -42,11 +38,11 @@ def delete_report(report_id):
         )
     ).delete(synchronize_session="fetch")
     session.commit()
-    # 
-    SampleData.query.filter(SampleData.report_id == report_id).delete()
+    # Delete sample data
+    session.query(SampleData).filter(SampleData.report_id == report_id).delete()
     session.commit()
-    #
-    SampleDataType.query.filter(
+    # Delete sample data type
+    session.query(SampleDataType).filter(
         SampleDataType.sample_data_type_id.in_(
             session.query(SampleDataType.sample_data_type_id)
             .outerjoin(SampleData)
@@ -54,16 +50,15 @@ def delete_report(report_id):
         )
     ).delete(synchronize_session="fetch")
     session.commit()
-    #
-    ReportMeta.query.filter(ReportMeta.report_id == report_id).delete()
+    # Delete report metadata
+    session.query(ReportMeta).filter(ReportMeta.report_id == report_id).delete()
     session.commit()
-    #
-    Sample.query.filter(Sample.report_id == report_id).delete()
+    # Delete sample
+    session.query(Sample).filter(Sample.report_id == report_id).delete()
     session.commit()
-    #
-    Report.query.filter(Report.report_id == report_id).delete()
+    # Delete report
+    session.query(Report).filter(Report.report_id == report_id).delete()
     session.commit()
-
 
 
 def upload_report(db_url, report, overwrite=False):
@@ -113,11 +108,30 @@ def upload_report(db_url, report, overwrite=False):
             )
             .first()
         )
+
         if report_exists:
             logging.warning(
-                f"Report {report_exists.report_id} in DB has the same output dir ({report['config_output_dir']}). Overwriting..."
+                f"Report {report_exists.report_id} in DB has the same output dir ({report['config_output_dir']})."
             )
-            delete_report(report_exists.report_id)
+            report_exists_older = (
+                session.query(ReportMeta)
+                .filter(
+                    ReportMeta.report_id == report_exists.report_id,
+                    ReportMeta.report_meta_key == "config_creation_date",
+                    ReportMeta.report_meta_value < report["config_creation_date"],
+                )
+                .first()
+            )
+            if report_exists_older:
+                logging.warning(
+                    f"Since existing report {report_exists.report_id} is older, it will be overwritten."
+                )
+                delete_report(session, report_exists.report_id)
+            else:
+                logging.warning(
+                    f"Since existing report {report_exists.report_id} is newer, skipping current report."
+                )
+                return None
 
         new_report = Report(
             report_hash=report["config_report_hash"],
@@ -131,7 +145,11 @@ def upload_report(db_url, report, overwrite=False):
 
         logging.info("Adding report metadata to DB")
         # Add user name
-        new_report_meta = ReportMeta(report_meta_key="username", report_meta_value=getpass.getuser(), report_id=report_id)
+        new_report_meta = ReportMeta(
+            report_meta_key="username",
+            report_meta_value=getpass.getuser(),
+            report_id=report_id,
+        )
         session.add(new_report_meta)
         # Add config info
         for key, value in report.items():

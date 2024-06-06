@@ -12,6 +12,7 @@ class Report(Base):
     """
     A MultiQC report.
     """
+
     __tablename__ = "report"
     report_id = Column(Integer, primary_key=True)
     report_hash = Column(UnicodeText, index=True, unique=True)
