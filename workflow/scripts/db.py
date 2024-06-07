@@ -235,11 +235,11 @@ def upload_report(db_url, report, overwrite=False):
             if plot_data["plot_type"] not in ["bar_graph", "xy_line"]:
                 logging.warning(f"Plot type {plot_data['plot_type']} is not supported")
                 continue
+            plot_config = copy.deepcopy(plot_data.get("config", plot_data["pconfig"]))
 
             for dst_idx, dataset in enumerate(plot_data["datasets"]):
                 # MultiQC 1.20 stores "categories" per-dataset, so need to re-add it into
                 # the main pconfig for MegaQC:
-                plot_config = copy.deepcopy(plot_data.get("config", plot_data["pconfig"]))
                 dls = None
                 dataset_name = None
                 if "data_labels" in plot_config and dst_idx < len(
@@ -253,10 +253,10 @@ def upload_report(db_url, report, overwrite=False):
                             plot_config[k] = v
                     else:
                         dataset_name = dls
-                if not dataset_name and "ylab" in plot_config:
-                    dataset_name = plot_config["ylab"]
-                elif not dataset_name and "title" in plot_config:
-                    dataset_name = plot_config["title"]
+                if not dataset_name:
+                    dataset_name = plot_config.get("ylab")
+                if not dataset_name:
+                    dataset_name = plot_config.get("title")
 
                 plot_configX = (
                     session.query(PlotConfig)
@@ -358,14 +358,14 @@ def upload_report(db_url, report, overwrite=False):
                         else dataset["lines"]
                     ):
                         try:
-                            data_key = plot_data["config"]["data_labels"][dst_idx][
+                            data_key = plot_config["data_labels"][dst_idx][
                                 "ylab"
                             ]
-                        except (KeyError, TypeError):
+                        except (KeyError, TypeError, IndexError):
                             try:
-                                data_key = plot_data["config"]["ylab"]
+                                data_key = plot_config["ylab"]
                             except KeyError:
-                                data_key = plot_data["config"]["title"]
+                                data_key = plot_config["title"]
 
                         category = (
                             session.query(PlotCategory)
