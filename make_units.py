@@ -27,7 +27,7 @@ parser.add_argument(
     "-r",
     "--regex",
     action="store",
-    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell>\w{10}).+\/(?P<library>LV\d{10})-LV\d{10}-(?P<sample>(LV\d{10}|CGG[\d-]{7,9}))",
+    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell>\w{10}).+\/(?P<library>LV\d{10})-LV\d{10}-(?P<sample>[^_]+)",
     help="Regex to extract sample and library identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
@@ -73,7 +73,7 @@ parser.add_argument(
 parser.add_argument(
     "--out-path",
     action="store",
-    default="{sample[0]}{sample[1]}{sample[2]}{sample[3]}/{sample[4]}{sample[5]}{sample[6]}{sample[7]}/{sample}/{date:%Y%m%d}_{flowcell}_{library}/config",
+    default="{library[0]}{library[1]}{library[2]}{library[3]}{library[4]}/{library[5]}{library[6]}{library[7]}{library[8]}{library[9]}/{library}/{date:%Y%m%d}_{flowcell}/config",
     help="Output folder structure.",
 )
 parser.add_argument(
@@ -218,6 +218,7 @@ logging.info(samples)
 
 # Define grouping
 from string import Formatter
+
 wildcards = list(
     set([key.split("[")[0] for _, key, _, _ in Formatter().parse(args.out_path) if key])
 )
@@ -242,11 +243,18 @@ else:
 
 datasets_keep = []
 for out_path, sample, units in sorted(datasets):
-    units_small = [Path(data.format(Read=1)).stat().st_size < args.min_file_size * 1024**2 for data in units["data"]]
+    units_small = [
+        Path(data.format(Read=1)).stat().st_size < args.min_file_size * 1024**2
+        for data in units["data"]
+    ]
     if all(units_small):
-        print(f"#{out_path.parent} # - All R1 files smaller than {args.min_file_size} MiB")
+        print(
+            f"#{out_path.parent} # - All R1 files smaller than {args.min_file_size} MiB"
+        )
     elif any(units_small):
-        print(f"#{out_path.parent} # - At least one R1 file smaller than {args.min_file_size} MiB")
+        print(
+            f"#{out_path.parent} # - At least one R1 file smaller than {args.min_file_size} MiB"
+        )
     else:
         print(out_path.parent)
         datasets_keep.append((out_path, sample, units))
