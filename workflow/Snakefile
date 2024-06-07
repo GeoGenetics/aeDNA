@@ -1,26 +1,26 @@
 snakemake.utils.min_version("8.11.2")
 
 # Define wrapper versions
-wrapper_ver = "v3.11.0"
+wrapper_ver = "v3.12.0"
 
 # Load modules
 module workflow_trim:
     snakefile:
-        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.4.2")
+        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.4.3")
     config:
         config
 use rule * from workflow_trim as trim_*
 
 module workflow_derep:
     snakefile:
-        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.4.2")
+        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.4.3")
     config:
         config
 use rule * from workflow_derep as derep_*
 
 module workflow_taxon:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.5.1")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.6.0")
     config:
         config
 use rule * from workflow_taxon as taxon_*
@@ -98,7 +98,7 @@ rule multiqc_trim_upload:
     params:
         db_url=config["report"]["multiqc_db_url"],
     conda:
-        "../envs/multiqc_upload.yaml"
+        "envs/multiqc_upload.yaml"
     localrule: True
     threads: 1
     resources:
