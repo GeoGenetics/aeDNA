@@ -41,7 +41,7 @@ import json
 import hashlib
 import datetime
 from snakemake.logging import logger
-base_dir = Path(workflow.basedir)
+base_dir = Path(workflow.basedir).resolve(strict=True)
 repo = git.Repo(base_dir.parent)
 logger.info(f"Snakemake version: {snakemake.common.__version__}")
 logger.info("Git commit: {commit_hash} [{tag_flag}{commit_tag}] ({commit_time})".format(
@@ -105,7 +105,7 @@ rule multiqc_trim_upload:
         mem = lambda w, attempt: f"{1 * attempt} GiB",
         runtime = lambda w, attempt: f"{30 * attempt} m",
     shell:
-        "python scripts/multiqc_upload.py --json {input.json} --db-url {params.db_url} --log-level INFO 2> {log}"
+        "python {base_dir}/scripts/multiqc_upload.py --json {input.json} --db-url {params.db_url} --log-level INFO 2> {log}"
 
 rule target_trim:
     input:
