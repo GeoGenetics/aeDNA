@@ -239,7 +239,7 @@ def upload_report(db_url, report, overwrite=False):
             for dst_idx, dataset in enumerate(plot_data["datasets"]):
                 # MultiQC 1.20 stores "categories" per-dataset, so need to re-add it into
                 # the main pconfig for MegaQC:
-                plot_config = copy.deepcopy(plot_data["config"])
+                plot_config = copy.deepcopy(plot_data.get("config", plot_data["pconfig"]))
                 dls = None
                 dataset_name = None
                 if "data_labels" in plot_config and dst_idx < len(

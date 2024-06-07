@@ -3,7 +3,8 @@ channels:
   - bioconda
   - nodefaults
 dependencies:
+  - pandas
   - sqlalchemy
+  - sqlalchemy-utils
   - packaging
   - psycopg2
-
