@@ -27,8 +27,8 @@ parser.add_argument(
     "-r",
     "--regex",
     action="store",
-    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell>\w{10}).+\/(?P<library>LV\d{10})-LV\d{10}-(?P<sample>[^_]+)",
-    help="Regex to extract sample and library identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
+    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell>\w{10}).+\/(?P<library>LV\d{10})-(?P<subsample>[^_-]+)-(?P<archive>[^_]+)",
+    help="Regex to extract identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
     "--min-file-size",
@@ -64,16 +64,16 @@ parser.add_argument(
     help="Do not parse info from read header.",
 )
 parser.add_argument(
-    "--extra-info",
+    "--extra-metadata",
     action="store",
     nargs="+",
-    default=["center=CAEG", "platform=ILLUMINA", "material=DNA"],
-    help="Do not parse info from read header.",
+    default=["sample=Lib", "center=CAEG", "platform=ILLUMINA", "material=DNA"],
+    help="Extra metadata.",
 )
 parser.add_argument(
     "--out-path",
     action="store",
-    default="{library[0]}{library[1]}{library[2]}{library[3]}{library[4]}/{library[5]}{library[6]}{library[7]}{library[8]}{library[9]}/{library}/{date:%Y%m%d}_{flowcell}/config",
+    default="{library[0]}{library[1]}{library[2]}/{library[3]}{library[4]}{library[5]}/{library[6]}{library[7]}{library[8]}/{library}/{date:%Y%m%d}_{flowcell}/config",
     help="Output folder structure.",
 )
 parser.add_argument(
@@ -105,6 +105,7 @@ parser.add_argument(
     help="Dry run",
 )
 args = parser.parse_args()
+# If not FASTQ files, read from STDIN
 if not args.fq_files:
     args.fq_files = [fq_file.strip() for fq_file in sys.stdin.readlines()]
 print(f"# {args}")
@@ -129,9 +130,9 @@ for fq_file in sorted(args.fq_files):
             row["flowcell"] = read_id[2]
     # Get info from arguments
     row["library_type"] = args.library_type
-    for extra_info in args.extra_info:
-        extra_info, value = extra_info.split("=")
-        row[extra_info] = value
+    for extra_metadata in args.extra_metadata:
+        key, value = extra_metadata.split("=")
+        row[key] = value
     row["seq_type"] = "SE"
     row["adapters"] = np.nan
     # Get info from file name
