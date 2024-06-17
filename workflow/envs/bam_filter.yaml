@@ -7,4 +7,4 @@ dependencies:
   - cxx-compiler
   - pip
   - pip:
-    - bam-filter==1.5.3
+    - bam-filter==1.6.0
