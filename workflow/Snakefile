@@ -1,7 +1,7 @@
 snakemake.utils.min_version("8.11.2")
 
 # Define wrapper versions
-wrapper_ver = "v3.12.0"
+wrapper_ver = "v3.12.1"
 
 # Load modules
 module workflow_trim:
@@ -20,7 +20,7 @@ use rule * from workflow_derep as derep_*
 
 module workflow_taxon:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.6.3")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.6.4")
     config:
         config
 use rule * from workflow_taxon as taxon_*
@@ -44,6 +44,7 @@ from snakemake.logging import logger
 base_dir = Path(workflow.basedir).resolve(strict=True)
 repo = git.Repo(base_dir.parent)
 logger.info(f"Snakemake version: {snakemake.common.__version__}")
+logger.info(f"Snakemake wrapper version: {wrapper_ver}")
 logger.info("Git commit: {commit_hash} [{tag_flag}{commit_tag}] ({commit_time})".format(
         commit_hash = repo.head.commit.hexsha,
         commit_time = repo.head.commit.committed_datetime.strftime("%Y-%m-%d %H:%M:%S"),
