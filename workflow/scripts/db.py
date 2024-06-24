@@ -84,7 +84,7 @@ def upload_report(db_url, report, overwrite=False):
     # Open session
     with Session(engine) as session:
         import getpass
-        import datetime
+        from dateutil import parser
         import pandas as pd
 
         logging.info(f"Adding report v{report['config_version']} to DB")
@@ -135,9 +135,7 @@ def upload_report(db_url, report, overwrite=False):
 
         new_report = Report(
             report_hash=report["config_report_hash"],
-            created_at=datetime.datetime.strptime(
-                report["config_creation_date"], "%Y-%m-%d, %H:%M %Z"
-            ),
+            created_at=parser.parse(report["config_creation_date"]),
         )
         session.add(new_report)
         session.commit()
@@ -358,9 +356,7 @@ def upload_report(db_url, report, overwrite=False):
                         else dataset["lines"]
                     ):
                         try:
-                            data_key = plot_config["data_labels"][dst_idx][
-                                "ylab"
-                            ]
+                            data_key = plot_config["data_labels"][dst_idx]["ylab"]
                         except (KeyError, TypeError, IndexError):
                             try:
                                 data_key = plot_config["ylab"]

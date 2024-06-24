@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, UnicodeText
 from sqlalchemy.orm import relationship
@@ -15,9 +16,13 @@ class Report(Base):
 
     __tablename__ = "report"
     report_id = Column(Integer, primary_key=True)
-    report_hash = Column(UnicodeText, index=True, unique=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    uploaded_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    report_hash = Column(UnicodeText, nullable=False, index=True, unique=True)
+    created_at = Column(
+        DateTime, nullable=False, default=datetime.datetime.now().astimezone()
+    )
+    uploaded_at = Column(
+        DateTime, nullable=False, default=datetime.datetime.now().astimezone()
+    )
     meta = relationship("ReportMeta", back_populates="report", passive_deletes="all")
     samples = relationship("Sample", back_populates="report", passive_deletes="all")
     sample_data = relationship(
