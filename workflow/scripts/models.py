@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import time
 import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, UnicodeText
 from sqlalchemy.orm import relationship
@@ -76,8 +75,8 @@ class PlotCategory(Base):
 class SampleDataType(Base):
     __tablename__ = "sample_data_type"
     sample_data_type_id = Column(Integer, primary_key=True)
-    data_id = Column(UnicodeText)
-    data_section = Column(UnicodeText)
+    data_id = Column(UnicodeText, nullable=False)
+    data_section = Column(UnicodeText, nullable=False)
     data_key = Column(UnicodeText, nullable=False)
     schema = Column(
         UnicodeText,
