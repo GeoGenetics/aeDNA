@@ -38,6 +38,7 @@ include: "rules/setup.smk"
 import pwd
 import git
 import json
+import socket
 import hashlib
 import datetime
 from snakemake.logging import logger
@@ -51,7 +52,7 @@ logger.info("Git commit: {commit_hash} [{tag_flag}{commit_tag}] ({commit_time})"
         tag_flag = next(("" for tag in repo.tags if tag.commit == repo.head.commit), ">"),
         commit_tag = repo.git.tag(l=True, sort="authordate").split("\n")[-1],
 ))
-logger.info("Run started: {time} ({user})".format(time = str(datetime.datetime.now()), user = pwd.getpwuid(os.getuid())[0]))
+logger.info("Run started: {time} @ {host} ({user})".format(time = str(datetime.datetime.now()), host = socket.gethostname(), user = pwd.getpwuid(os.getuid())[0]))
 logger.info(f"Workflow base dir: {base_dir}")
 logger.info(f"Executing in: {workflow.workdir_init}")
 config_json = json.dumps(config, sort_keys=True).encode('utf-8')
