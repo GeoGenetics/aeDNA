@@ -27,7 +27,7 @@ parser.add_argument(
     "-r",
     "--regex",
     action="store",
-    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell>[AB]H[A-Z0-9]{8})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>\w+)\/(?P<library>LV\d{10})-(?P<subsample>[^_-]+)-(?P<archive>[^_]+)",
+    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell>[AB]H[A-Z0-9]{8})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10})-(?P<subsample>[^_-]+)-(?P<archive>[^_]+)",
     help="Regex to extract identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
