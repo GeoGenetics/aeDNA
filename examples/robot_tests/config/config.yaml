@@ -89,25 +89,25 @@ align:
     params: "-k 1000 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp '1,1' --rdg '0,1' --rfg '0,1' --score-min 'L,0,-0.1' --no-unal"
 
   mark_duplicates:
-    activate: true
+    activate: false
     tool: markdup
     params: "-d 2500"
 
   calmd:
-    activate: true
+    activate: false
     params: "-e -E"
 
 bam_filter:
   reassign:
-    activate: true
+    activate: false
     params: "--iters 0 --min-read-ani 94 --min-read-count 3"
 
   filter:
-    activate: true
+    activate: false
     params: "--min-read-ani 94 --min-read-count 3 --min-expected-breadth-ratio 0.5 --min-normalized-entropy auto --min-normalized-gini auto --min-breadth 0 --min-avg-read-ani 90 --min-coverage-evenness 0.4 --min-coverage-mean 0 --include-low-detection"
 
   lca:
-    activate: true
+    activate: false
     params: "--lca-rank genus"
 
 taxonomy:
