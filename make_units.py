@@ -33,8 +33,9 @@ parser.add_argument(
 parser.add_argument(
     "--min-file-size",
     action="store",
-    default=1,
-    help="Minimum file size (MiB).",
+    type=int,
+    default=512,
+    help="Minimum file size (KiB).",
 )
 parser.add_argument(
     "-c",
@@ -245,16 +246,16 @@ else:
 datasets_keep = []
 for out_path, sample, units in sorted(datasets):
     units_small = [
-        Path(data.format(Read=1)).stat().st_size < args.min_file_size * 1024**2
+        Path(data.format(Read=1)).stat().st_size < args.min_file_size * 1024
         for data in units["data"]
     ]
     if all(units_small):
         print(
-            f"#{out_path.parent} # - All R1 files smaller than {args.min_file_size} MiB"
+            f"#{out_path.parent} # - All R1 files smaller than {args.min_file_size} KiB"
         )
     elif any(units_small):
         print(
-            f"#{out_path.parent} # - At least one R1 file smaller than {args.min_file_size} MiB"
+            f"#{out_path.parent} # - At least one R1 file smaller than {args.min_file_size} KiB"
         )
     else:
         print(out_path.parent)
