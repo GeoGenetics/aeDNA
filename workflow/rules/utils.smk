@@ -40,9 +40,8 @@ class switch(object):
 
 ### General
 
-
 def flatten(list_of_lists: List) -> List:
-    """Flatten a list of lists recursively
+    """Flatten an irregular list of lists recursively
 
     https://stackoverflow.com/a/53778278
 
@@ -120,25 +119,6 @@ def create_symlink(source: str, dest: str, force: bool = False):
     )
 
 
-def allow_remote(url, keep_local=True):
-    # HTTP(s)
-    url, n = re.subn(r"^https?://", "", url)
-    if n == 1:
-        from snakemake.remote.HTTP import RemoteProvider
-
-        return RemoteProvider().remote(url, keep_local=keep_local)
-
-    # FTP(s)
-    url, n = re.subn(r"^ftps?://", "", url)
-    if n == 1:
-        from snakemake.remote.FTP import RemoteProvider
-
-        return RemoteProvider().remote(url, keep_local=keep_local)
-
-    # If a file URL, just return it
-    return url
-
-
 def expand_ext(path, ext):
     if isinstance(path, list):
         l = [
@@ -200,7 +180,6 @@ def check_cmd(
 
 ### Config
 
-
 def _item_or_sample(row, item):
     i = getattr(row, item, None)
     if pd.isnull(i):
@@ -216,7 +195,6 @@ def is_activated(xpath):
 
 
 ### Samples
-
 
 def get_rule_stats(rule_name):
     r = re.compile("^stats/")
@@ -324,29 +302,24 @@ def get_read_type_map(sample, library, lane):
         if is_activated("reads/trim"):
             trimmer = config["reads"]["trim"]["tool"]
 
-            for case in switch(trimmer):
-                if case("adapterremoval"):
-                    read_type_map.append("singleton")
-                    if is_activated("reads/collapse"):
-                        read_type_map.append("collapsed")
-                        read_type_map.append("collapsedtrunc")
-                    break
-                if case("fastp"):
-                    read_type_map.append("singleton")
-                    if is_activated("reads/collapse"):
-                        read_type_map.append("collapsed")
-                    break
-                if case("bbduk"):
-                    read_type_map.append("singleton")
-                    break
-                if case("trimmomatic"):
-                    read_type_map.append("singleton1")
-                    read_type_map.append("singleton2")
-                    break
-                if case("cutadapt"):
-                    break
-                if case():
-                    raise ValueError("Invalid trimmer provided!")
+            if trimmer == "adapterremoval":
+                read_type_map.append("singleton")
+                if is_activated("reads/collapse"):
+                    read_type_map.append("collapsed")
+                    read_type_map.append("collapsedtrunc")
+            elif trimmer == "fastp":
+                read_type_map.append("singleton")
+                if is_activated("reads/collapse"):
+                    read_type_map.append("collapsed")
+            elif trimmer == "bbduk":
+                read_type_map.append("singleton")
+            elif trimmer == "trimmomatic":
+                read_type_map.append("singleton1")
+                read_type_map.append("singleton2")
+            elif trimmer == "cutadapt":
+                fall_through = True
+            else:
+                raise ValueError("Invalid trimmer provided!")
     else:
         read_type_map.append("se")
 

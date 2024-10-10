@@ -88,9 +88,8 @@ if not samples_without_units.empty:
 ###### Pipeline config ######
 #############################
 
-
 wildcard_constraints:
-    sample="|".join(get_samples()),
-    group="|".join(get_groups()),
-    library="|".join(get_libraries()),
-    lane="|".join(get_lanes()),
+    sample="|".join(samples["sample"].unique()),
+    group="|".join(samples["group"].unique()),
+    library="|".join(units["library"].unique()),
+    lane="|".join(units["lane"].unique()),
