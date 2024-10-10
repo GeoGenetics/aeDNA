@@ -1,0 +1,95 @@
+
+# - Only tested with Phred33 quality scores
+
+samples: config/samples.tsv
+
+units: config/units.tsv
+
+
+
+#############
+### READS ###
+#############
+reads:
+  trim:
+    activate: true
+    tool: adapterremoval
+    params: "--trimns --maxns 20 --trimqualities --minquality 5 --minlength 30"
+
+  # Ignored for SE
+  collapse:
+    activate: true
+    params: "--minalignmentlength 11 --collapse-conservatively"
+
+  extension:
+    activate: false
+    k: 17
+    params: "mode=extend ibb=f prefilter=0 el=100 er=100 overwrite=true trimends=9 ecc=t ecco=f conservative=t ignorebadquality"
+
+  derep:
+    activate: true
+    # vsearch or seqkit
+    tool: seqkit
+    params: ""
+
+  low_complex:
+    params: "maxns=25 minlen=30 entropy=0.7 entropywindow=30 entropyk=4"
+
+
+
+#############
+### ALIGN ###
+#############
+ref:
+  refseq_invertebrate:
+    n_chunks: 3
+    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/invertebrate/invert.{n_chunk}"
+  refseq_mitochondrion:
+    bt2l: False
+    n_chunks: 1
+    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/mitochondrion/mitochondrion.fa"
+
+align:
+  map:
+    params: "-k 1000 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp '1,1' --rdg '0,1' --rfg '0,1' --score-min 'L,0,-0.1' --no-unal"
+
+  mark_duplicates:
+    activate: false
+    tool: markdup
+    params: "-d 2500"
+
+  calmd:
+    activate: false
+    params: "-e -E"
+
+bam_filter:
+  reassign:
+    activate: false
+    params: "--iters 0 --min-read-ani 94 --min-read-count 3"
+
+  filter:
+    activate: false
+    params: "--min-read-ani 94 --min-read-count 3 --min-expected-breadth-ratio 0.5 --min-normalized-entropy auto --min-normalized-gini auto --min-breadth 0 --min-avg-read-ani 90 --min-coverage-evenness 0.4 --min-coverage-mean 0 --include-low-detection"
+
+  lca:
+    activate: false
+    params: "--lca-rank genus"
+
+taxonomy:
+  nodes: /projects/caeg/data/db/aeDNA-refs/resources/20230825/ncbi/taxonomy/nodes.dmp
+  names: /projects/caeg/data/db/aeDNA-refs/resources/20230825/ncbi/taxonomy/names.dmp
+  acc2taxid: /projects/caeg/data/db/mikkels/combined_accession2taxid_20221112.gz
+
+metadmg:
+  damage:
+    params: "--min_length 30 --print_length 30"
+
+  lca:
+    params: "--weight_type 1 --fix_ncbi 0 --sim_score_low 0.95 --how_many 30"
+
+  dfit:
+    params: "--nopt 10 --nbootstrap 20 --showfits 2"
+
+report:
+  multiqc: "--verbose --cl-config 'custom_logo: /maps/projects/caeg/data/resources/Lundbeck_logo.png' --cl-config 'custom_logo_title: Center for Ancient Environmental Genomics' --cl-config 'custom_logo_url: https://globe.ku.dk/research/caeg/'"
+  multiqc_db_url: ""
