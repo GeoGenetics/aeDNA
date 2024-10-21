@@ -34,7 +34,7 @@ parser.add_argument(
     "--min-file-size",
     action="store",
     type=int,
-    default=512,
+    default=50,
     help="Minimum file size (KiB).",
 )
 parser.add_argument(
