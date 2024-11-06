@@ -51,6 +51,7 @@ ref:
 
 align:
   map:
+    tool: bwa_aln
     params: "-k 1000 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp '1,1' --rdg '0,1' --rfg '0,1' --score-min 'L,0,-0.1' --no-unal"
 
   mark_duplicates:
