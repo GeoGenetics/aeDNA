@@ -94,7 +94,7 @@ parser.add_argument(
     "-l",
     "--loglevel",
     action="store",
-    default="WARNING",
+    default="INFO",
     choices=["DEBUG", "INFO", "WARNING", "ERROR"],
     help="Log verbosity level",
 )
@@ -266,9 +266,8 @@ logging.debug(datasets_keep)
 
 # Check if groups exist
 datasets_exist = [out_path.is_dir() for out_path, _, _ in datasets_keep]
-assert args.force or not any(
-    datasets_exist
-), f"Some of the datasets already exist ({datasets_exist})!"
+if any(datasets_exist):
+    logging.warning(f"Some of the datasets already exist ({datasets_exist})!")
 
 
 # Create files/fodlers
@@ -276,6 +275,10 @@ if args.dryrun:
     logging.debug("Dry-run finished successfully.")
 else:
     for out_path, samples, units in datasets_keep:
+        if out_path.exists() and not args.force:
+            logging.warning(f"Unit {out_path} already exists. Skipping!")
+            continue
+
         out_path.mkdir(parents=True, exist_ok=args.force)
         # Save samples.tsv file
         samples.to_csv(
@@ -297,6 +300,8 @@ else:
             open(out_path / args.extra_file.name, "w" if args.force else "x").write(
                 open(args.extra_file, "r").read()
             )
+
+        logging.info(f"Unit {out_path} created!")
 
 
 exit(0)
