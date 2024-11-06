@@ -19,12 +19,15 @@ from models import (
 
 def delete_report(session, report_id):
     # Delete plot data
+    logging.debug(f"Deleting report {report.id} from table 'plot_data'.")
     session.query(PlotData).filter(PlotData.report_id == report_id).delete()
     session.commit()
     # Delete plot category
+    logging.debug(f"Deleting report {report.id} from table 'plot_category'.")
     session.query(PlotCategory).filter(PlotCategory.report_id == report_id).delete()
     session.commit()
     # Delete plot config
+    logging.debug(f"Deleting report {report.id} from table 'plot_config'.")
     session.query(PlotConfig).filter(
         PlotConfig.config_id.in_(
             session.query(PlotConfig.config_id)
@@ -39,9 +42,11 @@ def delete_report(session, report_id):
     ).delete(synchronize_session="fetch")
     session.commit()
     # Delete sample data
+    logging.debug(f"Deleting report {report.id} from table 'sample_data'.")
     session.query(SampleData).filter(SampleData.report_id == report_id).delete()
     session.commit()
     # Delete sample data type
+    logging.debug(f"Deleting report {report.id} from table 'sample_data_type'.")
     session.query(SampleDataType).filter(
         SampleDataType.sample_data_type_id.in_(
             session.query(SampleDataType.sample_data_type_id)
@@ -51,12 +56,15 @@ def delete_report(session, report_id):
     ).delete(synchronize_session="fetch")
     session.commit()
     # Delete report metadata
+    logging.debug(f"Deleting report {report.id} from table 'report_meta'.")
     session.query(ReportMeta).filter(ReportMeta.report_id == report_id).delete()
     session.commit()
     # Delete sample
+    logging.debug(f"Deleting report {report.id} from table 'sample'.")
     session.query(Sample).filter(Sample.report_id == report_id).delete()
     session.commit()
     # Delete report
+    logging.debug(f"Deleting report {report.id} from table 'report'.")
     session.query(Report).filter(Report.report_id == report_id).delete()
     session.commit()
 
@@ -65,13 +73,13 @@ def upload_report(db_url, report, overwrite=False):
     from sqlalchemy import create_engine
     from sqlalchemy_utils import database_exists
     from sqlalchemy.orm import Session
+    from models import Base
 
     # Create SQLAlchemy emgine
     engine = create_engine(db_url)
+    logging.info(f"Uploading report to {engine.url}.")
 
     # Check if DB exists
-    from models import Base
-
     if database_exists(engine.url):
         if overwrite:
             logging.info(f"DB {engine.url} exists; overwriting DB.")

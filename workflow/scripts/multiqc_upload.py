@@ -101,8 +101,6 @@ def main():
 
         # Upload to DB
         from db import upload_report
-
-        logging.info(f"Uploading report to {args.db_url}")
         upload_report(args.db_url, report, args.db_force)
 
 
