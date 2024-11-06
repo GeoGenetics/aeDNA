@@ -5,4 +5,4 @@ channels:
 dependencies:
   - snakemake
   - snakemake-executor-plugin-slurm
-  - mamba
+  - conda
