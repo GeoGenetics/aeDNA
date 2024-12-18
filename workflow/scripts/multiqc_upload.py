@@ -61,7 +61,7 @@ def main():
     )
     parser.add_argument(
         "-i",
-        "--json",
+        "--db-upload",
         action="store",
         type=Path,
         nargs="+",
@@ -74,10 +74,22 @@ def main():
         help="DB connection.",
     )
     parser.add_argument(
-        "--db-force",
+        "--db-create",
         action="store_true",
         default=False,
-        help="Overwrite DB (if exists)?.",
+        help="Create DB and exit.",
+    )
+    parser.add_argument(
+        "--db-delete",
+        action="store_true",
+        default=False,
+        help="Delete DB and exit.",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Overwrite existing records?",
     )
     parser.add_argument(
         "-l",
@@ -89,20 +101,47 @@ def main():
     )
     args = parser.parse_args()
 
+
     # LOG
     logging.getLogger().setLevel(args.log_level.upper())
     logging.debug(args)
 
-    for json_path in args.json:
+
+    # Create SQLAlchemy engine
+    from sqlalchemy import create_engine
+    from sqlalchemy_utils import database_exists, create_database, drop_database
+    engine = create_engine(args.db_url)
+
+
+    # Checking if DB exists
+    if database_exists(engine.url):
+        logging.info(f"DB {engine.url} exists.")
+        # Deleting DB
+        if args.db_delete:
+            logging.warning(f"Deleting DB {engine.url}!")
+            exit(0)
+    else:
+        logging.info(f"DB {engine.url} does not exist.")
+        # Creating DB
+        if args.db_create:
+            logging.warning(f"Creating DB {engine.url}!")
+            create_database(engine.url)
+            exit(0)
+
+
+    for file_upload in args.db_upload:
         # Load MultiQC JSON files
-        logging.info(f"Reading file {json_path}")
-        report = load_multiqc(json_path)
+        logging.info(f"Reading file {file_upload}")
+        report = load_multiqc(file_upload)
         logging.debug(report)
+
 
         # Upload to DB
         from db import upload_report
-        upload_report(args.db_url, report, args.db_force)
+        logging.info(f"Uploading report v{report['config_version']} to DB...")
+        upload_report(engine, report, args.force)
 
 
 if __name__ == "__main__":
     main()
+    exit(0)

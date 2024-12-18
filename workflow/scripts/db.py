@@ -6,6 +6,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.sql import and_, not_, or_
 
 from models import (
+    Base,
     Report,
     ReportMeta,
     PlotConfig,
@@ -69,23 +70,9 @@ def delete_report(session, report_id):
     session.commit()
 
 
-def upload_report(db_url, report, overwrite=False):
-    from sqlalchemy import create_engine
-    from sqlalchemy_utils import database_exists
+def upload_report(engine, report, force=False):
     from sqlalchemy.orm import Session
-    from models import Base
 
-    # Create SQLAlchemy emgine
-    engine = create_engine(db_url)
-    logging.info(f"Uploading report to {engine.url}.")
-
-    # Check if DB exists
-    if database_exists(engine.url):
-        if overwrite:
-            logging.info(f"DB {engine.url} exists; overwriting DB.")
-            Base.metadata.drop_all(engine)
-        else:
-            logging.info(f"DB {engine.url} exists; using existing DB.")
     # Create DB
     Base.metadata.create_all(engine)
 
@@ -93,9 +80,7 @@ def upload_report(db_url, report, overwrite=False):
     with Session(engine) as session:
         import getpass
         from dateutil import parser
-        import pandas as pd
 
-        logging.info(f"Adding report v{report['config_version']} to DB")
         # Check if report exists by hash
         report_exists = (
             session.query(Report)
@@ -130,16 +115,22 @@ def upload_report(db_url, report, overwrite=False):
                 )
                 .first()
             )
-            if report_exists_older:
+            if force:
                 logging.warning(
-                    f"Since existing report {report_exists.report_id} is older, it will be overwritten."
+                    f"Force overwriting report {report_exists.report_id}."
                 )
                 delete_report(session, report_exists.report_id)
             else:
-                logging.warning(
-                    f"Since existing report {report_exists.report_id} is newer, skipping current report."
-                )
-                return None
+                if report_exists_older:
+                    logging.warning(
+                        f"Overwriting existing report {report_exists.report_id}, since it is older."
+                    )
+                    delete_report(session, report_exists.report_id)
+                else:
+                    logging.warning(
+                        f"Keeping existing report {report_exists.report_id}, since it is newer."
+                    )
+                    return None
 
         new_report = Report(
             report_hash=report["config_report_hash"],
@@ -183,7 +174,7 @@ def upload_report(db_url, report, overwrite=False):
                 # Check if sample exists
                 report_sample = (
                     session.query(Sample)
-                    .filter(Sample.sample_name == sample_key)
+                    .filter(Sample.sample_name == sample_key, Sample.report_id == report_id)
                     .first()
                 )
                 if report_sample:
@@ -298,7 +289,9 @@ def upload_report(db_url, report, overwrite=False):
                         data_key = str(cat_data["name"])
                         category = (
                             session.query(PlotCategory)
-                            .filter(PlotCategory.category_name == data_key)
+                            .filter(PlotCategory.report_id == report_id,
+                                    PlotCategory.config_id == plot_config_id,
+                                    PlotCategory.category_name == data_key)
                             .first()
                         )
                         data = json.dumps(
@@ -334,7 +327,7 @@ def upload_report(db_url, report, overwrite=False):
                         ):
                             sample = (
                                 session.query(Sample)
-                                .filter(Sample.sample_name == sname)
+                                .filter(Sample.sample_name == sname, Sample.report_id == report_id)
                                 .first()
                             )
                             if sample:
@@ -373,7 +366,9 @@ def upload_report(db_url, report, overwrite=False):
 
                         category = (
                             session.query(PlotCategory)
-                            .filter(PlotCategory.category_name == data_key)
+                            .filter(PlotCategory.report_id == report_id,
+                                    PlotCategory.config_id == plot_config_id,
+                                    PlotCategory.category_name == data_key)
                             .first()
                         )
                         data = json.dumps(
@@ -397,16 +392,14 @@ def upload_report(db_url, report, overwrite=False):
                         sample_name = line_data["name"]
                         sample = (
                             session.query(Sample)
-                            .filter(Sample.sample_name == sample_name)
+                            .filter(Sample.sample_name == sample_name, Sample.report_id == report_id)
                             .first()
                         )
                         if sample:
                             logging.debug(f"Sample {sample_name} already exists in DB")
                         else:
                             logging.debug(f"Adding sample {sample_name} to DB")
-                            sample = Sample(
-                                sample_name=sample_name, report_id=report_id
-                            )
+                            sample = Sample(sample_name=sample_name, report_id=report_id)
                             session.add(sample)
                             session.commit()
                         sample_id = sample.sample_id
