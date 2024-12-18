@@ -126,7 +126,7 @@ module_order:
       path_filters:
         - '*/fastqc_trim/*'
 
-  - adapterRemoval
+  - adapterremoval
 
   - bbmap:
       name: 'BBDuk'
