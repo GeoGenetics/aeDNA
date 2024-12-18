@@ -14,17 +14,17 @@ reads:
   trim:
     activate: true
     tool: adapterremoval
-    params: "--trimns --maxns 20 --trimqualities --minquality 5 --minlength 30"
+    params: "--minlength 30"
 
   # Ignored for SE
   collapse:
     activate: true
-    params: "--minalignmentlength 11 --collapse-conservatively"
+    params: "--collapse-conservatively"
 
   extension:
     activate: false
     k: 17
-    params: "mode=extend ibb=f prefilter=0 el=100 er=100 overwrite=true trimends=9 ecc=t ecco=f conservative=t ignorebadquality"
+    params: "ibb=f prefilter=0 el=100 er=100 overwrite=true trimends=9 ecc=t ecco=f conservative=t ignorebadquality"
 
   derep:
     activate: true
@@ -51,7 +51,7 @@ ref:
 
 align:
   map:
-    tool: bwa_aln
+    tool: bowtie2
     params: "-k 1000 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp '1,1' --rdg '0,1' --rfg '0,1' --score-min 'L,0,-0.1' --no-unal"
 
   mark_duplicates:
@@ -92,5 +92,5 @@ metadmg:
     params: "--nopt 10 --nbootstrap 20 --showfits 2"
 
 report:
-  multiqc: "--verbose --cl-config 'custom_logo: /maps/projects/caeg/data/resources/Lundbeck_logo.png' --cl-config 'custom_logo_title: Center for Ancient Environmental Genomics' --cl-config 'custom_logo_url: https://globe.ku.dk/research/caeg/'"
+  multiqc: "--verbose --cl-config 'custom_logo: /projects/caeg/data/resources/KU_long.png' --cl-config 'custom_logo_title: CAEG - Center for Ancient Environmental Genomics' --cl-config 'custom_logo_url: https://globe.ku.dk/research/caeg/'"
   multiqc_db_url: ""
