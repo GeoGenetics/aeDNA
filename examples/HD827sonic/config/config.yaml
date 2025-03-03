@@ -23,8 +23,8 @@ reads:
 
   extension:
     activate: false
-    k: 17
-    params: "ibb=f prefilter=0 el=100 er=100 overwrite=true trimends=9 ecc=t ecco=f conservative=t ignorebadquality"
+    k: 16
+    params: "ibb=t prefilter=0 el=100 er=100 ecc=f ecco=f ignorebadquality extendrollback=0"
 
   derep:
     activate: true
@@ -41,27 +41,59 @@ reads:
 ### ALIGN ###
 #############
 ref:
-  refseq_invertebrate:
-    n_chunks: 3
-    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/invertebrate/invert.{n_chunk}"
-  refseq_mitochondrion:
-    bt2l: False
-    n_chunks: 1
-    path: "/projects/caeg/data/db/mikkels/refseq_30Aug2022/mitochondrion/mitochondrion.fa"
-
-align:
-  map:
-    tool: bowtie2
-    params: "-k 1000 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp '1,1' --rdg '0,1' --rfg '0,1' --score-min 'L,0,-0.1' --no-unal"
-
-  mark_duplicates:
-    activate: false
-    tool: markdup
-    params: "-d 2500"
-
-  calmd:
-    activate: false
-    params: "-e -E"
+  wgs_eukaryota:
+    n_shards: 250
+    path: "/datasets/caeg_dataset/references/ncbi/20250205/data/wgs_eukaryota.{n_shard}.fas.gz"
+    map: &map_bowtie2_bt2l
+      tool: bowtie2
+      params: "-k 1000 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
+      bt2l: True
+    acc2taxid: /datasets/caeg_dataset/references/ncbi/20250205/wgs_eukaryota.acc2taxid.gz
+  phylo_norway:
+    n_shards: 10
+    path: "/datasets/caeg_dataset/references/phylo_norway/20250127/results/shard.{n_shard}-of-10"
+    map:
+      <<: *map_bowtie2_bt2l
+    acc2taxid: /datasets/caeg_dataset/references/phylo_norway/20250127/phylo_norway.acc2taxid.gz
+  core_nt:
+    n_shards: 1
+    path: "/datasets/caeg_dataset/references/ncbi/20250205/data/core_nt.fas.gz"
+    map:
+      <<: *map_bowtie2_bt2l
+    acc2taxid: /datasets/caeg_dataset/references/ncbi/20250205/core_nt.acc2taxid.gz
+  refseq_mitoch:
+    n_shards: 1
+    path: "/datasets/caeg_dataset/references/ncbi/20250205/data/refseq_mitochondrion.genomic.fas.gz"
+    map:
+      <<: *map_bowtie2_bt2l
+      bt2l: False
+    acc2taxid: /datasets/caeg_dataset/references/ncbi/20250205/refseq_mitochondrion.genomic.acc2taxid.gz
+  refseq_plastid:
+    n_shards: 1
+    path: "/datasets/caeg_dataset/references/ncbi/20250205/data/refseq_plastid.genomic.fas.gz"
+    map:
+      <<: *map_bowtie2_bt2l
+      bt2l: False
+    acc2taxid: /datasets/caeg_dataset/references/ncbi/20250205/refseq_plastid.genomic.acc2taxid.gz
+  refseq_archaea:
+    n_shards: 1
+    path: "/datasets/caeg_dataset/references/ncbi/20250205/data/refseq_archaea.genomic.fas.gz"
+    map:
+      <<: *map_bowtie2_bt2l
+    acc2taxid: /datasets/caeg_dataset/references/ncbi/20250205/refseq_archaea.genomic.acc2taxid.gz
+  refseq_bacteria:
+    n_shards: 33
+    path: "/datasets/caeg_dataset/references/ncbi/20250205/data/refseq_bacteria.genomic.{n_shard}.fas.gz"
+    map:
+      <<: *map_bowtie2_bt2l
+    acc2taxid: /datasets/caeg_dataset/references/ncbi/20250205/refseq_bacteria.genomic.acc2taxid.gz
+  refseq_viral:
+    n_shards: 1
+    path: "/datasets/caeg_dataset/references/ncbi/20250205/data/refseq_viral.genomic.fas.gz"
+    map:
+      <<: *map_bowtie2_bt2l
+      bt2l: False
+    acc2taxid: /datasets/caeg_dataset/references/ncbi/20250205/refseq_viral.genomic.acc2taxid.gz
 
 bam_filter:
   reassign:
@@ -77,16 +109,15 @@ bam_filter:
     params: "--lca-rank genus"
 
 taxonomy:
-  nodes: /projects/caeg/data/db/aeDNA-refs/resources/20230825/ncbi/taxonomy/nodes.dmp
-  names: /projects/caeg/data/db/aeDNA-refs/resources/20230825/ncbi/taxonomy/names.dmp
-  acc2taxid: /projects/caeg/data/db/mikkels/combined_accession2taxid_20221112.gz
+  nodes: /datasets/caeg_dataset/taxonomy/20250210/nodes.dmp
+  names: /datasets/caeg_dataset/taxonomy/20250210/names.dmp
 
 metadmg:
   damage:
-    params: "--min_length 30 --print_length 30"
+    params: "--min_length 30 --print_length 15"
 
   lca:
-    params: "--weight_type 1 --fix_ncbi 0 --sim_score_low 0.95 --how_many 30"
+    params: "--fix_ncbi 0 --sim_score_low 0.95 --how_many 15"
 
   dfit:
     params: "--nopt 10 --nbootstrap 20 --showfits 2"
