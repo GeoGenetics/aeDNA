@@ -1,26 +1,26 @@
 snakemake.utils.min_version("8.11.2")
 
 # Define wrapper versions
-wrapper_ver = "v4.7.0"
+wrapper_ver = "v5.8.3"
 
 # Load modules
 module workflow_trim:
     snakefile:
-        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.5.0")
+        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.5.1")
     config:
         config
 use rule * from workflow_trim as trim_*
 
 module workflow_derep:
     snakefile:
-        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.4.6")
+        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.4.9")
     config:
         config
 use rule * from workflow_derep as derep_*
 
 module workflow_taxon:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.7.4")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.8.0")
     config:
         config
 use rule * from workflow_taxon as taxon_*
@@ -29,6 +29,12 @@ use rule * from workflow_taxon as taxon_*
 
 include: "rules/utils.smk"
 include: "rules/setup.smk"
+
+onsuccess:
+    print("aeDNA workflow finished successfully!")
+
+onerror:
+    print("aeDNA workflow finished with an error!")
 
 
 
@@ -45,11 +51,12 @@ from snakemake.logging import logger
 base_dir = Path(workflow.basedir).resolve(strict=True)
 repo = git.Repo(base_dir.parent)
 logger.info(f"Snakemake version: {snakemake.common.__version__}")
+tag_recent = [[tag.name, commit.hexsha] for commit in repo.iter_commits() for tag in repo.tags if commit.hexsha == tag.commit.hexsha][0]
 logger.info("Git commit: {commit_hash} [{tag_flag}{commit_tag}] ({commit_time})".format(
         commit_hash = repo.head.commit.hexsha,
         commit_time = repo.head.commit.committed_datetime.strftime("%Y-%m-%d %H:%M:%S"),
-        tag_flag = next(("" for tag in repo.tags if tag.commit == repo.head.commit), ">"),
-        commit_tag = repo.git.tag(l=True, sort="authordate").split("\n")[-1],
+        tag_flag = "" if tag_recent[1] == repo.head.commit.hexsha else ">",
+        commit_tag = tag_recent[0],
 ))
 logger.info("Run started: {time} @ {host} ({user})".format(time = str(datetime.datetime.now()), host = socket.gethostname(), user = pwd.getpwuid(os.getuid())[0]))
 logger.info(f"Workflow base dir: {base_dir}")
