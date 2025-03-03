@@ -10,19 +10,18 @@ import pandas as pd
 from pathlib import Path
 
 
-
 def gzip_n_lines(in_gzip):
     with gzip.open(in_gzip, "rb") as f:
         for i, l in enumerate(f):
             pass
-    return i+1
-
+    return i + 1
 
 
 # Default adapters
-adapters = {"ss": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA,GGAAGAGCGTCGTGTAGGGAAAGAGTGT",
-            "ds": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA,AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"}
-
+adapters = {
+    "ss": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA,GGAAGAGCGTCGTGTAGGGAAAGAGTGT",
+    "ds": "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA,AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT",
+}
 
 
 # Parse command-line arguments
@@ -95,7 +94,7 @@ parser.add_argument(
 parser.add_argument(
     "--out-path",
     action="store",
-    default="{library[0]}{library[1]}{library[2]}/{library[3]}{library[4]}{library[5]}/{library[6]}{library[7]}{library[8]}/{library}/{date:%Y%m%d}_{flowcell}/config",
+    default="{library[0]}{library[1]}{library[2]}/{library[3]}{library[4]}{library[5]}/{library[6]}{library[7]}{library[8]}/{library}/{date:%Y%m%d}_{flowcell}/{workflow_ver}/{extra_file_md5}/config",
     help="Output folder structure.",
 )
 parser.add_argument(
@@ -133,7 +132,7 @@ if not args.fq_files:
 print(f"# {args}")
 
 
-# Adding metadata to extra
+# Add extra metadata
 if args.library_type and np.isnan(args.adapters):
     args.adapters = adapters.get(args.library_type, np.nan)
 for key in ["library_type", "adapters"]:
@@ -257,6 +256,29 @@ wildcards = list(
 )
 logging.debug(f"Wildcards: {wildcards}")
 
+
+# Add extra_file_md5 (MD5 hash of extra file), if present in out_path
+if args.extra_file.exists() and "extra_file_md5" in wildcards:
+    import hashlib
+
+    units["extra_file_md5"] = hashlib.md5(
+        open(args.extra_file, "rb").read()
+    ).hexdigest()
+
+# Add workflow_ver (current workflow version), if present in out_path
+if "workflow_ver" in wildcards:
+    import git
+
+    repo = git.Repo(Path(__file__).resolve(strict=True).parent)
+    tag_recent = [
+        [tag.name, commit.hexsha]
+        for commit in repo.iter_commits()
+        for tag in repo.tags
+        if commit.hexsha == tag.commit.hexsha
+    ][0]
+    units["workflow_ver"] = tag_recent[0]
+
+
 datasets = list()
 if wildcards:
     for keys, units in units.groupby(wildcards, group_keys=True):
@@ -267,7 +289,15 @@ if wildcards:
         logging.debug(units)
         # Create output path
         out_path = Path(args.out_path.format(**name))
-        datasets.append((out_path, samples[samples["sample"].isin(sample)], units))
+        datasets.append(
+            (
+                out_path,
+                samples[samples["sample"].isin(sample)],
+                units.drop(
+                    ["extra_file_md5", "workflow_ver"], axis=1, errors="ignore"
+                ),
+            )
+        )
 else:
     # Create output path
     out_path = Path(args.out_path)
@@ -275,9 +305,14 @@ else:
 
 
 for out_path, sample, units in sorted(datasets):
-    file_sizes_kb = [round(Path(data.format(Read=1)).stat().st_size / 1024, 1) for data in units["data"]]
+    file_sizes_kb = [
+        round(Path(data.format(Read=1)).stat().st_size / 1024, 1)
+        for data in units["data"]
+    ]
     if any(file_size_kb < args.min_file_size for file_size_kb in file_sizes_kb):
-        total_reads = [int(gzip_n_lines(data.format(Read=1))/4) for data in units["data"]]
+        total_reads = [
+            int(gzip_n_lines(data.format(Read=1)) / 4) for data in units["data"]
+        ]
         print(
             f"{out_path.parent}\t# Total reads: {total_reads}; File size (KiB): {file_sizes_kb};"
         )
