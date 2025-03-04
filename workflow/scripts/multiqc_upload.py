@@ -119,6 +119,7 @@ def main():
         # Deleting DB
         if args.db_delete:
             logging.warning(f"Deleting DB {engine.url}!")
+            drop_database(engine.url)
             exit(0)
     else:
         logging.info(f"DB {engine.url} does not exist.")
