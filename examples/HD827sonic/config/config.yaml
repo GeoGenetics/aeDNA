@@ -14,7 +14,7 @@ reads:
   trim:
     activate: true
     tool: adapterremoval
-    params: "--minlength 30"
+    params: "--trimns --maxns 10 --trimqualities --minlength 30"
 
   # Ignored for SE
   collapse:
