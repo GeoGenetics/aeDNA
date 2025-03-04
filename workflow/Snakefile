@@ -113,7 +113,7 @@ rule multiqc_trim_upload:
         mem = lambda w, attempt: f"{1 * attempt} GiB",
         runtime = lambda w, attempt: f"{30 * attempt} m",
     shell:
-        "python {base_dir}/scripts/multiqc_upload.py --json {input.json} --db-url {params.db_url} --log-level INFO 2> {log}"
+        "python {base_dir}/scripts/multiqc_upload.py --db-upload {input.json} --db-url {params.db_url} --log-level INFO 2> {log}"
 
 rule target_trim:
     input:
