@@ -110,8 +110,8 @@ def upload_report(engine, report, force=False):
                 session.query(ReportMeta)
                 .filter(
                     ReportMeta.report_id == report_exists.report_id,
-                    ReportMeta.report_meta_key == "config_creation_date",
-                    ReportMeta.report_meta_value < report["config_creation_date"],
+                    ReportMeta.report_meta_key == "report_creation_date",
+                    ReportMeta.report_meta_value < report["report_creation_date"],
                 )
                 .first()
             )
@@ -134,7 +134,7 @@ def upload_report(engine, report, force=False):
 
         new_report = Report(
             report_hash=report["config_report_hash"],
-            created_at=parser.parse(report["config_creation_date"]),
+            created_at=parser.parse(report["report_creation_date"]),
         )
         session.add(new_report)
         session.commit()

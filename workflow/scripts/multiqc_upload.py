@@ -22,7 +22,7 @@ def load_multiqc(json_path):
         from hashlib import md5
 
         data = copy.deepcopy(d)
-        data.pop("config_creation_date")
+        data.pop("report_creation_date")
         data_string = json.dumps(data, sort_keys=True).encode("utf-8")
         md5er = md5()
         md5er.update(data_string)
@@ -34,16 +34,21 @@ def load_multiqc(json_path):
 
         with ZipFile(json_path) as zfh:
             with zfh.open("multiqc_data.json") as fh:
-                parsed = json.load(fh)
+                report = json.load(fh)
     elif json_path.suffix.endswith(".json"):
         with open(json_path, "r") as fh:
-            parsed = json.load(fh)
+            report = json.load(fh)
 
-    parsed["config_report_hash"] = generate_hash(parsed)
-    if not parsed.get("config_output_dir"):
-        parsed["config_output_dir"] = json_path.absolute().parent
-    logging.debug(parsed)
-    return parsed
+    # Ensure key is consistent
+    if "config_creation_date" in report:
+        report["report_creation_date"] = report.pop("config_creation_date")
+    # Add report hash
+    report["config_report_hash"] = generate_hash(report)
+    # Add report output dir
+    if not report.get("config_output_dir"):
+        report["config_output_dir"] = json_path.absolute().parent
+    logging.debug(report)
+    return report
 
 
 ############
