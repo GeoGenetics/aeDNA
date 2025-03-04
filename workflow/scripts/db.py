@@ -409,7 +409,7 @@ def upload_report(engine, report, force=False):
                             config_id=plot_config_id,
                             sample_id=sample_id,
                             plot_category_id=plot_category_id,
-                            data=json.dumps(actual_data),
+                            data=json.dumps(line_data['pairs']),
                         )
                         session.add(new_dataset_row)
                         session.commit()
