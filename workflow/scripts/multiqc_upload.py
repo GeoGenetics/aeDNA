@@ -39,9 +39,6 @@ def load_multiqc(json_path):
         with open(json_path, "r") as fh:
             report = json.load(fh)
 
-    # Ensure key is consistent
-    if "config_creation_date" in report:
-        report["report_creation_date"] = report.pop("config_creation_date")
     # Add report hash
     report["config_report_hash"] = generate_hash(report)
     # Add report output dir
@@ -106,17 +103,15 @@ def main():
     )
     args = parser.parse_args()
 
-
     # LOG
     logging.getLogger().setLevel(args.log_level.upper())
     logging.debug(args)
 
-
     # Create SQLAlchemy engine
     from sqlalchemy import create_engine
     from sqlalchemy_utils import database_exists, create_database, drop_database
-    engine = create_engine(args.db_url)
 
+    engine = create_engine(args.db_url)
 
     # Checking if DB exists
     if database_exists(engine.url):
@@ -134,16 +129,15 @@ def main():
             create_database(engine.url)
             exit(0)
 
-
     for file_upload in args.db_upload:
         # Load MultiQC JSON files
         logging.info(f"Reading file {file_upload}")
         report = load_multiqc(file_upload)
         logging.debug(report)
 
-
         # Upload to DB
         from db import upload_report
+
         logging.info(f"Uploading report v{report['config_version']} to DB...")
         upload_report(engine, report, args.force)
 
