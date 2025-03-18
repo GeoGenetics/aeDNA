@@ -34,8 +34,8 @@ parser.add_argument(
     "-i",
     "--fq-files",
     action="store",
-    nargs="*",
-    help="Regex to extract sample and library identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
+    nargs="+",
+    help="List of FASTQ files",
 )
 parser.add_argument(
     "-r",
@@ -48,7 +48,7 @@ parser.add_argument(
     "--min-file-size",
     action="store",
     type=int,
-    default=20,
+    default=100,
     help="Minimum file size (KiB) for detailed file info.",
 )
 parser.add_argument(
@@ -111,6 +111,12 @@ parser.add_argument(
     help=argparse.SUPPRESS,
 )
 parser.add_argument(
+    "--out-stats",
+    action="store",
+    type=Path,
+    help="File path to stats file.",
+)
+parser.add_argument(
     "-l",
     "--loglevel",
     action="store",
@@ -129,7 +135,6 @@ args = parser.parse_args()
 # If not FASTQ files, read from STDIN
 if not args.fq_files:
     args.fq_files = [fq_file.strip() for fq_file in sys.stdin.readlines()]
-print(f"# {args}")
 
 
 # Add extra metadata
@@ -234,6 +239,7 @@ units.sort_values(by=list(units.columns.values), inplace=True)
 # Fix invalid values
 fix_cols = units.columns.drop("data")
 units[fix_cols] = units[fix_cols].replace(args.rm_chars, value="", regex=True)
+logging.info(f"Units file has {units.shape[0]} rows and {units.shape[1]} columns.")
 logging.debug(units)
 logging.debug(units.dtypes)
 
@@ -245,6 +251,9 @@ samples["group"] = np.nan
 samples["condition"] = args.condition
 samples.drop_duplicates(inplace=True)
 samples.sort_values(by=["sample"], inplace=True)
+logging.info(
+    f"Samples file has {samples.shape[0]} rows and {samples.shape[1]} columns."
+)
 logging.debug(samples)
 
 
@@ -293,9 +302,7 @@ if wildcards:
             (
                 out_path,
                 samples[samples["sample"].isin(sample)],
-                units.drop(
-                    ["extra_file_md5", "workflow_ver"], axis=1, errors="ignore"
-                ),
+                units.drop(["extra_file_md5", "workflow_ver"], axis=1, errors="ignore"),
             )
         )
 else:
@@ -304,32 +311,45 @@ else:
     datasets.append((out_path, samples, units))
 
 
+out_stats = []
 for out_path, sample, units in sorted(datasets):
-    file_sizes_kb = [
+    logging.debug(f"Gathering stats for unit {units.data}")
+    r1_sizes_kb = [
         round(Path(data.format(Read=1)).stat().st_size / 1024, 1)
         for data in units["data"]
     ]
-    if any(file_size_kb < args.min_file_size for file_size_kb in file_sizes_kb):
+    r2_sizes_kb = [
+        round(Path(data.format(Read=2)).stat().st_size / 1024, 1)
+        for data in units["data"]
+    ]
+    total_reads = pd.NA
+    if any(r1_size_kb < args.min_file_size for r1_size_kb in r1_sizes_kb):
         total_reads = [
             int(gzip_n_lines(data.format(Read=1)) / 4) for data in units["data"]
         ]
-        print(
-            f"{out_path.parent}\t# Total reads: {total_reads}; File size (KiB): {file_sizes_kb};"
-        )
-    else:
-        print(out_path.parent)
+    out_stats.append([out_path.parent, total_reads, r1_sizes_kb, r2_sizes_kb])
+
+
+# Save stats to file
+if args.out_stats:
+    logging.info(f"Saving stats to file {args.out_stats}")
+    assert not args.out_stats.exists(), "Output stats file already exists!"
+    with open(args.out_stats, "a") as out_stat_fh:
+        out_stat_fh.write(f"# {args}\n")
+        pd.DataFrame(
+            out_stats, columns=["id", "total_reads", "R1_size_kb", "R2_size_kb"]
+        ).to_csv(out_stat_fh, sep="\t", index=False)
 
 
 # Check if groups exist
 datasets_exist = [out_path.is_dir() for out_path, _, _ in datasets]
 if any(datasets_exist):
-    logging.warning(f"Some of the datasets already exist ({datasets_exist})!")
+    logging.error(f"Some of the datasets already exist ({datasets_exist})!")
+    exit(-1)
 
 
 # Create files/fodlers
-if args.dryrun:
-    logging.debug("Dry-run finished successfully.")
-else:
+if not args.dryrun:
     for out_path, samples, units in datasets:
         if out_path.exists() and not args.force:
             logging.warning(f"Unit {out_path} already exists. Skipping!")
