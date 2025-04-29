@@ -41,7 +41,7 @@ parser.add_argument(
     "-r",
     "--regex",
     action="store",
-    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell>[AB]H[A-Z0-9]{8})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10})-(?P<subsample>[^_-]+)-(?P<archive>[^_]+)",
+    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell_pos>[AB])(?P<flowcell>H[A-Z0-9]{8})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10})-(?P<subsample>[^_-]+)-(?P<archive>[^_]+)_(?P<sample_n>S\d+)_(?P<lane>L\d{3})_(?P<read>R[12])_001",
     help="Regex to extract identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
@@ -85,16 +85,24 @@ parser.add_argument(
     help="Do not parse info from read header.",
 )
 parser.add_argument(
-    "--metadata-extra",
+    "--metadata-default",
     action="store",
     nargs="+",
-    default=["sample=Lib", "center=CAEG", "platform=ILLUMINA", "material=DNA"],
-    help="Extra metadata.",
+    default=[
+        "sample=Lib",
+        "material=DNA",
+        "flowcell_pos=X",
+        "flowcell=HXXXXXXXX",
+        "lane=L001",
+        "platform=ILLUMINA",
+        "center=CAEG",
+    ],
+    help="Default metadata. These values are used, in case the are not exracted from other sources (e.g. input regex or read name).",
 )
 parser.add_argument(
     "--out-path",
     action="store",
-    default="{library[0]}{library[1]}{library[2]}/{library[3]}{library[4]}{library[5]}/{library[6]}{library[7]}{library[8]}/{library}/{date:%Y%m%d}_{flowcell}/{workflow_ver}/{extra_file_md5}/config",
+    default="{library[0]}{library[1]}{library[2]}/{library[3]}{library[4]}{library[5]}/{library[6]}{library[7]}{library[8]}/{library}/{date:%Y%m%d}_{flowcell_pos}{flowcell}/{workflow_ver}/{extra_file_md5}/config",
     help="Output folder structure.",
 )
 parser.add_argument(
@@ -142,7 +150,7 @@ if args.library_type and np.isnan(args.adapters):
     args.adapters = adapters.get(args.library_type, np.nan)
 for key in ["library_type", "adapters"]:
     if value := getattr(args, key):
-        args.metadata_extra.append(f"{key}={value}")
+        args.metadata_default.append(f"{key}={value}")
 
 
 # Set logger
@@ -154,9 +162,8 @@ logging.info(f"Found {len(args.fq_files)} input files")
 units = pd.DataFrame()
 for fq_file in sorted(args.fq_files):
     row = dict()
-    fq_file = Path(fq_file.rstrip())
-    row["data"] = str(fq_file.resolve(strict=True))
-    # Get info from read IDs
+    row["data"] = str(Path(fq_file.rstrip()).resolve(strict=True))
+    # Get metadata from read IDs
     if not args.metadata_ignore_header:
         with gzip.open(row["data"], "rt") as gz:
             read_header = gz.readline().lstrip("@").rstrip().split(":")
@@ -164,46 +171,63 @@ for fq_file in sorted(args.fq_files):
                 row["machine"] = read_header[0]
                 row["run_n"] = read_header[1]
                 row["flowcell"] = read_header[2]
-    # Get info from file name
-    fq_prefix = (
-        fq_file.with_suffix("").with_suffix("")
-        if fq_file.suffix in [".gz", ".bz2"]
-        else fq_file.with_suffix("")
-    )
-    fq_prefix = str(fq_prefix).rsplit("_", 1)[0]
-    logging.debug(f"FQ prefix: {fq_prefix}")
-    row["read"] = fq_prefix.rsplit("_", 1)[1]
-    row["lane"] = fq_prefix.rsplit("_", 2)[1]
-    row["sample_n"] = fq_prefix.rsplit("_", 3)[1]
-    # Get info from regexp
-    matches = re.search(args.regex, fq_prefix.rsplit("_", 3)[0])
+    # Get metadata from regexp
+    matches = re.search(args.regex, row["data"])
     if not matches:
-        logging.warning(f"cannot match regex to sample {fq_prefix}. Skipping...")
+        logging.warning(f"cannot match regex to sample {row['data']}. Skipping...")
         continue
-    matches = matches.groupdict()
-    for key, value in matches.items():
-        logging.debug(f"adding {key} information: {value}")
-        if key in row:
-            assert value.endswith(
-                row[key]
-            ), f"{key} information does not match: {value} != {row[key]}."
+    for key, value in matches.groupdict().items():
+        # Remove leading zeros
+        if key == "run_n":
+            value = value.lstrip("0")
+        logging.debug(f"adding {key} metadata: {value}")
+        assert (
+            key not in row or row[key] == value
+        ), f"{key} metadata does not match: {value} != {row[key]}."
         row[key] = value
+    # Replace read info with generic placeholder
+    read_pos = matches.span("read")
+    row["data"] = row["data"][: read_pos[0]] + "R{Read}" + row["data"][read_pos[1] :]
 
     row = pd.DataFrame([row])
     logging.debug(row)
     units = pd.concat([units, row])
 
-
-# Add metadata
-units["seq_type"] = "SE"
-for metadata_extra in args.metadata_extra:
-    key, value = metadata_extra.split("=")
-    units[key] = value
+if units.shape[0] == 0:
+    logging.warning("No valid data files found!")
+    exit(0)
 
 
 # Format date column (if present)
 if "date" in units.columns.values:
     units["date"] = pd.to_datetime(units["date"])
+
+
+# Add metadata
+for metadata_default in args.metadata_default:
+    key, value = metadata_default.split("=")
+    if key not in units:
+        units[key] = value
+
+
+# Fix seq_type info
+units["seq_type"] = "SE"
+# Collapse PE libraries
+units = units.reset_index(drop=True).sort_values(by=["data"])
+units.loc[units["data"].duplicated(keep=False), "seq_type"] = "PE"
+del units["read"]
+# Fix data for SE
+mask = units["seq_type"].eq("SE")
+units.loc[mask, "data"] = units.loc[mask, "data"].str.replace(
+    "R{Read}", "R1", regex=False
+)
+units.drop_duplicates(inplace=True)
+
+
+# Fix invalid values
+fix_cols = units.columns.drop("data")
+units[fix_cols] = units[fix_cols].replace(args.rm_chars, value="", regex=True)
+
 
 # Reorder columns
 col_order = {
@@ -217,28 +241,8 @@ col_order = {
     "data": 8,
 }
 units = units[sorted(units.columns.values, key=lambda x: col_order.get(x, 999))]
-logging.debug(units)
-logging.debug(units.dtypes)
-if not units.shape[0]:
-    logging.warning("No valid data files found!")
-    exit(0)
-
-# Reset index and sort data
-units = units.reset_index(drop=True).sort_values(by=["data"])
-# Collapse PE libraries
-units["data"] = units["data"].str.replace(r"_R[12]_", "_R{Read}_", regex=True)
-units.loc[units["data"].duplicated(keep=False), "seq_type"] = "PE"
-del units["read"]
-# Fix data for SE
-mask = units["seq_type"].eq("SE")
-units.loc[mask, "data"] = units.loc[mask, "data"].str.replace(
-    "_R{Read}_", "_R1_", regex=False
-)
-units.drop_duplicates(inplace=True)
+# Sort rows
 units.sort_values(by=list(units.columns.values), inplace=True)
-# Fix invalid values
-fix_cols = units.columns.drop("data")
-units[fix_cols] = units[fix_cols].replace(args.rm_chars, value="", regex=True)
 logging.info(f"Units file has {units.shape[0]} rows and {units.shape[1]} columns.")
 logging.debug(units)
 logging.debug(units.dtypes)
@@ -344,17 +348,18 @@ if args.out_stats:
 # Check if groups exist
 datasets_exist = [out_path.is_dir() for out_path, _, _ in datasets]
 if any(datasets_exist):
-    logging.error(f"Some of the datasets already exist ({datasets_exist})!")
-    exit(-1)
+    if args.force:
+        logging.warning(
+            f"Some of the datasets already exist ({datasets_exist}). Overwritting!"
+        )
+    else:
+        logging.error(f"Some of the datasets already exist ({datasets_exist})!")
+        exit(-1)
 
 
-# Create files/fodlers
+# Create files/folders
 if not args.dryrun:
     for out_path, samples, units in datasets:
-        if out_path.exists() and not args.force:
-            logging.warning(f"Unit {out_path} already exists. Skipping!")
-            continue
-
         out_path.mkdir(parents=True, exist_ok=args.force)
         # Save samples.tsv file
         samples.to_csv(
