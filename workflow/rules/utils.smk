@@ -40,6 +40,7 @@ class switch(object):
 
 ### General
 
+
 def flatten(list_of_lists: List) -> List:
     """Flatten an irregular list of lists recursively
 
@@ -180,6 +181,7 @@ def check_cmd(
 
 ### Config
 
+
 def _item_or_sample(row, item):
     i = getattr(row, item, None)
     if pd.isnull(i):
@@ -195,6 +197,7 @@ def is_activated(xpath):
 
 
 ### Samples
+
 
 def get_rule_stats(rule_name):
     r = re.compile("^stats/")

@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  ################################################################################################
+  # Formatting: Check formatting using Pixi
+  ################################################################################################
+  format:
+    if: github.event.pull_request.merged != true || github.ref != 'refs/heads/main'
+    permissions:
+      contents: read # for actions/checkout to fetch code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pixi
+        uses: prefix-dev/setup-pixi@v0.8.3
+        with:
+          environments: format
+          pixi-version: v0.43.3
+          cache: false
+          locked: false
+
+      - name: Run snakefmt
+        run: pixi run -e format snakefmt workflow/Snakefile workflow/rules/*.smk --check --diff
+
+
+  ################################################################################################
+  # Testing: Run tests using Pixi
+  ################################################################################################
+  test:
+    if: github.event.pull_request.merged != true || github.ref != 'refs/heads/main'
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Pixi
+        uses: prefix-dev/setup-pixi@v0.8.3
+        with:
+          environments: test
+          pixi-version: v0.43.3
+          cache: false
+          locked: false
+
+      - name: Run examples
+        run: pixi run -e test env --chdir ./examples/ ./make_dags.sh
