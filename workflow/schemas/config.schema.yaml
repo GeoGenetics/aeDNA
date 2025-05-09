@@ -5,6 +5,24 @@ description: aeDNA workflow configuration file
 type: object
 properties:
 
+  samples:
+    type: string
+
+  units:
+    type: string
+
+  trim:
+    type: object
+
+  derep:
+    type: object
+
+  prefilter:
+    type: object
+
+  euk:
+    type: object
+
   report:
     type: object
     properties:
@@ -18,4 +36,8 @@ properties:
       - multiqc_db_url
 
 required:
+  - trim
+  - derep
+  - prefilter
+  - euk
   - report

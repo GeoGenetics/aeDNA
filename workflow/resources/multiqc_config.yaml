@@ -83,6 +83,13 @@ module_order:
       path_filters:
         - '*/low_complexity/*'
 
+  - fastqc:
+      name: 'FastQC (low complexity)'
+      anchor: 'low_complexity'
+      info: 'FastQC results after removing low complexity reads.'
+      path_filters:
+        - '*/fastqc/low_complexity/*'
+
   - bbmap:
       name: 'BBDuk'
       anchor: 'low_complexity'
@@ -97,13 +104,26 @@ module_order:
       path_filters:
         - '*/represent/grep/*'
 
+  - fastqc:
+      name: 'FastQC (represent. read)'
+      anchor: 'repres'
+      info: 'FastQC results for representative reads.'
+      path_filters:
+        - '*/fastqc/represent/grep/*'
+
   - nonpareil:
       name: 'nonpareil (dereplicated)'
       anchor: 'derep'
       info: 'nonpareil results for dereplicated reads.'
       path_filters:
-        - '*/derep/seqkit/*'
-        - '*/derep/vsearch/*'
+        - '*/derep/*'
+
+  - fastqc:
+      name: 'FastQC (dereplicated)'
+      anchor: 'derep'
+      info: 'FastQC results for dereplicated reads.'
+      path_filters:
+        - '*/fastqc/derep/*'
 
   - nonpareil:
       name: 'nonpareil (extension)'
@@ -112,19 +132,33 @@ module_order:
       path_filters:
         - '*/extend/tadpole/*'
 
+  - fastqc:
+      name: 'FastQC (extension)'
+      anchor: 'extension'
+      info: 'FastQC results AFTER read extension.'
+      path_filters:
+        - '*/fastqc/extend/tadpole/*'
+
   - nonpareil:
-      name: 'nonpareil'
-      anchor: 'initial'
-      info: 'nonpareil results for starting reads.'
+      name: 'nonpareil (merged lanes)'
+      anchor: 'merge_lanes'
+      info: 'nonpareil results for all reads after trimming and QC.'
       path_filters:
         - '*/merge_lanes/*'
+
+  - fastqc:
+      name: 'FastQC (merged lanes)'
+      anchor: 'merge_lanes'
+      info: 'FastQC results for all reads after trimming and QC.'
+      path_filters:
+        - '*/fastqc/merge_lanes/*'
 
   - fastqc:
       name: 'FastQC (trimmed)'
       anchor: 'trimmed'
       info: 'FastQC results AFTER adapter trimming and QC.'
       path_filters:
-        - '*/fastqc_trim/*'
+        - '*/fastqc/trim/*'
 
   - adapterremoval
 
@@ -144,7 +178,7 @@ module_order:
       anchor: 'raw'
       info: 'FastQC results BEFORE adapter trimming and QC.'
       path_filters:
-        - '*/fastqc_raw/*'
+        - '*/fastqc/raw/*'
 
 
 
