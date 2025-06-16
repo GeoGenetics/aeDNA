@@ -74,7 +74,25 @@ module_order:
       path_filters:
         - '*.metrics.txt'
 
-  - bowtie2
+  - bowtie2:
+      name: 'Bowtie2'
+      anchor: 'bowtie2'
+      path_filters:
+        - '*/shards/bowtie2/*'
+
+  - fastqc:
+      name: 'FastQC (prefilter)'
+      anchor: 'prefilter'
+      info: 'FastQC results after prefiltering.'
+      path_filters:
+        - '*/fastqc/prefilter/*'
+
+  - bowtie2:
+      name: 'Bowtie2 (prefilter)'
+      anchor: 'bowtie2_prefilter'
+      info: 'Bowtie2 results after prefiltering.'
+      path_filters:
+        - '*/prefilter_shards/bowtie2/*'
 
   - nonpareil:
       name: 'nonpareil (low complexity)'
