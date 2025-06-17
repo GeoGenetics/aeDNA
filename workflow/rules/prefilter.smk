@@ -2,7 +2,9 @@
 rule prefilter_reads_taxonomy:
     input:
         bam=rules.taxon_prefilter_align_merge.output.bam,
-        taxonomy=config["prefilter"]["ref"]["hires_organelles_viruses_smags"]["acc2taxid"],
+        taxonomy=config["prefilter"]["ref"]["hires_organelles_viruses_smags"][
+            "acc2taxid"
+        ],
     output:
         read_id=temp(
             "temp/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.read_ids.txt.gz"
@@ -72,10 +74,9 @@ rule prefilter_fastqc:
         "logs/reads/fastqc/prefilter/{sample}_{library}_{read_type_map}.log",
     benchmark:
         "benchmarks/reads/fastqc/prefilter/{sample}_{library}_{read_type_map}.jsonl"
-    threads: 2
+    threads: 4
     resources:
-        # Memory is hard-coded to 250M per thread (https://github.com/bcbio/bcbio-nextgen/issues/2989)
-        mem=lambda w, threads: f"{512* threads} MiB",
+        mem=lambda w, attempt: f"{5* attempt} GiB",
         runtime=lambda w, attempt: f"{1* attempt} h",
     wrapper:
         f"{wrapper_ver}/bio/fastqc"
