@@ -2,8 +2,7 @@
 rule prefilter_reads_taxonomy:
     input:
         bam=rules.taxon_prefilter_align_merge.output.bam,
-        taxonomy=Path(config["prefilter"]["taxonomy"]["names"]).parent.parent
-        / "hires-organelles-viruses-smags.acc2tax.gz",
+        taxonomy=config["prefilter"]["ref"]["hires_organelles_viruses_smags"]["acc2taxid"],
     output:
         read_id=temp(
             "temp/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.read_ids.txt.gz"
