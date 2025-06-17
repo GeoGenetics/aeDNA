@@ -32,10 +32,17 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument(
     "-i",
-    "--fq-files",
+    "--fq-folder",
     action="store",
-    nargs="+",
-    help="List of FASTQ files",
+    type=Path,
+    help="Folder with FASTQ files",
+)
+parser.add_argument(
+    "--fq-regex",
+    action="store",
+    type=str,
+    default="^(?!Undetermined).*.(fastq|fq).gz$",
+    help="Regex to filter FASTQ files in fq-folder",
 )
 parser.add_argument(
     "-r",
@@ -140,9 +147,21 @@ parser.add_argument(
     help="Dry run",
 )
 args = parser.parse_args()
-# If not FASTQ files, read from STDIN
-if not args.fq_files:
-    args.fq_files = [fq_file.strip() for fq_file in sys.stdin.readlines()]
+
+
+if args.fq_folder:
+    # Read all files from input folder
+    fq_files = args.fq_folder.glob("*.*")
+else:
+    # If no FASTQ folder, read from STDIN
+    fq_files = [Path(fq_file) for fq_file in sys.stdin.readlines()]
+
+# Apply regex filter to input files
+fq_files = [
+    fq_file
+    for fq_file in fq_files
+    if fq_file.is_file() and re.search(args.fq_regex, fq_file.name)
+]
 
 
 # Add extra metadata
@@ -162,7 +181,7 @@ logging.info(f"Found {len(args.fq_files)} input files")
 units = pd.DataFrame()
 for fq_file in sorted(args.fq_files):
     row = dict()
-    row["data"] = str(Path(fq_file.rstrip()).resolve(strict=True))
+    row["data"] = str(fq_file.resolve(strict=True))
     # Get metadata from read IDs
     if not args.metadata_ignore_header:
         with gzip.open(row["data"], "rt") as gz:

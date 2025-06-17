@@ -1,8 +1,11 @@
 from snakemake.utils import validate
 
 
-# Get basedir
-base_dir = Path(workflow.basedir)
+def _item_or_sample(row, item):
+    i = getattr(row, item, None)
+    if pd.isnull(i):
+        return getattr(row, "sample")
+    return i
 
 
 ########################
@@ -10,7 +13,7 @@ base_dir = Path(workflow.basedir)
 ########################
 
 ### config.yaml
-validate(config, schema=base_dir / "schemas/config.schema.yaml")
+validate(config, schema=Path(workflow.basedir) / "schemas/config.schema.yaml")
 
 
 ### samples.yaml
@@ -25,7 +28,7 @@ samples = (
 samples["group"] = [_item_or_sample(row, "group") for row in samples.itertuples()]
 # If no "alias" provided, set it the same as "sample"
 samples["alias"] = [_item_or_sample(row, "alias") for row in samples.itertuples()]
-validate(samples, schema=base_dir / "schemas/samples.schema.yaml")
+validate(samples, schema=Path(workflow.basedir) / "schemas/samples.schema.yaml")
 
 
 ### units.yaml
@@ -49,7 +52,7 @@ units = (
     .sort_index()
 )
 # Validate unit data
-validate(units, schema=base_dir / "schemas/units.schema.yaml")
+validate(units, schema=Path(workflow.basedir) / "schemas/units.schema.yaml")
 # Check for duplicated data sources
 units_dup = units.index.duplicated()
 if units_dup.any():
