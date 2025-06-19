@@ -12,7 +12,7 @@ include: "rules/setup.smk"
 # Load modules
 module workflow_trim:
     snakefile:
-        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.5.2")
+        github("GeoGenetics/ngs-trim", path="workflow/Snakefile", tag="v0.5.3")
     config:
         {"units": units, "cfg": config["trim"]}
 
@@ -22,7 +22,7 @@ use rule * from workflow_trim as trim_*
 
 module workflow_derep:
     snakefile:
-        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.4.10")
+        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.4.11")
     config:
         {"units": units, "cfg": config["derep"]}
 
@@ -37,7 +37,7 @@ from itertools import product
 
 module workflow_taxon_prefilter:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.0")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.1")
     config:
         {"units": units, "cfg": config["prefilter"]}
     replace_prefix:
@@ -49,7 +49,7 @@ use rule * from workflow_taxon_prefilter as taxon_prefilter_*
 
 module workflow_taxon:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.0")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.1")
     config:
         {"units": units, "cfg": config["euk"]}
 
