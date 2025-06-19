@@ -2,9 +2,11 @@
 rule prefilter_reads_taxonomy:
     input:
         bam=rules.taxon_prefilter_align_merge.output.bam,
-        taxonomy=config["prefilter"]["ref"]["hires_organelles_viruses_smags"][
-            "acc2taxid"
-        ],
+        taxonomy=Path(
+            config["prefilter"]["ref"]["hires_organelles_viruses_smags"]["acc2taxid"]
+        )
+        .with_suffix("")
+        .with_suffix(".acc2tax.gz"),
     output:
         read_id=temp(
             "temp/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.read_ids.txt.gz"
@@ -20,7 +22,7 @@ rule prefilter_reads_taxonomy:
         Path(workflow.basedir) / "envs" / "get_reads_taxonomy.yaml"
     threads: 8
     resources:
-        mem=lambda w, attempt: f"{20* attempt} GiB",
+        mem=lambda w, attempt: f"{100* attempt} GiB",
         runtime=lambda w, attempt: f"{2* attempt} h",
     shell:
         "getRTax --bam {input.bam} --taxonomy-file {input.taxonomy} {params.extra} --prefix {params.out_prefix} > {log} 2>&1"
