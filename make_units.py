@@ -154,7 +154,11 @@ if args.fq_folder:
     fq_files = args.fq_folder.glob("*.*")
 else:
     # If no FASTQ folder, read from STDIN
-    fq_files = [Path(fq_file) for fq_file in sys.stdin.readlines()]
+    fq_files = [
+        Path(fq_file.strip())
+        for fq_file in sys.stdin.readlines()
+        if not fq_file.startswith("#")
+    ]
 
 # Apply regex filter to input files
 fq_files = [
@@ -175,11 +179,11 @@ for key in ["library_type", "adapters"]:
 # Set logger
 loglevel = getattr(logging, args.loglevel.upper(), None)
 logging.basicConfig(encoding="utf-8", level=loglevel)
-logging.info(f"Found {len(args.fq_files)} input files")
+logging.info(f"Found {len(fq_files)} input files")
 
 
 units = pd.DataFrame()
-for fq_file in sorted(args.fq_files):
+for fq_file in sorted(fq_files):
     row = dict()
     row["data"] = str(fq_file.resolve(strict=True))
     # Get metadata from read IDs
