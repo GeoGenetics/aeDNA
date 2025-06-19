@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/GeoGenetics/aeDNA/compare/v1.0.1...v1.0.2) (2025-06-19)
+
+
+### Bug Fixes
+
+* taxonomy and bump ngs-taxon module ([#5](https://github.com/GeoGenetics/aeDNA/issues/5)) ([35d7692](https://github.com/GeoGenetics/aeDNA/commit/35d7692ff9ed0bdd5bf3f519f7eadcd84c760707))
+
 ## [1.0.1](https://github.com/GeoGenetics/aeDNA/compare/v1.0.0...v1.0.1) (2025-06-19)
 
 
