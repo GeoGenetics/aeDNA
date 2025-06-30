@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 # Allowed status; order matters!
-status_choices = ["RUNNING", "PENDING", "OK", "ERROR", "NOT_RUN"]
+status_choices = ["RUNNING", "PENDING", "OK", "ERROR", "ERROR_SBATCH", "NOT_RUN", "LOCKED"]
 
 
 # Parse command-line arguments
@@ -130,6 +130,8 @@ def get_snakemake_status(log, n_lines=10):
                 for line in log_fh.read().splitlines()[-n_lines:]
                 if line.startswith("aeDNA workflow finished")
                 or line.startswith("Cleaning up log files older than ")
+                or line.startswith("Directory cannot be locked")
+                or line.startswith("sbatch: error:")
             ]
             return tail.pop(0) if len(tail) > 0 else pd.NA
     else:
@@ -147,12 +149,20 @@ logging.info("Filling in missing status")
 df.loc[df.snakemake_log.isna(), "snakemake_status"] = "NOT_RUN"
 df.loc[
     df.snakemake_status.eq("aeDNA workflow finished successfully!"),
-    ["snakemake_status", "status"],
+    "snakemake_status",
 ] = "OK"
 df.loc[
     df.snakemake_status.eq("aeDNA workflow finished with an error!"),
-    ["snakemake_status", "status"],
+    "snakemake_status",
 ] = "ERROR"
+df.loc[
+    df.snakemake_status.str.startswith("sbatch: error: ", na = False),
+    ["snakemake_status", "status"],
+] = "ERROR_SBATCH"
+df.loc[
+    df.snakemake_status.str.startswith("Directory cannot be locked", na = False),
+    "snakemake_status",
+] = "LOCKED"
 df.loc[
     df.snakemake_status.str.startswith("Cleaning up log files older than ", na=False),
     "snakemake_status",
