@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/GeoGenetics/aeDNA/compare/v1.0.2...v1.0.3) (2025-06-30)
+
+
+### Bug Fixes
+
+* use extract reads ([#7](https://github.com/GeoGenetics/aeDNA/issues/7)) ([112fb31](https://github.com/GeoGenetics/aeDNA/commit/112fb31bc5b40df29b94e4516d5e45f894882b96))
+
 ## [1.0.2](https://github.com/GeoGenetics/aeDNA/compare/v1.0.1...v1.0.2) (2025-06-19)
 
 
