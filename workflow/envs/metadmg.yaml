@@ -1,7 +1,6 @@
 channels:
-  - genomewalker
   - conda-forge
   - bioconda
   - nodefaults
 dependencies:
-  - get-reads-taxonomy =0.0.3
+  - metadmg =0.4.1
