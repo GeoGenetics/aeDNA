@@ -2,30 +2,29 @@
 rule prefilter_reads_taxonomy:
     input:
         bam=rules.taxon_prefilter_align_merge.output.bam,
-        taxonomy=Path(
-            config["prefilter"]["ref"]["hires_organelles_viruses_smags"]["acc2taxid"]
-        )
-        .with_suffix("")
-        .with_suffix(".acc2tax.gz"),
+        names=rules.taxon_prefilter_metadmg_lca.input.names,
+        nodes=rules.taxon_prefilter_metadmg_lca.input.nodes,
+        acc2taxid=rules.taxon_prefilter_metadmg_lca.input.acc2taxid,
     output:
         read_id=temp(
-            "temp/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.read_ids.txt.gz"
+            "temp/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.read_ids"
         ),
     log:
         "logs/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.log",
     benchmark:
         "benchmarks/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.jsonl"
     params:
-        out_prefix=lambda w, output: output.read_id.removesuffix(".read_ids.txt.gz"),
-        extra="""--rank '{"domain":["d__Bacteria", "d__Archaea", "d__Viruses"]}' --only-read-ids --combine --unique""",
+        extra="-taxnames d__Bacteria,d__Archaea,d__Viruses -strict 1",
     conda:
-        Path(workflow.basedir) / "envs" / "get_reads_taxonomy.yaml"
-    threads: 8
+        urlunparse(
+            baseurl._replace(path=str(Path(baseurl.path) / "envs" / "metadmg.yaml"))
+        )
+    threads: 1
     resources:
-        mem=lambda w, attempt: f"{100* attempt} GiB",
-        runtime=lambda w, attempt: f"{2* attempt} h",
+        mem=lambda w, attempt: f"{1* attempt} GiB",
+        runtime=lambda w, attempt: f"{30* attempt} m",
     shell:
-        "getRTax --bam {input.bam} --taxonomy-file {input.taxonomy} {params.extra} --prefix {params.out_prefix} > {log} 2>&1"
+        "(extract_reads bytaxid -hts {input.bam} -names {input.names} -nodes {input.nodes} -acc2tax <(cat {input.acc2taxid}) {params.extra} -forcedump 1 -out - -type sam | grep -v '^@' | cut -f 1 | uniq > {output.read_id}) 2> {log}"
 
 
 rule prefilter_reads_extract:

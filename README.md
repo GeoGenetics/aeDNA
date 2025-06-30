@@ -14,25 +14,13 @@ This workflow combines several modules to build a workflow for ancient environme
 ## Requirements
 
 These workflows require:
-* `conda` / `mamba` / `micromamba`
-* `snakemake`
+* [pixi](https://www.pixi.sh)
+* [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
+* [snakemake](https://snakemake.github.io/)
 
 ## Install and configure Snakemake environment
 
-If you don't have the required packages (and cannot install them), `snakemake` [recommends](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) installing [mambaforge](https://mamba.readthedocs.io/en/latest/installation.html). If you are looking for a more lightweight solution, try `micromamba` (info [here](https://mamba.readthedocs.io/en/latest/installation.html#micromamba)):
-```
-mkdir micromamba/
-cd micromamba
-curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
-./bin/micromamba shell init --shell bash --prefix `pwd`
-```
-
-Independently of what you choose (`conda`, `mamba`, or `micromamba`), create an environment from the `environment.yaml` file in this repo, activate it (e.g. for `micromamba`) and, the first time you use it, set channel priority to `strict`:
-```
-micromamba create --name snakemake_env --file environment.yaml
-micromamba activate snakemake_env
-micromamba config set channel_priority strict
-```
+The easiet way to deploy `snakemake` is to [install pixi](https://pixi.sh/latest/installation/) and use the included environment.
 
 
 ## Usage
@@ -40,12 +28,13 @@ micromamba config set channel_priority strict
 #### Step 1: Install and configure workflow
 
 1. [Clone](https://help.github.com/en/articles/cloning-a-repository) this repository to your local system
+2. Test `pixi` environment: `pixi run snakemake --version`
 2. Configure workflow according to your needs via editing the file `config/config.yaml`.
-3. Add samples to analyze (to generate draft units, use the script `make_units.py`; NB: always manually check files before running workflow!):
+3. Add samples to analyze:
     * Add samples to `config/samples.tsv` (column `sample` is mandatory).
     * For each sample, add one or more sequencing units (runs, lanes, libraries or replicates) to `config/units.tsv`, as well as adapters used, and path to FASTQ files (if paired-end, use `R{Read}` to represent `R1/R2` files).
-
-Missing values can be specified by empty columns or by writing `NA`.
+    * Missing values can be specified by empty columns or by writing `NA`.
+    * To facilitate things, the helper script `make_units.py` is provided that, from a list of FASTQ files, generates a folder structure with all necessary files to run (NB: always manually check files before running workflow!).
 
 4. Define your `TOKEN`
 ```
@@ -56,17 +45,17 @@ export GITHUB_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 5. Test your configuration by performing a dry-run via:
 ```
-snakemake --configfile config/config.yaml --dry-run
+pixi run snakemake --configfile config/config.yaml --dry-run
 ```
 
 and confirm workflow analyses by checking the DAG:
 ```
-snakemake --configfile config/config.yaml --dag | dot -Tsvg > dag.svg
+pixi run snakemake --configfile config/config.yaml --dag | dot -Tsvg > dag.svg
 ```
 
 You can also create all needed `conda` environments beforehand:
 ```
-snakemake --configfile config/config.yaml --jobs 1 --conda-create-envs-only
+pixi run snakemake --configfile config/config.yaml --jobs 1 --conda-create-envs-only
 ```
 
 #### Step 3: Execute workflow
@@ -74,17 +63,17 @@ snakemake --configfile config/config.yaml --jobs 1 --conda-create-envs-only
 
   6.1. locally via:
 ```
-snakemake --configfile config/config.yaml --use-conda --jobs $N
+pixi run snakemake --configfile config/config.yaml --jobs $N --software-deployment-method conda
 ```
 
   6.2. in a [SLURM](https://slurm.schedmd.com/overview.html) cluster environment via:
 ```
-snakemake --configfile config/config.yaml --use-conda --jobs $N --slurm
+pixi run snakemake --configfile config/config.yaml --jobs $N --software-deployment-method conda --executor slurm
 ```
 
 #### Step 4: Check results
 
 7. After successful execution, you can create a self-contained interactive HTML report:
 ```
-snakemake --configfile config/config.yaml --report report.html
+pixi run snakemake --configfile config/config.yaml --report report.html
 ```
