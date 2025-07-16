@@ -22,7 +22,7 @@ rule prefilter_reads_taxonomy:
     threads: 1
     resources:
         mem=lambda w, input, attempt: f"{2* attempt} GiB",
-        runtime=lambda w, input, attempt: f"{(0.06*input.size_gb+2)* attempt} h",
+        runtime=lambda w, input, attempt: f"{(0.06* input.size_gb+2)* attempt} h",
     shell:
         "(extract_reads bytaxid -hts {input.bam} -names {input.names} -nodes {input.nodes} -acc2tax <(cat {input.acc2taxid}) {params.extra} -strict 1 -forcedump 1 -out - -type sam | grep -v '^@' | cut -f 1 | uniq > {output.read_id}) 2> {log}"
 
