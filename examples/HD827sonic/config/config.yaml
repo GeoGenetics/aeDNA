@@ -62,7 +62,7 @@ prefilter:
 
   filter:
     saturated_reads:
-      activate: false
+      activate: true
       n_alns: 1000
 
   bam_filter:
