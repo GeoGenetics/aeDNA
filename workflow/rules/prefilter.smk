@@ -14,23 +14,48 @@ rule prefilter_reads_taxonomy:
     benchmark:
         "benchmarks/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.jsonl"
     params:
-        extra="-taxnames d__Bacteria,d__Archaea,d__Viruses -strict 1",
+        extra="-taxnames d__Bacteria,d__Archaea,d__Viruses",
     conda:
         urlunparse(
             baseurl._replace(path=str(Path(baseurl.path) / "envs" / "metadmg.yaml"))
         )
     threads: 1
     resources:
+        mem=lambda w, input, attempt: f"{2* attempt} GiB",
+        runtime=lambda w, input, attempt: f"{(0.06*input.size_gb+2)* attempt} h",
+    shell:
+        "(extract_reads bytaxid -hts {input.bam} -names {input.names} -nodes {input.nodes} -acc2tax <(cat {input.acc2taxid}) {params.extra} -strict 1 -forcedump 1 -out - -type sam | grep -v '^@' | cut -f 1 | uniq > {output.read_id}) 2> {log}"
+
+
+rule prefilter_reads_merge:
+    input:
+        taxonomy=rules.prefilter_reads_taxonomy.output.read_id,
+        saturated=rules.taxon_prefilter_shard_saturated_reads_filter.output.read_id,
+    output:
+        read_id=temp(
+            "temp/reads/prefilter/merge/{sample}_{library}_{read_type_map}.read_ids"
+        ),
+    log:
+        "logs/reads/prefilter/merge/{sample}_{library}_{read_type_map}.log",
+    benchmark:
+        "benchmarks/reads/prefilter/merge/{sample}_{library}_{read_type_map}.jsonl"
+    localrule: True
+    threads: 1
+    resources:
         mem=lambda w, attempt: f"{1* attempt} GiB",
         runtime=lambda w, attempt: f"{30* attempt} m",
     shell:
-        "(extract_reads bytaxid -hts {input.bam} -names {input.names} -nodes {input.nodes} -acc2tax <(cat {input.acc2taxid}) {params.extra} -forcedump 1 -out - -type sam | grep -v '^@' | cut -f 1 | uniq > {output.read_id}) 2> {log}"
+        "cat {input} > {output} 2> {log}"
 
 
 rule prefilter_reads_extract:
     input:
         fastq=workflow_taxon_prefilter.get_data,
-        pattern=rules.prefilter_reads_taxonomy.output.read_id,
+        pattern=branch(
+            is_activated("prefilter/filter/saturated_reads"),
+            then=rules.prefilter_reads_merge.output.read_id,
+            otherwise=rules.prefilter_reads_taxonomy.output.read_id,
+        ),
     output:
         fq="results/reads/prefilter/extract/{sample}_{library}_{read_type_map}.fastq.gz",
     log:
@@ -42,8 +67,8 @@ rule prefilter_reads_extract:
         extra="--invert-match --delete-matched",
     threads: 4
     resources:
-        mem=lambda w, attempt: f"{1* attempt} GiB",
-        runtime=lambda w, attempt: f"{30* attempt} m",
+        mem=lambda w, input, attempt: f"{(0.2* input.size_gb+5)* attempt} GiB",
+        runtime=lambda w, input, attempt: f"{(0.06* input.size_gb+0.5)* attempt} h",
     wrapper:
         f"{wrapper_ver}/bio/seqkit"
 
