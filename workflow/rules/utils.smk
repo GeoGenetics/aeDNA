@@ -1,7 +1,7 @@
-
 #################
 ### FUNCTIONS ###
 #################
+
 
 def is_activated(xpath):
     c = config
