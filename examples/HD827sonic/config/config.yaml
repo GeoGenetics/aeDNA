@@ -48,7 +48,7 @@ prefilter:
       path: "/datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/hires-organelles-viruses-smags.{n_shard}.fas.gz"
       map:
         tool: bowtie2
-        params: "-k 1000 -N 1 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.08 --no-unal"
+        params: "-k 50 -N 1 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.08 --no-unal"
         bt2l: True
       acc2taxid: "/datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/taxonomy/hires-organelles-viruses-smags.acc2taxid.gz"
     human_genome:
@@ -56,14 +56,14 @@ prefilter:
       path: "/datasets/caeg_dataset/references/human_genome/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fas.gz"
       map:
         tool: bowtie2
-        params: "-k 1000 -N 0 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.08 --no-unal"
+        params: "-k 50 -N 0 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.08 --no-unal"
         bt2l: False
       acc2taxid: "/datasets/caeg_dataset/references/human_genome/GCF_000001405.40/taxonomy/hires-organelles-viruses-smags/GCF_000001405.40_GRCh38.p14_genomic.acc2taxid.gz"
 
   filter:
     saturated_reads:
       activate: true
-      n_alns: 1000
+      n_alns: 50
 
   bam_filter:
     reassign:
@@ -100,7 +100,7 @@ euk:
       path: "/datasets/caeg_dataset/references/ncbi/20250530/data/refseq_mitochondrion.genomic.fas.gz"
       map: &map_euk_bowtie2_bt2
         tool: bowtie2
-        params: "-k 1000 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
+        params: "-k 50 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
         bt2l: False
       acc2taxid: "/datasets/caeg_dataset/references/ncbi/20250530/taxonomy/ncbi/refseq_mitochondrion.genomic.acc2taxid.gz"
     refseq_plastid:
@@ -134,7 +134,7 @@ euk:
   filter:
     saturated_reads:
       activate: true
-      n_alns: 1000
+      n_alns: 50
 
   bam_filter:
     reassign:
