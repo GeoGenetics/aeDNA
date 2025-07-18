@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/GeoGenetics/aeDNA/compare/v1.0.4...v1.0.5) (2025-07-18)
+
+
+### Bug Fixes
+
+* Update modules due to resource typos ([#11](https://github.com/GeoGenetics/aeDNA/issues/11)) ([9ee694c](https://github.com/GeoGenetics/aeDNA/commit/9ee694caa6240af9f51d7a439cacddc310346396))
+
 ## [1.0.4](https://github.com/GeoGenetics/aeDNA/compare/v1.0.3...v1.0.4) (2025-07-18)
 
 
