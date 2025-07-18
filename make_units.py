@@ -26,23 +26,23 @@ adapters = {
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(
-    description="Generate `sample` and `unit` files from list of FASTQ files (on stdin).",
+    description="Generate `sample` and `unit` files from list of input files.",
     allow_abbrev=False,
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument(
     "-i",
-    "--fq-folder",
+    "--in-folder",
     action="store",
     type=Path,
-    help="Folder with FASTQ files",
+    help="Folder with input files",
 )
 parser.add_argument(
-    "--fq-regex",
+    "--in-regex",
     action="store",
     type=str,
-    default="^(?!Undetermined).*.(fastq|fq).gz$",
-    help="Regex to filter FASTQ files in fq-folder",
+    default="^(?!Undetermined).*.(sam|bam|fastq|fq)(.gz)?$",
+    help="Regex to filter input files",
 )
 parser.add_argument(
     "-r",
@@ -86,12 +86,6 @@ parser.add_argument(
     help="Adapters (comma-separated).",
 )
 parser.add_argument(
-    "--metadata-ignore-header",
-    action="store_true",
-    default=False,
-    help="Do not parse info from read header.",
-)
-parser.add_argument(
     "--metadata-default",
     action="store",
     nargs="+",
@@ -115,8 +109,8 @@ parser.add_argument(
 parser.add_argument(
     "--extra-file",
     action="store",
-    type=Path,
-    default=Path("/projects/caeg/data/resources/config/config.yaml"),
+    type=str,
+    default="config.yaml:/projects/caeg/data/resources/config/PROD.config.yaml",
     help="Extra file (e.g. config.yaml) to be copied to the final folder.",
 )
 parser.add_argument(
@@ -149,23 +143,36 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-if args.fq_folder:
+####################
+### ARGS PROCESS ###
+####################
+if args.in_folder:
     # Read all files from input folder
-    fq_files = args.fq_folder.glob("*.*")
+    in_files = args.in_folder.glob("*.*")
 else:
-    # If no FASTQ folder, read from STDIN
-    fq_files = [
-        Path(fq_file.strip())
-        for fq_file in sys.stdin.readlines()
-        if not fq_file.startswith("#")
+    # If no input folder, read from STDIN
+    in_files = [
+        Path(in_file.strip())
+        for in_file in sys.stdin.readlines()
+        if not in_file.startswith("#")
     ]
 
 # Apply regex filter to input files
-fq_files = [
-    fq_file
-    for fq_file in fq_files
-    if fq_file.is_file() and re.search(args.fq_regex, fq_file.name)
+in_files = [
+    in_file
+    for in_file in in_files
+    if in_file.is_file() and re.search(args.in_regex, in_file.name)
 ]
+
+
+# Extra file
+if args.extra_file.find(":") > 0:
+    extra_file_name, ori_name = args.extra_file.split(":", 1)
+    args.extra_file = Path(ori_name)
+else:
+    args.extra_file = Path(args.extra_file)
+    extra_file_name = args.extra_file.name
+assert args.extra_file.exists(), "Extra file does not exist."
 
 
 # Add extra metadata
@@ -176,24 +183,29 @@ for key in ["library_type", "adapters"]:
         args.metadata_default.append(f"{key}={value}")
 
 
-# Set logger
+# Define output path wildcards (groupings)
+from string import Formatter
+
+out_path_wildcards = list(
+    set([key.split("[")[0] for _, key, _, _ in Formatter().parse(args.out_path) if key])
+)
+
+
+###########
+### LOG ###
+###########
 loglevel = getattr(logging, args.loglevel.upper(), None)
 logging.basicConfig(encoding="utf-8", level=loglevel)
-logging.info(f"Found {len(fq_files)} input files")
+logging.info(f"Found {len(in_files)} input files")
 
 
+###################
+### PARSE INPUT ###
+###################
 units = pd.DataFrame()
-for fq_file in sorted(fq_files):
+for in_file in sorted(in_files):
     row = dict()
-    row["data"] = str(fq_file.resolve(strict=True))
-    # Get metadata from read IDs
-    if not args.metadata_ignore_header:
-        with gzip.open(row["data"], "rt") as gz:
-            read_header = gz.readline().lstrip("@").rstrip().split(":")
-            if len(read_header) > 2:
-                row["machine"] = read_header[0]
-                row["run_n"] = read_header[1]
-                row["flowcell"] = read_header[2]
+    row["data"] = str(in_file.resolve(strict=True))
     # Get metadata from regexp
     matches = re.search(args.regex, row["data"])
     if not matches:
@@ -201,26 +213,42 @@ for fq_file in sorted(fq_files):
         continue
     for key, value in matches.groupdict().items():
         # Remove leading zeros
-        if key == "run_n":
+        if key in ["run_n"]:
             value = value.lstrip("0")
-        logging.debug(f"adding {key} metadata: {value}")
+        logging.debug(f"adding {key} to metadata: {value}")
         assert (
             key not in row or row[key] == value
         ), f"{key} metadata does not match: {value} != {row[key]}."
         row[key] = value
-    # Replace read info with generic placeholder
-    read_pos = matches.span("read")
-    row["data"] = row["data"][: read_pos[0]] + "R{Read}" + row["data"][read_pos[1] :]
+        # Add file sizes
+        row["size_kb"] = round(Path(row["data"]).stat().st_size / 1024, 1)
+        # Add number of reads
+        row["n_reads"] = (
+            int(gzip_n_lines(row["data"]) / 4)
+            if row["size_kb"] < args.min_file_size
+            else pd.NA
+        )
+        # Replace read info with generic placeholder
+        if key == "read":
+            read_pos = matches.span("read")
+            row["data"] = (
+                row["data"][: read_pos[0]] + "R{Read}" + row["data"][read_pos[1] :]
+            )
 
+    # Add row to DF
     row = pd.DataFrame([row])
     logging.debug(row)
     units = pd.concat([units, row])
+
 
 if units.shape[0] == 0:
     logging.warning("No valid data files found!")
     exit(0)
 
 
+######################
+### FORMAT COLUMNS ###
+######################
 # Format date column (if present)
 if "date" in units.columns.values:
     units["date"] = pd.to_datetime(units["date"])
@@ -228,28 +256,59 @@ if "date" in units.columns.values:
 
 # Add metadata
 for metadata_default in args.metadata_default:
-    key, value = metadata_default.split("=")
-    if key not in units:
-        units[key] = value
-
-
-# Fix seq_type info
-units["seq_type"] = "SE"
-# Collapse PE libraries
-units = units.reset_index(drop=True).sort_values(by=["data"])
-units.loc[units["data"].duplicated(keep=False), "seq_type"] = "PE"
-del units["read"]
-# Fix data for SE
-mask = units["seq_type"].eq("SE")
-units.loc[mask, "data"] = units.loc[mask, "data"].str.replace(
-    "R{Read}", "R1", regex=False
-)
-units.drop_duplicates(inplace=True)
-
+    if metadata_default.find("=") > 0:
+        key, value = metadata_default.split("=")
+        if key not in units:
+            units[key] = value
 
 # Fix invalid values
 fix_cols = units.columns.drop("data")
 units[fix_cols] = units[fix_cols].replace(args.rm_chars, value="", regex=True)
+
+
+# Fix seq_type info and collapse
+if "read" in units:
+    del units["read"]
+    # Set all to SE by default
+    units["seq_type"] = "SE"
+    # If duplicated data, then it is PE
+    units = units.reset_index(drop=True).sort_values(by=["data"])
+    units.loc[units["data"].duplicated(keep=False), "seq_type"] = "PE"
+    # Fix data for SE
+    mask = units["seq_type"].eq("SE")
+    units.loc[mask, "data"] = units.loc[mask, "data"].str.replace(
+        "R{Read}", "R1", regex=False
+    )
+    units = (
+        units.groupby(units.columns.drop(["size_kb", "n_reads"]).to_list())[
+            ["size_kb", "n_reads"]
+        ]
+        .agg(lambda x: x.dropna().tolist() if not x.isna().sum() else pd.NA)
+        .reset_index()
+    )
+
+
+# Add extra_file_md5 (MD5 hash of extra file), if present in out_path
+if args.extra_file.exists() and "extra_file_md5" in out_path_wildcards:
+    import hashlib
+
+    units["extra_file_md5"] = hashlib.md5(
+        open(args.extra_file, "rb").read()
+    ).hexdigest()
+
+
+# Add workflow_ver (current workflow version), if present in out_path
+if "workflow_ver" in out_path_wildcards:
+    import git
+
+    repo = git.Repo(Path(__file__).resolve(strict=True).parent)
+    tag_recent = [
+        [tag.name, commit.hexsha]
+        for commit in repo.iter_commits()
+        for tag in repo.tags
+        if commit.hexsha == tag.commit.hexsha
+    ][0]
+    units["workflow_ver"] = tag_recent[0]
 
 
 # Reorder columns
@@ -265,143 +324,95 @@ col_order = {
 }
 units = units[sorted(units.columns.values, key=lambda x: col_order.get(x, 999))]
 # Sort rows
-units.sort_values(by=list(units.columns.values), inplace=True)
+units = units.sort_values(by=list(units.columns.drop(["size_kb", "n_reads"]).values))
 logging.info(f"Units file has {units.shape[0]} rows and {units.shape[1]} columns.")
 logging.debug(units)
 logging.debug(units.dtypes)
 
 
-# Make samples DF
-samples = units["sample"].copy().to_frame()
-samples["alias"] = np.nan
-samples["group"] = np.nan
-samples["condition"] = args.condition
-samples.drop_duplicates(inplace=True)
-samples.sort_values(by=["sample"], inplace=True)
-logging.info(
-    f"Samples file has {samples.shape[0]} rows and {samples.shape[1]} columns."
-)
-logging.debug(samples)
-
-
-# Define grouping
-from string import Formatter
-
-wildcards = list(
-    set([key.split("[")[0] for _, key, _, _ in Formatter().parse(args.out_path) if key])
-)
-logging.debug(f"Wildcards: {wildcards}")
-
-
-# Add extra_file_md5 (MD5 hash of extra file), if present in out_path
-if args.extra_file.exists() and "extra_file_md5" in wildcards:
-    import hashlib
-
-    units["extra_file_md5"] = hashlib.md5(
-        open(args.extra_file, "rb").read()
-    ).hexdigest()
-
-# Add workflow_ver (current workflow version), if present in out_path
-if "workflow_ver" in wildcards:
-    import git
-
-    repo = git.Repo(Path(__file__).resolve(strict=True).parent)
-    tag_recent = [
-        [tag.name, commit.hexsha]
-        for commit in repo.iter_commits()
-        for tag in repo.tags
-        if commit.hexsha == tag.commit.hexsha
-    ][0]
-    units["workflow_ver"] = tag_recent[0]
-
-
+#####################
+### Define groups ###
+#####################
 datasets = list()
-if wildcards:
-    for keys, units in units.groupby(wildcards, group_keys=True):
-        name = dict(zip(wildcards, keys))
-        logging.debug(f"Group wildcards: {name}")
-        sample = units["sample"].unique()
-        logging.debug(f"Group samples: {sample}")
+if out_path_wildcards:
+    for keys, units in units.groupby(out_path_wildcards, group_keys=True):
+        name = dict(zip(out_path_wildcards, keys))
+        logging.debug(f"Group units with output path wildcards: {name}")
         logging.debug(units)
         # Create output path
         out_path = Path(args.out_path.format(**name))
-        datasets.append(
-            (
-                out_path,
-                samples[samples["sample"].isin(sample)],
-                units.drop(["extra_file_md5", "workflow_ver"], axis=1, errors="ignore"),
-            )
-        )
+        assert args.force or not out_path.is_dir(), f"Dataset {name} already exists"
+        #
+        datasets.append((out_path, units))
 else:
     # Create output path
     out_path = Path(args.out_path)
-    datasets.append((out_path, samples, units))
+    assert args.force or not out_path.is_dir(), f"Path {out_path} already exists"
+    datasets.append((out_path, units))
 
 
-out_stats = []
-for out_path, sample, units in sorted(datasets):
-    logging.debug(f"Gathering stats for unit {units.data}")
-    r1_sizes_kb = [
-        round(Path(data.format(Read=1)).stat().st_size / 1024, 1)
-        for data in units["data"]
-    ]
-    r2_sizes_kb = [
-        round(Path(data.format(Read=2)).stat().st_size / 1024, 1)
-        for data in units["data"]
-    ]
-    total_reads = pd.NA
-    if any(r1_size_kb < args.min_file_size for r1_size_kb in r1_sizes_kb):
-        total_reads = [
-            int(gzip_n_lines(data.format(Read=1)) / 4) for data in units["data"]
-        ]
-    out_stats.append([out_path.parent, total_reads, r1_sizes_kb, r2_sizes_kb])
-
-
-# Save stats to file
+###################
+### Save Output ###
+###################
+# Stats file
 if args.out_stats:
     logging.info(f"Saving stats to file {args.out_stats}")
-    assert not args.out_stats.exists(), "Output stats file already exists!"
+
+    out_stats = []
+    for out_path, units in sorted(datasets):
+        logging.debug(f"Gathering stats for group {out_path}")
+        out_stats.append(
+            units[["size_kb", "n_reads"]]
+            .assign(id=out_path)
+            .groupby("id")[["size_kb", "n_reads"]]
+            .agg(lambda x: x.dropna().tolist() if not x.isna().sum() else pd.NA)
+            .reset_index()
+        )
+    logging.debug(pd.concat(out_stats))
+
     with open(args.out_stats, "a") as out_stat_fh:
+        np.set_printoptions(legacy="1.25")
         out_stat_fh.write(f"# {args}\n")
-        pd.DataFrame(
-            out_stats, columns=["id", "total_reads", "R1_size_kb", "R2_size_kb"]
-        ).to_csv(out_stat_fh, sep="\t", index=False)
-
-
-# Check if groups exist
-datasets_exist = [out_path.is_dir() for out_path, _, _ in datasets]
-if any(datasets_exist):
-    if args.force:
-        logging.warning(
-            f"Some of the datasets already exist ({datasets_exist}). Overwritting!"
-        )
-    else:
-        logging.error(f"Some of the datasets already exist ({datasets_exist})!")
-        exit(-1)
-
-
-# Create files/folders
-if not args.dryrun:
-    for out_path, samples, units in datasets:
-        out_path.mkdir(parents=True, exist_ok=args.force)
-        # Save samples.tsv file
-        samples.to_csv(
-            out_path / "samples.tsv",
+        pd.concat(out_stats).dropna(axis=1, how="all").to_csv(
+            out_stat_fh,
             sep="\t",
+            header=args.out_stats.stat().st_size == 0,
             index=False,
-            mode="w" if args.force else "x",
+            float_format="%g",
         )
+
+
+if not args.dryrun:
+    for out_path, units in datasets:
+        # Create folders
+        out_path.mkdir(parents=True, exist_ok=args.force)
         # Save units.tsv file
-        units.to_csv(
+        units.dropna(axis=1, how="all").to_csv(
             out_path / "units.tsv",
             sep="\t",
             index=False,
             mode="w" if args.force else "x",
         )
+        if "sample" in units:
+            samples = (
+                units["sample"]
+                .copy()
+                .to_frame()
+                .drop_duplicates()
+                .sort_values(by=["sample"])
+            )
+            samples[["alias", "group", "condition"]] = [np.nan, np.nan, args.condition]
+            # Save samples.tsv file
+            samples.to_csv(
+                out_path / "samples.tsv",
+                sep="\t",
+                index=False,
+                mode="w" if args.force else "x",
+            )
         # Copy extra file
         if args.extra_file.exists():
             logging.debug("Copying extra file.")
-            open(out_path / args.extra_file.name, "w" if args.force else "x").write(
+            open(out_path / extra_file_name, "w" if args.force else "x").write(
                 open(args.extra_file, "r").read()
             )
 
