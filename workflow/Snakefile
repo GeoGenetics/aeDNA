@@ -10,6 +10,7 @@ wrapper_ver = "v7.0.0"
 baseurl = urlparse(workflow.current_basedir.get_path_or_uri())
 
 
+include: "rules/utils.smk"
 include: "rules/setup.smk"
 
 
@@ -26,7 +27,7 @@ use rule * from workflow_trim as trim_*
 
 module workflow_derep:
     snakefile:
-        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.4.11")
+        github("GeoGenetics/ngs-derep", path="workflow/Snakefile", tag="v0.4.12")
     config:
         {"units": units, "cfg": config["derep"]}
 
@@ -41,7 +42,7 @@ from itertools import product
 
 module workflow_taxon_prefilter:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.3")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.4")
     config:
         {"units": units, "cfg": config["prefilter"]}
     replace_prefix:
@@ -53,7 +54,7 @@ use rule * from workflow_taxon_prefilter as taxon_prefilter_*
 
 module workflow_taxon:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.3")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.4")
     config:
         {"units": units, "cfg": config["euk"]}
 
@@ -222,12 +223,13 @@ use rule multiqc_derep as multiqc_taxon with:
     input:
         rules.trim_multiqc.input,
         rules.derep_multiqc.input,
-        rules.taxon_prefilter_multiqc.input,
+        # FastQC of prefiltered read
         expand(
             rules.prefilter_fastqc.output.zip,
             zip,
             **units.assign(read_type_map="collapsed").to_dict("list"),
         ),
+        rules.taxon_prefilter_multiqc.input,
         rules.taxon_multiqc.input,
         config=base_dir / "resources/multiqc_config.yaml",
     output:
@@ -253,6 +255,7 @@ rule target_taxon:
         rules.multiqc_taxon_upload.output
         if config["report"]["multiqc_db_url"]
         else rules.multiqc_taxon.output,
+        rules.taxon_prefilter_all.input.res,
         rules.taxon_all.input.res,
     message:
         "Taxonomic assignment finished successfully!"
