@@ -221,10 +221,10 @@ assert (
 df["status"] = pd.Categorical(df["status"], status_choices)
 df = df.sort_values("status")
 df = df[~df.index.duplicated()]
-logging.debug(df[["hpc_status", "snakemake_status", "status"]])
+logging.debug(df[["snakemake_status", "status"]])
 assert (
     n_jobs == df.shape[0]
-), f"Number of jobs ({n_jobs}) and HPC status ({df.shape[0]}) does not match"
+), f"Number of jobs ({n_jobs}) and status ({df.shape[0]}) does not match"
 
 
 # Print summary
