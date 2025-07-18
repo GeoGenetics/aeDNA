@@ -280,10 +280,10 @@ if "read" in units:
         "R{Read}", "R1", regex=False
     )
     units = (
-        units.groupby(units.columns.drop(["size_kb", "n_reads"]).to_list())[
-            ["size_kb", "n_reads"]
-        ]
-        .agg(lambda x: x.dropna().tolist() if not x.isna().sum() else pd.NA)
+        units.groupby(
+            units.columns.drop(["size_kb", "n_reads"]).to_list(), dropna=False
+        )[["size_kb", "n_reads"]]
+        .agg(lambda x: pd.NA if x.isna().all() else x.tolist())
         .reset_index()
     )
 
@@ -301,7 +301,7 @@ if args.extra_file.exists() and "extra_file_md5" in out_path_wildcards:
 if "workflow_ver" in out_path_wildcards:
     import git
 
-    repo = git.Repo(Path(__file__).resolve(strict=True).parent)
+    repo = git.Repo(Path(__file__).resolve(strict=True).parent.parent)
     tag_recent = [
         [tag.name, commit.hexsha]
         for commit in repo.iter_commits()
@@ -363,9 +363,9 @@ if args.out_stats:
         logging.debug(f"Gathering stats for group {out_path}")
         out_stats.append(
             units[["size_kb", "n_reads"]]
-            .assign(id=out_path)
+            .assign(id=out_path.parent)
             .groupby("id")[["size_kb", "n_reads"]]
-            .agg(lambda x: x.dropna().tolist() if not x.isna().sum() else pd.NA)
+            .agg(lambda x: pd.NA if x.isna().all() else x.tolist())
             .reset_index()
         )
     logging.debug(pd.concat(out_stats))
