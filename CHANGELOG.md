@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/GeoGenetics/aeDNA/compare/v1.0.3...v1.0.4) (2025-07-18)
+
+
+### Bug Fixes
+
+* remove both prefilter saturated and taxonomy reads ([#9](https://github.com/GeoGenetics/aeDNA/issues/9)) ([f8faa77](https://github.com/GeoGenetics/aeDNA/commit/f8faa773fd9a2399e25b838a24740c8af0f6c896))
+
 ## [1.0.3](https://github.com/GeoGenetics/aeDNA/compare/v1.0.2...v1.0.3) (2025-06-30)
 
 
