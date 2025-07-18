@@ -1,6 +1,6 @@
 # aeDNA - a customizable Snakemake workflow for ancient environmental DNA
 
-[![Snakemake](https://img.shields.io/badge/snakemake-≥8.11.2-brightgreen.svg)](https://snakemake.bitbucket.io)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥9.0.0-brightgreen.svg)](https://snakemake.bitbucket.io)
 
 This workflow combines several modules to build a workflow for ancient environmental DNA (aeDNA) analyses and QC:
 - [Read trimming](https://github.com/GeoGenetics/ngs-trim)
@@ -45,17 +45,17 @@ export GITHUB_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 5. Test your configuration by performing a dry-run via:
 ```
-pixi run snakemake --configfile config/config.yaml --dry-run
+pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --dry-run
 ```
 
 and confirm workflow analyses by checking the DAG:
 ```
-pixi run snakemake --configfile config/config.yaml --dag | dot -Tsvg > dag.svg
+pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --dag | dot -Tsvg > dag.svg
 ```
 
 You can also create all needed `conda` environments beforehand:
 ```
-pixi run snakemake --configfile config/config.yaml --jobs 1 --conda-create-envs-only
+pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --jobs 1 --conda-create-envs-only
 ```
 
 #### Step 3: Execute workflow
@@ -63,17 +63,17 @@ pixi run snakemake --configfile config/config.yaml --jobs 1 --conda-create-envs-
 
   6.1. locally via:
 ```
-pixi run snakemake --configfile config/config.yaml --jobs $N --software-deployment-method conda
+pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --jobs $N --software-deployment-method conda
 ```
 
   6.2. in a [SLURM](https://slurm.schedmd.com/overview.html) cluster environment via:
 ```
-pixi run snakemake --configfile config/config.yaml --jobs $N --software-deployment-method conda --executor slurm
+pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --jobs $N --software-deployment-method conda --executor slurm
 ```
 
 #### Step 4: Check results
 
 7. After successful execution, you can create a self-contained interactive HTML report:
 ```
-pixi run snakemake --configfile config/config.yaml --report report.html
+pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --report report.html
 ```

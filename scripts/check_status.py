@@ -7,7 +7,15 @@ from pathlib import Path
 
 
 # Allowed status; order matters!
-status_choices = ["RUNNING", "PENDING", "OK", "ERROR", "ERROR_SBATCH", "NOT_RUN", "LOCKED"]
+status_choices = [
+    "RUNNING",
+    "PENDING",
+    "OK",
+    "ERROR",
+    "ERROR_SBATCH",
+    "NOT_RUN",
+    "LOCKED",
+]
 
 
 # Parse command-line arguments
@@ -156,11 +164,11 @@ df.loc[
     "snakemake_status",
 ] = "ERROR"
 df.loc[
-    df.snakemake_status.str.startswith("sbatch: error: ", na = False),
-    ["snakemake_status", "status"],
+    df.snakemake_status.str.startswith("sbatch: error: ", na=False),
+    "snakemake_status",
 ] = "ERROR_SBATCH"
 df.loc[
-    df.snakemake_status.str.startswith("Directory cannot be locked", na = False),
+    df.snakemake_status.str.startswith("Directory cannot be locked", na=False),
     "snakemake_status",
 ] = "LOCKED"
 df.loc[
@@ -177,13 +185,16 @@ logging.debug(df.iloc[0])
 # Compare with HPC status
 if args.scheduler:
     df.loc[
+        df.hpc_status.eq("COMPLETED") & df.snakemake_status.isin(["OK"]),
+        "status",
+    ] = "OK"
+    df.loc[
         df.hpc_status.ne("PENDING")
         & df.snakemake_status.isin(["NOT_RUN", "NOT_RUNNING"]),
         "status",
     ] = "NOT_RUN"
     df.loc[
-        df.hpc_status.eq("PENDING")
-        & df.snakemake_status.isin(["NOT_RUN", "NOT_RUNNING"]),
+        df.hpc_status.eq("PENDING"),
         "status",
     ] = "PENDING"
     df.loc[

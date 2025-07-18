@@ -34,7 +34,7 @@ derep:
     params: ""
 
   low_complex:
-    params: "maxns=25 minlen=30 entropy=0.7 entropywindow=30 entropyk=4"
+    params: "entropy=0.7 entropywindow=30 entropyk=4"
 
 
 
@@ -48,7 +48,7 @@ prefilter:
       path: "/datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/hires-organelles-viruses-smags.{n_shard}.fas.gz"
       map:
         tool: bowtie2
-        params: "-k 1000 -N 1 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.08 --no-unal"
+        params: "-k 50 -N 1 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.08 --no-unal"
         bt2l: True
       acc2taxid: "/datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/taxonomy/hires-organelles-viruses-smags.acc2taxid.gz"
     human_genome:
@@ -56,27 +56,27 @@ prefilter:
       path: "/datasets/caeg_dataset/references/human_genome/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fas.gz"
       map:
         tool: bowtie2
-        params: "-k 1000 -N 0 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.08 --no-unal"
+        params: "-k 50 -N 0 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.08 --no-unal"
         bt2l: False
       acc2taxid: "/datasets/caeg_dataset/references/human_genome/GCF_000001405.40/taxonomy/hires-organelles-viruses-smags/GCF_000001405.40_GRCh38.p14_genomic.acc2taxid.gz"
 
   filter:
     saturated_reads:
-      activate: false
-      n_alns: 1000
+      activate: true
+      n_alns: 50
 
   bam_filter:
     reassign:
-      activate: true
-      params: "--iters 0 --min-read-ani 92 --min-read-count 3 -s 0"
+      activate: false
+      params: "--iters 0 --min-read-ani 92 --min-read-count 3 --scale 0 --reference-lengths /datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/misc/genomes.len.map"
 
     filter:
-      activate: true
-      params: "--min-read-ani 92 --min-read-count 3 --min-normalized-entropy 0.6 --min-normalized-gini 0.4 --min-avg-read-ani 94 --include-low-detection"
+      activate: false
+      params: "--min-read-ani 92 --min-read-count 3 --min-normalized-entropy 0.6 --min-normalized-gini 0.4 --min-avg-read-ani 94 --reference-lengths /datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/misc/genomes.len.map"
 
     lca:
-      activate: true
-      params: "--lca-rank genus"
+      activate: false
+      params: "--lca-rank genus --reference-lengths /datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/misc/genomes.len.map"
 
   taxonomy:
     nodes: "/datasets/caeg_dataset/taxonomy/hires-organelles-viruses-smags/20240313/nodes.dmp"
@@ -84,13 +84,13 @@ prefilter:
 
   metadmg:
     damage:
-      params: "--min_length 30 --print_length 15"
+      params: "--print_length 15"
 
     lca:
-      params: "--fix_ncbi 0 --sim_score_low 0.92 --how_many 15 --lca_rank genus"
+      params: "--fix_ncbi 0 --how_many 25 --weight_type 1 --edit_dist_max 10000 --lca_rank genus"
 
     dfit:
-      params: "--nopt 10 --nbootstrap 20 --showfits 2"
+      params: "--nopt 5 --showfits 2"
 
 
 euk:
@@ -100,7 +100,7 @@ euk:
       path: "/datasets/caeg_dataset/references/ncbi/20250530/data/refseq_mitochondrion.genomic.fas.gz"
       map: &map_euk_bowtie2_bt2
         tool: bowtie2
-        params: "-k 1000 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
+        params: "-k 50 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
         bt2l: False
       acc2taxid: "/datasets/caeg_dataset/references/ncbi/20250530/taxonomy/ncbi/refseq_mitochondrion.genomic.acc2taxid.gz"
     refseq_plastid:
@@ -134,16 +134,16 @@ euk:
   filter:
     saturated_reads:
       activate: true
-      n_alns: 1000
+      n_alns: 50
 
   bam_filter:
     reassign:
       activate: false
-      params: "--iters 0 --min-read-ani 94 --min-read-count 3"
+      params: "--iters 0 --min-read-ani 92 --min-read-count 3 --scale 0 --squarem-min-improvement 0.001 --squarem-max-step-factor 2.0"
 
     filter:
       activate: false
-      params: "--min-read-ani 94 --min-read-count 3 --min-expected-breadth-ratio 0.5 --min-normalized-entropy auto --min-normalized-gini auto --min-breadth 0 --min-avg-read-ani 90 --min-coverage-evenness 0.4 --min-coverage-mean 0 --include-low-detection"
+      params: "--min-read-ani 92 --min-read-count 3 --min-normalized-entropy 0.6 --min-normalized-gini 0.4 --min-avg-read-ani 92"
 
     lca:
       activate: false
@@ -155,13 +155,13 @@ euk:
 
   metadmg:
     damage:
-      params: "--min_length 30 --print_length 15"
+      params: "--print_length 15"
 
     lca:
-      params: "--fix_ncbi 0 --sim_score_low 0.95 --how_many 15 --lca_rank genus"
+      params: "--fix_ncbi 0 --how_many 15 --sim_score_low 0.95 --weight_type 0 --lca_rank genus"
 
     dfit:
-      params: "--nopt 10 --nbootstrap 20 --showfits 2"
+      params: "--nopt 5 --showfits 2"
 
 
 ############
