@@ -42,7 +42,7 @@ from itertools import product
 
 module workflow_taxon_prefilter:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.5")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.6")
     config:
         {"units": units, "cfg": config["prefilter"]}
     replace_prefix:
@@ -54,7 +54,7 @@ use rule * from workflow_taxon_prefilter as taxon_prefilter_*
 
 module workflow_taxon:
     snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.5")
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.9.6")
     config:
         {"units": units, "cfg": config["euk"]}
 
