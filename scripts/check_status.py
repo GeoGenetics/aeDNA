@@ -119,15 +119,20 @@ if args.scheduler == "slurm":
     )
     res = (
         pd.read_csv(StringIO(res.stdout.decode("utf-8")), sep="|")
-        .rename(columns={"JobID":"id", "JobName": "name", "State": "hpc_status", "End": "time_end"})
+        .rename(
+            columns={
+                "JobID": "id",
+                "JobName": "name",
+                "State": "hpc_status",
+                "End": "time_end",
+            }
+        )
         .sort_values("time_end")
         .set_index(["name", "id"])
     )
 
     # Add scheduler logs
-    res["hpc_log"] = res.index.map(
-        lambda x: Path(x[0]) / f"slurm-{x[1]}.out"
-    )
+    res["hpc_log"] = res.index.map(lambda x: Path(x[0]) / f"slurm-{x[1]}.out")
     # Remove non-existing logs
     res = res[res["hpc_log"].map(lambda x: x.exists())]
 
