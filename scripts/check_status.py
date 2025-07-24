@@ -30,6 +30,7 @@ parser.add_argument(
     action="store",
     type=Path,
     nargs="+",
+    default=["/dev/stdin"],
     help="Path to stats file",
 )
 parser.add_argument(
@@ -64,20 +65,28 @@ args = parser.parse_args()
 
 # Set logger
 loglevel = getattr(logging, args.loglevel.upper(), None)
-logging.basicConfig(encoding="utf-8", level=loglevel)
+logging.basicConfig(
+    encoding="utf-8",
+    level=loglevel,
+    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 
 # Read job list
 logging.info("Reading input file(s)")
 df = pd.concat(
     [
-        pd.read_table(job_list, index_col="id", comment="#").assign(filename=job_list)
+        pd.read_table(
+            job_list, header=None, index_col=0, usecols=[0], comment="#"
+        ).assign(filename=job_list)
         for job_list in args.job_list
     ]
 )
 
 n_jobs = df.shape[0]
 logging.info(f"Checking {n_jobs} jobs")
+logging.debug(df)
 
 
 # Looking up Snakemake logs
@@ -103,26 +112,37 @@ if args.scheduler == "slurm":
             "--endtime",
             "now",
             "--format",
-            "JobName%-500, State, End",
+            "JobId, JobName%-500, State, End",
         ]
         + args.hpc_extra.split(" "),
         stdout=subprocess.PIPE,
     )
     res = (
         pd.read_csv(StringIO(res.stdout.decode("utf-8")), sep="|")
-        .rename(columns={"JobName": "id", "State": "hpc_status", "End": "time_end"})
-        .set_index("id")
+        .rename(
+            columns={
+                "JobID": "id",
+                "JobName": "name",
+                "State": "hpc_status",
+                "End": "time_end",
+            }
+        )
         .sort_values("time_end")
+        .set_index(["name", "id"])
     )
+
+    # Add scheduler logs
+    res["hpc_log"] = res.index.map(lambda x: Path(x[0]) / f"slurm-{x[1]}.out")
+    # Remove non-existing logs
+    res = res[res["hpc_log"].map(lambda x: x.exists())]
+
+    # Reset index to Job Name
+    res = res.reset_index().set_index("name")
+
     # Keep only most recent job
     df = df.join(res[~res.index.duplicated(keep="last")])
-
-    # Add scheduler status
-    df["hpc_log"] = df.index.map(
-        lambda x: ([pd.NA] + sorted(Path(x).glob("slurm-*"))).pop()
-    )
 else:
-    logging.warning("No supported HPC scheduler supplied!")
+    logging.warning(f"HPC scheduler {args.scheduler} not supported!")
 
 
 # Parse snakemake status
@@ -135,11 +155,11 @@ def get_snakemake_status(log, n_lines=10):
         with open(log, "r") as log_fh:
             tail = [
                 line
-                for line in log_fh.read().splitlines()[-n_lines:]
+                for line in reversed(log_fh.read().splitlines()[-n_lines:])
                 if line.startswith("aeDNA workflow finished")
-                or line.startswith("Cleaning up log files older than ")
                 or line.startswith("Directory cannot be locked")
                 or line.startswith("sbatch: error:")
+                or line.startswith("Cleaning up log files older than ")
             ]
             return tail.pop(0) if len(tail) > 0 else pd.NA
     else:

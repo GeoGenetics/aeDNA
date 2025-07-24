@@ -21,10 +21,10 @@ rule prefilter_reads_taxonomy:
         )
     threads: 1
     resources:
-        mem=lambda w, input, attempt: f"{2* attempt} GiB",
+        mem=lambda w, input, attempt: f"{3* attempt} GiB",
         runtime=lambda w, input, attempt: f"{(0.06* input.size_gb+2)* attempt} h",
     shell:
-        "(extract_reads bytaxid -hts {input.bam} -names {input.names} -nodes {input.nodes} -acc2tax <(cat {input.acc2taxid}) {params.extra} -strict 1 -forcedump 1 -out - -type sam | grep -v '^@' | cut -f 1 | uniq > {output.read_id}) 2> {log}"
+        "(extract_reads bytaxid -hts {input.bam} -names {input.names} -nodes {input.nodes} -acc2tax <(cat {input.acc2taxid}) {params.extra} -strict 1 -forcedump 1 -out - -type sam | awk '!/^@/' | cut -f 1 | uniq > {output.read_id}) 2> {log}"
 
 
 rule prefilter_reads_merge:
@@ -73,13 +73,13 @@ rule prefilter_reads_extract:
         f"{wrapper_ver}/bio/seqkit"
 
 
-use rule bowtie2 from workflow_taxon_prefilter as taxon_prefilter_bowtie2 with:
+use rule shard_bowtie2 from workflow_taxon_prefilter as taxon_prefilter_shard_bowtie2 with:
     input:
         sample=workflow_taxon.get_data,
         idx=workflow_taxon_prefilter.get_index,
 
 
-use rule bowtie2 from workflow_taxon as taxon_bowtie2 with:
+use rule shard_bowtie2 from workflow_taxon as taxon_shard_bowtie2 with:
     input:
         sample=[rules.prefilter_reads_extract.output.fq],
         idx=workflow_taxon.get_index,

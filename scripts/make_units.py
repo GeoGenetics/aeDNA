@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 def gzip_n_lines(in_gzip):
+    i = 0
     with gzip.open(in_gzip, "rb") as f:
         for i, l in enumerate(f):
             pass
@@ -110,7 +111,7 @@ parser.add_argument(
     "--extra-file",
     action="store",
     type=str,
-    default="config.yaml:/projects/caeg/data/resources/config/PROD.config.yaml",
+    default="config.yaml:/projects/caeg/data/resources/config/PROD.latest.config.yaml",
     help="Extra file (e.g. config.yaml) to be copied to the final folder.",
 )
 parser.add_argument(
@@ -195,7 +196,12 @@ out_path_wildcards = list(
 ### LOG ###
 ###########
 loglevel = getattr(logging, args.loglevel.upper(), None)
-logging.basicConfig(encoding="utf-8", level=loglevel)
+logging.basicConfig(
+    encoding="utf-8",
+    level=loglevel,
+    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 logging.info(f"Found {len(in_files)} input files")
 
 
@@ -206,6 +212,14 @@ units = pd.DataFrame()
 for in_file in sorted(in_files):
     row = dict()
     row["data"] = str(in_file.resolve(strict=True))
+    # Add data size
+    row["size_kb"] = round(Path(row["data"]).stat().st_size / 1024, 1)
+    # Add number of reads
+    row["n_reads"] = (
+        int(gzip_n_lines(row["data"]) / 4)
+        if row["size_kb"] < args.min_file_size
+        else pd.NA
+    )
     # Get metadata from regexp
     matches = re.search(args.regex, row["data"])
     if not matches:
@@ -220,14 +234,6 @@ for in_file in sorted(in_files):
             key not in row or row[key] == value
         ), f"{key} metadata does not match: {value} != {row[key]}."
         row[key] = value
-        # Add file sizes
-        row["size_kb"] = round(Path(row["data"]).stat().st_size / 1024, 1)
-        # Add number of reads
-        row["n_reads"] = (
-            int(gzip_n_lines(row["data"]) / 4)
-            if row["size_kb"] < args.min_file_size
-            else pd.NA
-        )
         # Replace read info with generic placeholder
         if key == "read":
             read_pos = matches.span("read")
@@ -341,13 +347,10 @@ if out_path_wildcards:
         logging.debug(units)
         # Create output path
         out_path = Path(args.out_path.format(**name))
-        assert args.force or not out_path.is_dir(), f"Dataset {name} already exists"
-        #
         datasets.append((out_path, units))
 else:
     # Create output path
     out_path = Path(args.out_path)
-    assert args.force or not out_path.is_dir(), f"Path {out_path} already exists"
     datasets.append((out_path, units))
 
 
@@ -358,6 +361,7 @@ else:
 if args.out_stats:
     logging.info(f"Saving stats to file {args.out_stats}")
 
+    # Output stats as ID\tsize_kb\tn_reads
     out_stats = []
     for out_path, units in sorted(datasets):
         logging.debug(f"Gathering stats for group {out_path}")
@@ -370,13 +374,14 @@ if args.out_stats:
         )
     logging.debug(pd.concat(out_stats))
 
-    with open(args.out_stats, "a") as out_stat_fh:
+    with open(args.out_stats, "x") as out_stat_fh:
         np.set_printoptions(legacy="1.25")
         out_stat_fh.write(f"# {args}\n")
         pd.concat(out_stats).dropna(axis=1, how="all").to_csv(
             out_stat_fh,
             sep="\t",
-            header=args.out_stats.stat().st_size == 0,
+            na_rep="<NA>",
+            header=False,
             index=False,
             float_format="%g",
         )
