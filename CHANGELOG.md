@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.7](https://github.com/GeoGenetics/aeDNA/compare/v1.0.6...v1.0.7) (2025-07-24)
+
+
+### Bug Fixes
+
+* bug empty bam ([#15](https://github.com/GeoGenetics/aeDNA/issues/15)) ([89bfb0a](https://github.com/GeoGenetics/aeDNA/commit/89bfb0a7a6dee65a83e86f84629c2a87697c0aa6))
+
 ## [1.0.6](https://github.com/GeoGenetics/aeDNA/compare/v1.0.5...v1.0.6) (2025-07-19)
 
 
