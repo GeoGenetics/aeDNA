@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.8](https://github.com/GeoGenetics/aeDNA/compare/v1.0.7...v1.0.8) (2025-07-25)
+
+
+### Reverts
+
+* metadmg version ([#17](https://github.com/GeoGenetics/aeDNA/issues/17)) ([7a0d4bf](https://github.com/GeoGenetics/aeDNA/commit/7a0d4bfce559bb57ea2a79a83e61b00297f6fe69))
+
 ## [1.0.7](https://github.com/GeoGenetics/aeDNA/compare/v1.0.6...v1.0.7) (2025-07-24)
 
 
