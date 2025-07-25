@@ -42,7 +42,8 @@ parser.add_argument(
     choices=["DEBUG", "INFO", "WARNING", "ERROR"],
     help="Log verbosity level",
 )
-args = parser.parse_args()
+args, extra_args = parser.parse_known_args()
+extra_args = " ".join(extra_args)
 
 
 # Set logger
@@ -83,7 +84,7 @@ elif args.workflow == "prod-test":
 elif args.workflow == "caterpillar":
     pixi_path = workflow_path = "/projects/caeg/people/lnc113/workflows/caterpillar"
 
-cmd = f"pixi run --manifest-path {pixi_path} snakemake --snakefile {workflow_path}/workflow/Snakefile --workflow-profile /projects/caeg/data/resources/profile"
+cmd = f"pixi run --manifest-path {pixi_path} snakemake --snakefile {workflow_path}/workflow/Snakefile --workflow-profile /projects/caeg/data/resources/profile {extra_args}"
 
 
 # Print command
