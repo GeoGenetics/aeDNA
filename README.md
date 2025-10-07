@@ -44,17 +44,19 @@ export GITHUB_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 #### Step 2: Test workflow
 
-5. Test your configuration by performing a dry-run via:
+5. Test your configuration:
+
+  5.1. Perform a dry-run:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --dry-run
 ```
 
-and confirm workflow analyses by checking the DAG:
+  5.2. Confirm workflow analyses by checking the DAG:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --dag | dot -Tsvg > dag.svg
 ```
 
-You can also create all needed `conda` environments beforehand:
+  5.3. Optionaly, create all needed `conda` environments beforehand:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --jobs 1 --conda-create-envs-only
 ```
@@ -62,14 +64,19 @@ pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yam
 #### Step 3: Execute workflow
 6. Execute the workflow, using `$N` cores, either:
 
-  6.1. locally via:
+  6.1. locally:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --jobs $N --software-deployment-method conda
 ```
 
-  6.2. in a [SLURM](https://slurm.schedmd.com/overview.html) cluster environment via:
+  6.2. in a [SLURM](https://slurm.schedmd.com/overview.html) cluster environment:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --jobs $N --software-deployment-method conda --executor slurm
+```
+
+  6.3. Optionally, you can also use binaries from local modules, by adding `env-modules` to `--software-deployment-method`:
+```
+pixi run snakemake [...] --software-deployment-method env-modules conda [...]
 ```
 
 #### Step 4: Check results
