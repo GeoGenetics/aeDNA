@@ -309,12 +309,22 @@ if "workflow_ver" in out_path_wildcards:
     import git
 
     repo = git.Repo(Path(__file__).resolve(strict=True).parent.parent)
-    commits = pd.DataFrame([[commit.hexsha, commit.committed_date] for commit in repo.iter_commits()], columns=["hexsha", "date"]).sort_values(by="date")
-    tags = pd.DataFrame([[tag.commit.hexsha, tag.name] for tag in repo.tags], columns=["hexsha", "tag"])
-    commits = pd.merge(commits, tags, how="left", on="hexsha").ffill()
+    commits = pd.DataFrame(
+        [[commit.hexsha, commit.committed_date] for commit in repo.iter_commits()],
+        columns=["hexsha", "date"],
+    ).sort_values(by="date")
+    tags = pd.DataFrame(
+        [[tag.commit.hexsha, tag.name] for tag in repo.tags], columns=["hexsha", "tag"]
+    )
+    commits = pd.merge(commits, tags, how="left", on="hexsha")
+    # if no tag, use commit hexsha
+    commits["tag"] = commits["tag"].fillna(commits["hexsha"])
 
-    mask = commits.duplicated(subset="tag")
-    commits.loc[mask, "tag"] = "+" + commits.loc[mask, "tag"]
+    # Sanity check
+    commits_no_tag = commits[commits.tag.str.len() == 40]
+    assert all(
+        commits_no_tag["hexsha"].eq(commits_no_tag["tag"])
+    ), "Commits HEX SHA do not match!"
 
     units["workflow_ver"] = commits.iloc[-1]["tag"]
 
