@@ -65,14 +65,11 @@ table_cond_formatting_colours:
 ## To remove a section of a module
 # https://multiqc.info/docs/#removing-modules-or-sections
 module_order:
-  - samtools
-
-  - picard
-
-  - biobambam2:
-      name: 'BamSorMaDup'
+  - samtools:
+      name: 'Samtools'
+      anchor: 'samtools'
       path_filters:
-        - '*.metrics.txt'
+        - '*/aligns/samtools_stats/*'
 
   - bowtie2:
       name: 'Bowtie2'
@@ -82,10 +79,17 @@ module_order:
 
   - fastqc:
       name: 'FastQC (prefilter)'
-      anchor: 'prefilter'
+      anchor: 'fastqc_prefilter'
       info: 'FastQC results after prefiltering.'
       path_filters:
         - '*/fastqc/prefilter/*'
+
+  - samtools:
+      name: 'Samtools (prefilter)'
+      anchor: 'samtools_prefilter'
+      info: 'Samtools Stats for prefiltering.'
+      path_filters:
+        - '*/prefilter_aligns/samtools_stats/*'
 
   - bowtie2:
       name: 'Bowtie2 (prefilter)'
