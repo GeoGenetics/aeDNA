@@ -1,0 +1,381 @@
+1	|	all	|		|	synonym
+1	|	root	|		|	scientific name
+2759	|	Eucarya	|		|	synonym
+2759	|	Eucaryotae	|		|	synonym
+2759	|	Eukarya	|		|	synonym
+2759	|	Eukaryota	|		|	scientific name
+2759	|	Eukaryotae	|		|	synonym
+2759	|	eucaryotes	|		|	genbank common name
+2759	|	eukaryotes	|	eukaryotes <blast name>	|	blast name
+2759	|	eukaryotes	|	eukaryotes <common name>	|	common name
+4751	|	Fungi	|		|	scientific name
+4751	|	Mycota	|		|	synonym
+4751	|	fungi	|		|	blast name
+4890	|	Ascomycota	|		|	scientific name
+4890	|	ascomycete fungi	|		|	blast name
+4890	|	ascomycetes	|		|	genbank common name
+4890	|	sac fungi	|		|	common name
+4958	|	Debaryomyces	|		|	scientific name
+4958	|	Debaryomyces Lodder & Kreger-van Rij ex Kreger-van Rij, 1984	|		|	authority
+4958	|	Wingea	|		|	synonym
+5125	|	Hypocreales	|		|	scientific name
+5125	|	Pyrenomycetes	|	Pyrenomycetes <ascomycete fungi,Hypocreales>	|	in-part
+5197	|	Lecanorales	|		|	scientific name
+5506	|	Albonectria	|		|	synonym
+5506	|	Albonectria Rossman & Samuels, 1999	|		|	authority
+5506	|	Bisifusarium	|		|	synonym
+5506	|	Bisifusarium L. Lombard, Crous & W. Gams, 2015	|		|	authority
+5506	|	Cyanonectria	|		|	synonym
+5506	|	Cyanonectria Samuels & P. Chaverri, 2009	|		|	authority
+5506	|	Fusarium	|		|	scientific name
+5506	|	Fusarium Link, 1809	|		|	authority
+5506	|	Fusarium sect. Setofusarium	|		|	synonym
+5506	|	Fusarium sect. Setofusarium Nirenberg & Samuels, 1989	|		|	authority
+5506	|	Fusisporium	|		|	synonym
+5506	|	Fusisporium Link, 1809	|		|	authority
+5506	|	Geejayessia	|		|	synonym
+5506	|	Geejayessia Schroers, Grafenhan & Seifert, 2011	|		|	authority
+5506	|	Gibberella	|		|	synonym
+5506	|	Gibberella Sacc., 1877	|		|	authority
+5506	|	Haematonectria	|		|	synonym
+5506	|	Haematonectria Samuels & Nirenberg, 1999	|		|	authority
+5506	|	Luteonectria	|		|	synonym
+5506	|	Luteonectria Sand.-Den., L. Lombard, Schroers & Rossman, 2021	|		|	synonym
+5506	|	Neocosmospora	|		|	synonym
+5506	|	Neocosmospora E.F. Sm., 1899	|		|	authority
+5506	|	Nothofusarium	|		|	synonym
+5506	|	Nothofusarium Crous, Sand.-Den. & L. Lombard, 2021	|		|	authority
+5506	|	Rectifusarium	|		|	synonym
+5506	|	Rectifusarium L. Lombard, Crous & W. Gams, 2015	|		|	authority
+5506	|	Setofusarium	|		|	synonym
+5506	|	Setofusarium (Nirenberg & Samuels) Crous & Sand.-Den., 2021	|		|	authority
+6072	|	Eumetazoa	|		|	scientific name
+7711	|	Chordata	|		|	scientific name
+7711	|	chordates	|	chordates <blast name>	|	blast name
+7711	|	chordates	|	chordates <genbank common name>	|	genbank common name
+7742	|	Vertebrata	|	Vertebrata <vertebrates>	|	scientific name
+7742	|	Vertebrata Cuvier, 1812	|		|	authority
+7742	|	vertebrates	|	vertebrates <blast name>	|	blast name
+7742	|	vertebrates	|	vertebrates <genbank common name>	|	genbank common name
+7776	|	Gnathostomata	|	Gnathostomata <vertebrates>	|	scientific name
+7776	|	jawed vertebrates	|		|	genbank common name
+8287	|	Sarcopterygii	|		|	scientific name
+9347	|	Eutheria	|		|	scientific name
+9347	|	Placentalia	|		|	synonym
+9347	|	eutherian mammals	|		|	common name
+9347	|	placental mammals	|		|	common name
+9347	|	placentals	|	placentals <blast name>	|	blast name
+9347	|	placentals	|	placentals <genbank common name>	|	genbank common name
+9443	|	Primata	|		|	synonym
+9443	|	Primates	|		|	scientific name
+9443	|	Primates Linnaeus, 1758	|		|	authority
+9443	|	primate	|		|	equivalent name
+9443	|	primates	|		|	blast name
+9526	|	Catarrhini	|		|	scientific name
+9604	|	Hominidae	|		|	scientific name
+9604	|	Hominidae Gray, 1825	|		|	authority
+9604	|	Pongidae	|		|	synonym
+9604	|	great apes	|		|	genbank common name
+9605	|	Homo	|		|	scientific name
+9605	|	Homo Linnaeus, 1758	|		|	authority
+9605	|	humans	|		|	common name
+9606	|	Homo sapiens	|		|	scientific name
+9606	|	Homo sapiens Linnaeus, 1758	|		|	authority
+9606	|	human	|		|	genbank common name
+13366	|	Brettanomyces	|		|	scientific name
+13366	|	Brettanomyces N.H. Claussen ex Custers, 1940	|		|	authority
+13366	|	Dekkera	|		|	synonym
+13366	|	Eeniella	|		|	synonym
+13502	|	ATCC 48014	|	ATCC 48014 <type material>	|	type material
+13502	|	Brettanomyces nanus	|		|	scientific name
+13502	|	Brettanomyces nanus (M.T. Sm., Bat. Vegte & Scheffers) M.T. Sm., Boekhout, Kurtzman & O'Donnell, 1994	|		|	authority
+13502	|	CBS 1945	|	CBS 1945 <type material>	|	type material
+13502	|	CCRC 21335	|	CCRC 21335 <type material>	|	type material
+13502	|	CCRC:21335	|	CCRC:21335 <type material>	|	type material
+13502	|	Eeniella nana	|		|	synonym
+13502	|	Eeniella nana M.T. Sm., Bat. Vegte & Scheffers, 1981	|		|	authority
+13502	|	NRRL Y-17527	|	NRRL Y-17527 <type material>	|	type material
+13502	|	specimen-voucher:NRRL:Y:17527	|	specimen-voucher:NRRL:Y:17527 <type material>	|	type material
+27319	|	Metschnikowiaceae	|		|	scientific name
+27319	|	Metschnikowiaceae T. Kamienski ex Doweld, 2013	|		|	authority
+27337	|	CBS 130341	|	CBS 130341 <culture from epitype>	|	type material
+27337	|	NRRL 54785	|	NRRL 54785 <culture from epitype>	|	type material
+27337	|	PD322	|	PD322 <culture from epitype>	|	type material
+27337	|	UC 1953893	|	UC 1953893 <epitype>	|	type material
+27337	|	Verticillium dahliae	|		|	scientific name
+27337	|	Verticillium dahliae Klebahn, 1913	|		|	authority
+32523	|	Tetrapoda	|		|	scientific name
+32523	|	tetrapods	|		|	genbank common name
+32524	|	Amniota	|		|	scientific name
+32524	|	amniotes	|		|	genbank common name
+32525	|	Theria	|	Theria <mammals>	|	scientific name
+32525	|	Theria Parker & Haswell, 1897	|		|	authority
+33154	|	Fungi/Metazoa group	|		|	synonym
+33154	|	Opisthokonta	|		|	scientific name
+33154	|	Opisthokonta Cavalier-Smith 1987	|		|	authority
+33154	|	opisthokonts	|		|	synonym
+33183	|	Arachnomycetales	|		|	synonym
+33183	|	Ascosphaerales	|		|	synonym
+33183	|	Gymnoascales	|		|	synonym
+33183	|	Onygenales	|		|	scientific name
+33183	|	Onygenales Cif. ex Benny & Kimbr., 1980	|		|	authority
+33208	|	Animalia	|		|	synonym
+33208	|	Metazoa	|		|	scientific name
+33208	|	animals	|		|	blast name
+33208	|	metazoans	|		|	genbank common name
+33208	|	multicellular animals	|		|	common name
+33213	|	Bilateria	|		|	scientific name
+33511	|	Deuterostomia	|		|	scientific name
+33511	|	deuterostomes	|		|	common name
+34384	|	Arthrodermataceae	|		|	scientific name
+34384	|	Arthrodermataceae Locq. ex Currah, 1985	|		|	authority
+34384	|	Arthrodermataceae anamorphs	|		|	synonym
+34384	|	anamorphic Arthrodermataceae	|		|	synonym
+34384	|	dermatophytes	|		|	genbank common name
+34384	|	mitosporic Arthrodermataceae	|		|	includes
+34392	|	Microsporum	|		|	scientific name
+34392	|	Microsporum Gruby, 1843	|		|	authority
+40674	|	Mammalia	|		|	scientific name
+40674	|	mammals	|	mammals <blast name>	|	blast name
+40674	|	mammals	|	mammals <genbank common name>	|	genbank common name
+45357	|	ATCC 22991	|	ATCC 22991 <type material>	|	type material
+45357	|	CBS 5149	|	CBS 5149 <type material>	|	type material
+45357	|	Candida haemuli (Uden & Kolip.) S.A. Mey. & Yarrow 1978	|		|	synonym
+45357	|	Candida haemulonii	|		|	synonym
+45357	|	Candida haemulonii type II	|		|	includes
+45357	|	Candida haemulonis	|		|	synonym
+45357	|	Candidozyma haemuli	|		|	scientific name
+45357	|	Candidozyma haemuli (Uden & Kolip.) Q.M. Wang, Yurkov, Boekhout & F.Y. Bai, 2024	|		|	authority
+45357	|	DBVPG 6958	|	DBVPG 6958 <type material>	|	type material
+45357	|	IFO 10001	|	IFO 10001 <type material>	|	type material
+45357	|	IGC 3025	|	IGC 3025 <type material>	|	type material
+45357	|	JCM 3762	|	JCM 3762 <type material>	|	type material
+45357	|	NRRL Y-6693	|	NRRL Y-6693 <type material>	|	type material
+45357	|	Torulopsis haemuli Uden & Kolip., 1962	|		|	synonym
+45357	|	Torulopsis haemuloni	|		|	synonym
+45357	|	specimen-voucher:NRRL:Y:6693	|	specimen-voucher:NRRL:Y:6693 <type material>	|	type material
+45607	|	AJ 4995	|	AJ 4995 <holotype>	|	type material
+45607	|	ATCC 60130	|	ATCC 60130 <type material>	|	type material
+45607	|	CBS 6739	|	CBS 6739 <type material>	|	type material
+45607	|	CCRC 22618	|	CCRC 22618 <type material>	|	type material
+45607	|	CCRC:22618	|	CCRC:22618 <type material>	|	type material
+45607	|	Candida sorbophila	|		|	synonym
+45607	|	IFO 1583	|	IFO 1583 <culture from holotype>	|	type material
+45607	|	JCM 1514	|	JCM 1514 <type material>	|	type material
+45607	|	NRRL Y-7921	|	NRRL Y-7921 <type material>	|	type material
+45607	|	Torulopsis sorbophila	|		|	synonym
+45607	|	Torulopsis sorbophila Nakase, 1975	|		|	authority
+45607	|	Wickerhamiella sorbophila	|		|	scientific name
+45607	|	Wickerhamiella sorbophila (Nakase) C. Vega & Lachance, 2017	|		|	authority
+45607	|	specimen-voucher:NRRL:Y:7921	|	specimen-voucher:NRRL:Y:7921 <type material>	|	type material
+45787	|	Wickerhamiella	|		|	scientific name
+45787	|	Wickerhamiella Van der Walt & Liebenberg, 1973	|		|	authority
+56646	|	CBS 458.93	|	CBS 458.93 <holotype>	|	type material
+56646	|	Fusarium venenatum	|		|	scientific name
+56646	|	Fusarium venenatum Nirenberg, 1995	|		|	authority
+56646	|	Fusarium venetum	|		|	synonym
+56646	|	ICMP:20649	|	ICMP:20649 <type material>	|	type material
+58627	|	ATCC 20278	|	ATCC 20278 <culture from type material>	|	type material
+58627	|	BCRC 21710	|	BCRC 21710 <culture from type material>	|	type material
+58627	|	CBS 789	|	CBS 789 <culture from type material>	|	type material
+58627	|	CECT 11370	|	CECT 11370 <culture from type material>	|	type material
+58627	|	CECT 11370T	|	CECT 11370T <culture from type material>	|	type material
+58627	|	Debaryomyces fabryi	|		|	scientific name
+58627	|	Debaryomyces fabryi M. Ota, 1924	|		|	authority
+58627	|	Debaryomyces fabryi M.Ota, 1924	|		|	authority
+58627	|	Debaryomyces hansenii var. fabryi	|		|	synonym
+58627	|	Debaryomyces hansenii var. fabryi (M.Ota) Nakase & M. Suzuki 1985	|		|	authority
+58627	|	IFO 0015	|	IFO 0015 <culture from type material>	|	type material
+58627	|	JCM 2104	|	JCM 2104 <culture from type material>	|	type material
+58627	|	KCTC 7603	|	KCTC 7603 <culture from type material>	|	type material
+58627	|	NBRC 0015	|	NBRC 0015 <culture from type material>	|	type material
+58627	|	NRRL Y-17914	|	NRRL Y-17914 <culture from type material>	|	type material
+58627	|	Y-17914	|	Y-17914 <culture from type material>	|	type material
+58627	|	type strain: CBS 789	|	type strain: CBS 789 <culture from type material>	|	type material
+63221	|	Feldhofer 1	|	Feldhofer 1 <holotype>	|	type material
+63221	|	Homo neanderthalensis	|		|	synonym
+63221	|	Homo sapiens neanderthalensis	|		|	scientific name
+63221	|	Homo sapiens neanderthalensis King, 1864	|		|	authority
+63221	|	Neandertal	|		|	genbank common name
+63221	|	Neandertal man	|		|	common name
+63221	|	Neanderthal	|		|	common name
+63221	|	Neanderthal 1	|	Neanderthal 1 <holotype>	|	type material
+63221	|	Neanderthal man	|		|	common name
+63402	|	Achorion gypseum	|		|	synonym
+63402	|	Achorion gypseum E. Bodin, 1907	|		|	authority
+63402	|	Arthroderma gypseum	|		|	synonym
+63402	|	Arthroderma gypseum (Nann.) Weitzman, McGinnis, A.A. Padhye & Ajello, 1986	|		|	authority
+63402	|	CBS 258.61	|	CBS 258.61 <culture from neotype>	|	type material
+63402	|	Closterosporia gypsea	|		|	synonym
+63402	|	Gymnoascus gypseus	|		|	synonym
+63402	|	Gymnoascus gypseus Nann., 1929	|		|	authority
+63402	|	Microsporum gypseum	|		|	synonym
+63402	|	Microsporum gypseum (E. Bodin) Guiart & Grigoraki, 1928	|		|	authority
+63402	|	Microsporum gypseum var. vinosum	|		|	synonym
+63402	|	Microsporum gypseum var. vinosum M.A. Gordon & Lusick, 1965	|		|	authority
+63402	|	Nannizzia gypsea	|		|	scientific name
+63402	|	Nannizzia gypsea (Nannizzi) Stockdale	|		|	synonym
+63402	|	Sabouraudites gypseus	|		|	synonym
+63402	|	Thallomicrosporon kuehnii	|		|	synonym
+63402	|	Thallomicrosporon kuehnii Benedek, 1964	|		|	authority
+63402	|	Trichophyton gypseum	|		|	synonym
+63405	|	Arthroderma otae	|		|	synonym
+63405	|	Arthroderma otae (A. Haseg. & Usui) McGinnis, Weitzman, A.A. Padhye & Ajello, 1986	|		|	synonym
+63405	|	CBS 496.86	|	CBS 496.86 <culture from neotype>	|	type material
+63405	|	Microsporum canis	|		|	scientific name
+63405	|	Microsporum canis E. Bodin ex Gueg., 1902	|		|	authority
+63405	|	Nannizzia otae	|		|	synonym
+63405	|	Nannizzia otae A. Haseg. & Usui 1974	|		|	authority
+78060	|	Alectoriaceae	|		|	synonym
+78060	|	Anziaceae	|		|	synonym
+78060	|	Parmeliaceae	|		|	scientific name
+89593	|	Craniata	|	Craniata <chordates>	|	scientific name
+110618	|	Nectriaceae	|		|	scientific name
+110618	|	Nectriaceae Tul. & C. Tul., 1865	|		|	authority
+110618	|	mitosporic Nectriaceae	|		|	includes
+112415	|	Letharia	|		|	scientific name
+112415	|	Letharia (Th. Fr.) Zahlbr., 1892	|		|	authority
+117570	|	Teleostomi	|		|	scientific name
+117571	|	Euteleostomi	|		|	scientific name
+117571	|	bony vertebrates	|		|	genbank common name
+131567	|	biota	|		|	synonym
+131567	|	cellular organisms	|		|	scientific name
+147537	|	Saccharomycotina	|		|	scientific name
+147537	|	budding yeasts & others	|		|	blast name
+147537	|	true yeasts	|		|	common name
+147538	|	Euascomycota	|		|	synonym
+147538	|	Pezizomycotina	|		|	scientific name
+147538	|	filamentous ascomycetes	|		|	genbank common name
+147545	|	Chaetothyriomycetes	|		|	includes
+147545	|	Eurotiomycetes	|		|	scientific name
+147545	|	Loculoascomycetes	|	Loculoascomycetes <Eurotiomycetes>	|	in-part
+147545	|	Plectomycetes	|	Plectomycetes <ascomycete fungi,Eurotiomycetes>	|	in-part
+147545	|	bitunicate ascomycetes	|	bitunicate ascomycetes <Eurotiomycetes>	|	in-part
+147547	|	Lecanoromycetes	|		|	scientific name
+147550	|	Pyrenomycetes	|	Pyrenomycetes <ascomycete fungi,Sordariomycetes>	|	in-part
+147550	|	Sordariomycetes	|		|	scientific name
+157822	|	Lecanorineae	|		|	scientific name
+171627	|	Fusarium fujikuroi species complex	|		|	scientific name
+171627	|	Gibberella fujikuroi complex	|		|	synonym
+207598	|	Homininae	|		|	scientific name
+207598	|	Homo/Pan/Gorilla group	|		|	synonym
+222543	|	Hypocreomycetidae	|		|	scientific name
+222543	|	mitosporic Hypocreomycetidae	|		|	includes
+229219	|	Blastomyces	|		|	scientific name
+229219	|	Blastomyces Gilchrist & W.R. Stokes, 1898	|		|	authority
+299071	|	Ajellomycetaceae	|		|	scientific name
+299071	|	Ajellomycetaceae Unter., J.A. Scott & Sigler, 2004	|		|	authority
+314146	|	Euarchontoglires	|		|	scientific name
+314293	|	Anthropoidea	|		|	synonym
+314293	|	Simiiformes	|		|	scientific name
+314295	|	Hominoidea	|		|	scientific name
+314295	|	ape	|	ape <primates>	|	common name
+314295	|	apes	|		|	genbank common name
+376913	|	Haplorrhini	|		|	scientific name
+388435	|	Lecanoromycetidae	|		|	scientific name
+410830	|	Trichomonascaceae	|		|	scientific name
+410830	|	Trichomonascaceae Kurtzman & Robnett, 2007	|		|	authority
+451864	|	Dikarya	|		|	scientific name
+451871	|	Eurotiomycetidae	|		|	scientific name
+498257	|	Verticillium dahliae VdLs.17	|		|	scientific name
+535722	|	Arthroderma gypseum CBS 118893	|		|	equivalent name
+535722	|	Microsporum gypseum CBS 118893	|		|	equivalent name
+535722	|	Nannizzia gypsea CBS 118893	|		|	scientific name
+554155	|	Arthroderma otae CBS 113480	|		|	synonym
+554155	|	Microsporum canis CBS 113480	|		|	scientific name
+554155	|	Microsporum canis CBS113480	|		|	synonym
+559298	|	Ajellomyces dermatitidis SLH#14081	|		|	equivalent name
+559298	|	Ajellomyces dermatitidis SLH14081	|		|	equivalent name
+559298	|	Blastomyces dermatitidis SLH14081	|		|	equivalent name
+559298	|	Blastomyces gilchristii SLH14081	|		|	scientific name
+560253	|	Letharia lupina	|		|	scientific name
+560253	|	Letharia lupina Altermann, Goward & Leavitt, 2016	|		|	authority
+560253	|	Letharia sp. Altermann EP3a	|		|	includes
+560253	|	Letharia sp. SA-2008b	|		|	includes
+560253	|	UC 2049992	|	UC 2049992 <holotype>	|	type material
+569360	|	Fusarium graminearum species complex	|		|	includes
+569360	|	Fusarium sambucinum species complex	|		|	scientific name
+715989	|	sordariomyceta	|		|	scientific name
+716545	|	saccharomyceta	|		|	scientific name
+716546	|	leotiomyceta	|		|	scientific name
+741158	|	Denisova hominin	|		|	genbank common name
+741158	|	Denisovan	|		|	common name
+741158	|	Denisovans	|		|	common name
+741158	|	Homo sapiens ssp. 'Denisova'	|		|	equivalent name
+741158	|	Homo sapiens ssp. Denisova	|		|	equivalent name
+741158	|	Homo sapiens subsp. 'Denisova'	|		|	scientific name
+741158	|	Homo sp. Altai	|		|	synonym
+766764	|	Debaryomycetaceae	|		|	scientific name
+766764	|	Debaryomycetaceae Kurtzman & M. Suzuki, 2010	|		|	authority
+766764	|	Debaryomycetaceae Kurtzman et M. Suzuki 2010	|		|	authority
+1028384	|	Glomerellales	|		|	scientific name
+1028384	|	Glomerellales Chadef. ex Reblova, W. Gams & Seifert 2011	|		|	authority
+1033978	|	Plectosphaerellaceae	|		|	scientific name
+1033978	|	Plectosphaerellaceae W.Gams, Summerbell & Zare 2007	|		|	authority
+1033978	|	mitosporic Plectosphaerellaceae	|		|	includes
+1036719	|	Verticillium	|		|	scientific name
+1036719	|	Verticillium Nees, 1816	|		|	authority
+1156497	|	Pichiaceae	|		|	scientific name
+1156497	|	Pichiaceae M. Groenew., Hittinger, Opulente & A. Rokas, 2023	|		|	authority
+1156497	|	Pichiaceae Zender, 1925	|		|	authority
+1231522	|	CBS 7798	|	CBS 7798 <holotype>	|	type material
+1231522	|	Candida duobushaemuli Cend.-Bueno, Kolecka, Alastr.-Izq., Gomez-Lopez, Cuenc.-Estr. & Boekhout, 2012	|		|	synonym
+1231522	|	Candida duobushaemulonii	|		|	synonym
+1231522	|	Candidozyma duobushaemuli	|		|	scientific name
+1231522	|	Candidozyma duobushaemuli (Cend.-Bueno, Kolecka, Alastr.-Izq., Gomez-Lopez, Cuenc.-Estr. & Boekhout, 2012) Q.M. Wang, Yurkov, Boekhout & F.Y. Bai, 2024	|		|	authority
+1231522	|	NRRL Y-17802	|	NRRL Y-17802 <culture from holotype>	|	type material
+1231522	|	NRRL-Y-17802	|	NRRL-Y-17802 <culture from holotype>	|	type material
+1231522	|	NRRL:Y-17802	|	NRRL:Y-17802 <culture from holotype>	|	type material
+1231522	|	NRRLY-17802	|	NRRLY-17802 <culture from holotype>	|	type material
+1231523	|	CNM CL-7239	|	CNM CL-7239 <holotype>	|	type material
+1231523	|	CNM-CL-7239	|	CNM-CL-7239 <holotype>	|	type material
+1231523	|	CNM:CL-7239	|	CNM:CL-7239 <holotype>	|	type material
+1231523	|	CNMCL-7239	|	CNMCL-7239 <holotype>	|	type material
+1231523	|	CNMCL7239	|	CNMCL7239 <holotype>	|	type material
+1231523	|	Candida haemuli var. vulneris Cend.-Bueno, Kolecka, Alastr.-Izq., Gomez-Lopez, Cuenc.-Estr. & Boekhout, 2012	|		|	synonym
+1231523	|	Candida haemuloni var. vulnera	|		|	synonym
+1231523	|	Candidozyma haemuli var. vulneris	|		|	scientific name
+1231523	|	Candidozyma haemuli var. vulneris (Cend.-Bueno, Kolecka, Alastr.-Izq., Gomez-Lopez, Cuenc.-Estr. & Boekhout) Q.M. Wang, Yurkov, Boekhout & F.Y. Bai, 2024	|		|	authority
+1338369	|	Dipnotetrapodomorpha	|		|	scientific name
+1437010	|	Boreoeutheria	|		|	scientific name
+1437010	|	Boreotheria	|		|	synonym
+1520881	|	OSLEUM clade	|		|	scientific name
+1567544	|	CBS 144400	|	CBS 144400 <culture from holotype>	|	type material
+1567544	|	CBS-144400	|	CBS-144400 <culture from holotype>	|	type material
+1567544	|	CBS144400	|	CBS144400 <culture from holotype>	|	type material
+1567544	|	CBS:144400	|	CBS:144400 <culture from holotype>	|	type material
+1567544	|	Fusarium sp. ML-2014i	|		|	includes
+1567544	|	Fusarium tjaetaba	|		|	scientific name
+1567544	|	Fusarium tjaetaba T.T.H. Vu, J.L. Walsh, M.H. Laurence, L.W. Burgess, E.C.Y. Liew & Summerell, 2016	|		|	authority
+1567544	|	NRRL 66243	|	NRRL 66243 <culture from holotype>	|	type material
+1567544	|	NRRL-66243	|	NRRL-66243 <culture from holotype>	|	type material
+1567544	|	NRRL66243	|	NRRL66243 <culture from holotype>	|	type material
+1567544	|	NRRL:66243	|	NRRL:66243 <culture from holotype>	|	type material
+1567544	|	RBG 5361	|	RBG 5361 <holotype>	|	type material
+1567544	|	RBG-5361	|	RBG-5361 <holotype>	|	type material
+1567544	|	RBG5361	|	RBG5361 <holotype>	|	type material
+1567544	|	RBG:5361	|	RBG:5361 <holotype>	|	type material
+1681229	|	Blastomyces gilchristii	|		|	scientific name
+1681229	|	Blastomyces gilchristii Eliz.M. Brown, L.R. McTaggart, Sean X. Zhang, D.E. Low, D.A. Stevens & S.E. Richardson, 2013	|		|	authority
+1681229	|	CBS 134223	|	CBS 134223 <culture from holotype>	|	type material
+1681229	|	PHO TB00018	|	PHO TB00018 <holotype>	|	type material
+1681229	|	TB00018 2005	|	TB00018 2005 <type material>	|	type material
+1915381	|	Nannizzia	|		|	scientific name
+1915381	|	Nannizzia Stockdale, 1961	|		|	authority
+1915381	|	Thallomicrosporon	|		|	synonym
+1915381	|	Thallomicrosporon Benedek, 1964	|		|	authority
+2916678	|	CTG clade	|		|	common name
+2916678	|	CUG-Ser1 clade	|		|	genbank common name
+2916678	|	Serinales	|		|	scientific name
+2916678	|	Serinales M. Groenew., Hittinger, Opulente & A. Rokas, 2023	|		|	authority
+3239873	|	Dipodascomycetes	|		|	scientific name
+3239873	|	Dipodascomycetes M. Groenew., Hittinger, Opulente & A. Rokas, 2023	|		|	authority
+3239874	|	Pichiomycetes	|		|	scientific name
+3239874	|	Pichiomycetes M. Groenew., Hittinger, Opulente & A. Rokas, 2023	|		|	authority
+3243772	|	Dipodascales	|		|	scientific name
+3243772	|	Dipodascales M. Groenew., Hittinger, Opulente & A. Rokas, 2023	|		|	authority
+3243775	|	Pichiales	|		|	scientific name
+3243775	|	Pichiales M. Groenew., Hittinger, Opulente & A. Rokas, 2023	|		|	authority
+3303203	|	CAH clade	|		|	common name
+3303203	|	Candidozyma	|		|	scientific name
+3303203	|	Candidozyma Q.M. Wang, Yurkov, Boekhout & F.Y. Bai, 2024	|		|	authority

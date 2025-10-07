@@ -120,7 +120,7 @@ logger.info(
 logger.info("Samples:")
 logger.info(samples.to_string(index=False))
 logger.info("Units:")
-logger.info(units.index)
+logger.info(str(units.index))
 
 
 ####################

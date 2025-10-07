@@ -43,22 +43,14 @@ derep:
 #############
 prefilter:
   ref:
-    hires_organelles_viruses_smags:
-      n_shards: 7
-      path: "/datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/hires-organelles-viruses-smags.{n_shard}.fas.gz"
+    test:
+      n_shards: 2
+      path: "data/test.{n_shard}-of-2.fas.gz"
       map:
         tool: bowtie2
-        params: "-k 50 -N 1 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.08 --no-unal"
-        bt2l: True
-      acc2taxid: "/datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/taxonomy/hires-organelles-viruses-smags.acc2taxid.gz"
-    human_genome:
-      n_shards: 1
-      path: "/datasets/caeg_dataset/references/human_genome/GCF_000001405.40/GCF_000001405.40_GRCh38.p14_genomic.fas.gz"
-      map:
-        tool: bowtie2
-        params: "-k 50 -N 0 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.08 --no-unal"
+        params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
         bt2l: False
-      acc2taxid: "/datasets/caeg_dataset/references/human_genome/GCF_000001405.40/taxonomy/hires-organelles-viruses-smags/GCF_000001405.40_GRCh38.p14_genomic.acc2taxid.gz"
+      acc2taxid: "data/test.acc2taxid.gz"
 
   filter:
     saturated_reads:
@@ -68,19 +60,19 @@ prefilter:
   bam_filter:
     reassign:
       activate: false
-      params: "--iters 0 --min-read-ani 92 --min-read-count 3 --scale 0 --reference-lengths /datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/misc/genomes.len.map"
+      params: "--iters 0 --min-read-ani 92 --min-read-count 3 --scale 0 --reference-lengths genomes.len.map"
 
     filter:
       activate: false
-      params: "--min-read-ani 92 --min-read-count 3 --min-normalized-entropy 0.6 --min-normalized-gini 0.4 --min-avg-read-ani 94 --reference-lengths /datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/misc/genomes.len.map"
+      params: "--min-read-ani 92 --min-read-count 3 --min-normalized-entropy 0.6 --min-normalized-gini 0.4 --min-avg-read-ani 94 --reference-lengths genomes.len.map"
 
     lca:
       activate: false
-      params: "--lca-rank genus --reference-lengths /datasets/caeg_dataset/references/hires-organelles-viruses-smags/20240313/misc/genomes.len.map"
+      params: "--lca-rank genus --reference-lengths genomes.len.map"
 
   taxonomy:
-    nodes: "/datasets/caeg_dataset/taxonomy/hires-organelles-viruses-smags/20240313/nodes.dmp"
-    names: "/datasets/caeg_dataset/taxonomy/hires-organelles-viruses-smags/20240313/names.dmp"
+    nodes: "data/taxdump/nodes.dmp"
+    names: "data/taxdump/names.dmp"
 
   metadmg:
     damage:
@@ -95,41 +87,14 @@ prefilter:
 
 euk:
   ref:
-    refseq_mitoch:
-      n_shards: 1
-      path: "/datasets/caeg_dataset/references/ncbi/20250530/data/refseq_mitochondrion.genomic.fas.gz"
-      map: &map_euk_bowtie2_bt2
+    test:
+      n_shards: 2
+      path: "data/test.{n_shard}-of-2.fas.gz"
+      map:
         tool: bowtie2
-        params: "-k 50 -D 15 -R 2 -L 22 -i S,1,1.15 --np 1 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
+        params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
         bt2l: False
-      acc2taxid: "/datasets/caeg_dataset/references/ncbi/20250530/taxonomy/ncbi/refseq_mitochondrion.genomic.acc2taxid.gz"
-    refseq_plastid:
-      n_shards: 1
-      path: "/datasets/caeg_dataset/references/ncbi/20250530/data/refseq_plastid.genomic.fas.gz"
-      map:
-        <<: *map_euk_bowtie2_bt2
-      acc2taxid: "/datasets/caeg_dataset/references/ncbi/20250530/taxonomy/ncbi/refseq_plastid.genomic.acc2taxid.gz"
-    core_nt:
-      n_shards: 1
-      path: "/datasets/caeg_dataset/references/ncbi/20250530/data/core_nt.fas.gz"
-      map:
-        <<: *map_euk_bowtie2_bt2
-        bt2l: True
-      acc2taxid: "/datasets/caeg_dataset/references/ncbi/20250530/taxonomy/ncbi/core_nt.acc2taxid.gz"
-#    wgs_eukaryota:
-#      n_shards: 129
-#      path: "/datasets/caeg_dataset/references/ncbi/20250530/data/wgs_eukaryota.{n_shard}.fas.gz"
-#      map:
-#        <<: *map_euk_bowtie2_bt2
-#        bt2l: True
-#      acc2taxid: "/datasets/caeg_dataset/references/ncbi/20250530/taxonomy/ncbi/wgs_eukaryota.acc2taxid.gz"
-#    phylo_norway:
-#      n_shards: 10
-#      path: "/datasets/caeg_dataset/references/phylo_norway/20250127/results/shard.{n_shard}-of-10"
-#      map:
-#        <<: *map_euk_bowtie2_bt2
-#        bt2l: True
-#      acc2taxid: "/datasets/caeg_dataset/references/phylo_norway/20250127/taxonomy/ncbi/phylo_norway.acc2taxid.gz"
+      acc2taxid: "data/test.acc2taxid.gz"
 
   filter:
     saturated_reads:
@@ -139,7 +104,7 @@ euk:
   bam_filter:
     reassign:
       activate: false
-      params: "--iters 0 --min-read-ani 92 --min-read-count 3 --scale 0 --squarem-min-improvement 0.001 --squarem-max-step-factor 2.0"
+      params: "--iters 0 --min-read-ani 92 --min-read-count 3 --scale 0"
 
     filter:
       activate: false
@@ -150,8 +115,8 @@ euk:
       params: "--lca-rank genus"
 
   taxonomy:
-    nodes: "/datasets/caeg_dataset/taxonomy/ncbi/20250530/nodes.dmp"
-    names: "/datasets/caeg_dataset/taxonomy/ncbi/20250530/names.dmp"
+    nodes: "data/taxdump/nodes.dmp"
+    names: "data/taxdump/names.dmp"
 
   metadmg:
     damage:
@@ -168,5 +133,5 @@ euk:
 ## REPORT ##
 ############
 report:
-  multiqc: "--verbose --cl-config 'custom_logo: /projects/caeg/data/resources/KU_long.png' --cl-config 'custom_logo_title: CAEG - Center for Ancient Environmental Genomics' --cl-config 'custom_logo_url: https://globe.ku.dk/research/caeg/'"
+  multiqc: "--verbose --cl-config 'custom_logo: data/KU_long.png' --cl-config 'custom_logo_title: CAEG - Center for Ancient Environmental Genomics' --cl-config 'custom_logo_url: https://globe.ku.dk/research/caeg/'"
   multiqc_db_url: ""
