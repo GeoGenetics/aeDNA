@@ -158,7 +158,7 @@ rule multiqc_trim_upload:
     log:
         "logs/reports/multiqc_trim.upload.log",
     params:
-        db_url=config["report"]["multiqc_db_url"],
+        db_url=config["report"].get("multiqc_db_url"),
     conda:
         "envs/multiqc_upload.yaml"
     localrule: True
