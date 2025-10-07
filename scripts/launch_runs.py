@@ -72,53 +72,51 @@ logging.basicConfig(
 
 
 # Infer Pixi env and workflow paths
-if args.workflow.startswith("prod"):
+if args.workflow == "prod":
     pixi_env = workflow_path = "/projects/caeg/apps/aeDNA"
     extra_args += " --profile /projects/caeg/data/resources/profile_production"
-    if args.workflow == "prod-legacy":
-        workflow_path = "/projects/caeg/apps/aeDNA-legacy"
-    elif args.workflow == "prod-test":
-        pixi_env = workflow_path = "/projects/caeg/people/lnc113/workflows/aeDNA/aeDNA"
+elif args.workflow == "prod-legacy":
+    pixi_env = "/projects/caeg/apps/aeDNA"
+    workflow_path = "/projects/caeg/apps/aeDNA-legacy"
+elif args.workflow == "prod-test":
+    pixi_env = workflow_path = "/projects/caeg/people/lnc113/workflows/aeDNA/aeDNA"
 elif args.workflow == "caterpillar":
     pixi_env = workflow_path = "/projects/caeg/people/lnc113/workflows/caterpillar"
 
 
+# Infer account/partition
+import socket
+hostname = socket.gethostname()
+if hostname.startswith("dandy"):
+    hpc_snakemake_account = hpc_job_account = "prod"
+    hpc_job_partition = "compregular"
+    hpc_snakemake_partition = "compsnake"
+elif hostname.startswith("rubus"):
+    hpc_snakemake_account = hpc_job_account = "bench"
+    hpc_snakemake_partition = "epyc_long,xeon_fat_long"
+    hpc_job_partition = "epyc,epyc_noht,xeon_fat"
+else:
+    logging.error(f"Host {hostname} not supported yet!")
+    exit(-1)
+
+
 # Infer hostname, HPC account and partition
-cmd = f"env --chdir={{id}} bash -c "
+opts = "--jobs 300 --retries 1"
 if args.run == "local":
     logging.info(f"Running jobs locally")
-    opts_hpc = ""
-else:
-    import socket
-
-    opts_hpc = f"--executor {args.run}"
-    hostname = socket.gethostname()
-    if hostname.startswith("dandy"):
-        hpc_snakemake_account = hpc_job_account = "prod"
-        hpc_job_partition = "compregular"
-        hpc_snakemake_partition = "compsnake"
-    elif hostname.startswith("rubus"):
-        hpc_snakemake_account = hpc_job_account = "bench"
-        hpc_snakemake_partition = "epyc_long,xeon_fat_long"
-        hpc_job_partition = "epyc,epyc_noht,xeon_fat"
-    else:
-        logging.error(f"Host {hostname} not supported yet!")
-        exit(-1)
-
-
-    if args.submit_snakemake:
-        if args.run == "slurm":
-            cmd = f"sbatch --chdir {{id}} --job-name {{id}} --account {hpc_snakemake_account} --partition {hpc_snakemake_partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap="
-            opts_hpc += f" --default-resources slurm_account={hpc_job_account} slurm_partition={hpc_job_partition} tmpdir='{args.tmp_dir}' --slurm-status-attempts 1000"
-        else:
-            logging.error(f"HPC {args.run} not supported yet!")
-            exit(-1)
-
-        logging.info(f"Workflows will be submitted to the {args.run} HPC, on account '{hpc_snakemake_account}' and partition '{hpc_snakemake_partition}'.")
-    else:
-        logging.info(f"Workflows will be run locally on host {hostname}")
-
+    opts += f" --default-resources tmpdir='{args.tmp_dir}'"
+elif args.run == "slurm":
     logging.info(f"Jobs will be submitted to the {args.run} HPC, on account '{hpc_job_account}' and partition '{hpc_job_partition}'.")
+    opts += f" --executor {args.run} --default-resources slurm_account={hpc_job_account} slurm_partition={hpc_job_partition} tmpdir='{args.tmp_dir}'"
+
+
+# Submit snakemake process
+if args.submit_snakemake:
+    cmd = f"sbatch --chdir {{id}} --job-name {{id}} --account {hpc_snakemake_account} --partition {hpc_snakemake_partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap="
+    logging.info(f"Workflows will be submitted to the {args.run} HPC, on account '{hpc_snakemake_account}' and partition '{hpc_snakemake_partition}'.")
+else:
+    cmd = f"env --chdir={{id}} bash -c "
+    logging.info(f"Workflows will be run locally on host {hostname}")
 
 
 # Read job list
@@ -140,6 +138,6 @@ logging.debug(df)
 logging.info("Build command")
 
 for id in df.index:
-    print(f'{cmd.format(id=id)}"pixi run --manifest-path {pixi_env} snakemake --snakefile {workflow_path}/workflow/Snakefile --workflow-profile /projects/caeg/data/resources/profile {extra_args} {opts_hpc}"; sleep 0.5')
+    print(f'{cmd.format(id=id)}"pixi run --manifest-path {pixi_env} snakemake --snakefile {workflow_path}/workflow/Snakefile --workflow-profile /projects/caeg/data/resources/profile {extra_args} {opts}"; sleep 0.5')
 
 exit(0)
