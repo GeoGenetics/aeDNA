@@ -22,17 +22,32 @@ parser.add_argument(
     help="Path to stats file",
 )
 parser.add_argument(
+    "-w",
     "--workflow",
     action="store",
-    choices=["prod", "prod-legacy", "prod-test", "caterpillar"],
     default="prod",
+    choices=["prod", "prod-legacy", "prod-test", "caterpillar"],
     help="Workflow to use",
 )
 parser.add_argument(
-    "--scheduler",
+    "-r",
+    "--run",
     action="store",
-    default="slurm",
-    help="HPC scheduler",
+    default="local",
+    choices=["local", "slurm"],
+    help="How to run jobs?",
+)
+parser.add_argument(
+    "--submit-snakemake",
+    action="store_true",
+    default=False,
+    help="Submit Snakemake as an HPC job",
+)
+parser.add_argument(
+    "--tmp-dir",
+    action="store",
+    default="/projects/caeg/scratch/production/",
+    help="Path to temp folder",
 )
 parser.add_argument(
     "-l",
@@ -56,6 +71,56 @@ logging.basicConfig(
 )
 
 
+# Infer Pixi env and workflow paths
+if args.workflow.startswith("prod"):
+    pixi_env = workflow_path = "/projects/caeg/apps/aeDNA"
+    extra_args += " --profile /projects/caeg/data/resources/profile_production"
+    if args.workflow == "prod-legacy":
+        workflow_path = "/projects/caeg/apps/aeDNA-legacy"
+    elif args.workflow == "prod-test":
+        pixi_env = workflow_path = "/projects/caeg/people/lnc113/workflows/aeDNA/aeDNA"
+elif args.workflow == "caterpillar":
+    pixi_env = workflow_path = "/projects/caeg/people/lnc113/workflows/caterpillar"
+
+
+# Infer hostname, HPC account and partition
+cmd = f"env --chdir={{id}} bash -c "
+if args.run == "local":
+    logging.info(f"Running jobs locally")
+    opts_hpc = ""
+else:
+    import socket
+
+    opts_hpc = f"--executor {args.run}"
+    hostname = socket.gethostname()
+    if hostname.startswith("dandy"):
+        hpc_snakemake_account = hpc_job_account = "prod"
+        hpc_job_partition = "compregular"
+        hpc_snakemake_partition = "compsnake"
+    elif hostname.startswith("rubus"):
+        hpc_snakemake_account = hpc_job_account = "bench"
+        hpc_snakemake_partition = "epyc_long,xeon_fat_long"
+        hpc_job_partition = "epyc,epyc_noht,xeon_fat"
+    else:
+        logging.error(f"Host {hostname} not supported yet!")
+        exit(-1)
+
+
+    if args.submit_snakemake:
+        if args.run == "slurm":
+            cmd = f"sbatch --chdir {{id}} --job-name {{id}} --account {hpc_snakemake_account} --partition {hpc_snakemake_partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap="
+            opts_hpc += f" --default-resources slurm_account={hpc_job_account} slurm_partition={hpc_job_partition} tmpdir='{args.tmp_dir}' --slurm-status-attempts 1000"
+        else:
+            logging.error(f"HPC {args.run} not supported yet!")
+            exit(-1)
+
+        logging.info(f"Workflows will be submitted to the {args.run} HPC, on account '{hpc_snakemake_account}' and partition '{hpc_snakemake_partition}'.")
+    else:
+        logging.info(f"Workflows will be run locally on host {hostname}")
+
+    logging.info(f"Jobs will be submitted to the {args.run} HPC, on account '{hpc_job_account}' and partition '{hpc_job_partition}'.")
+
+
 # Read job list
 logging.info("Reading input file(s)")
 df = pd.concat(
@@ -66,36 +131,15 @@ df = pd.concat(
         for job_list in args.job_list
     ]
 )
-
-
 n_jobs = df.shape[0]
 logging.info(f"Launching {n_jobs} jobs")
 logging.debug(df)
 
 
-logging.info("Build base command")
-if args.workflow == "prod":
-    pixi_path = workflow_path = "/projects/caeg/apps/aeDNA"
-elif args.workflow == "prod-legacy":
-    pixi_path = "/projects/caeg/apps/aeDNA"
-    workflow_path = "/projects/caeg/apps/aeDNA-legacy"
-elif args.workflow == "prod-test":
-    pixi_path = workflow_path = "/projects/caeg/people/lnc113/workflows/aeDNA/aeDNA"
-elif args.workflow == "caterpillar":
-    pixi_path = workflow_path = "/projects/caeg/people/lnc113/workflows/caterpillar"
-
-cmd = f"pixi run --manifest-path {pixi_path} snakemake --snakefile {workflow_path}/workflow/Snakefile --workflow-profile /projects/caeg/data/resources/profile {extra_args}"
-
-
 # Print command
+logging.info("Build command")
+
 for id in df.index:
-    if args.scheduler == "":
-        print(f"env --chdir={id} {cmd}")
-    elif args.scheduler == "slurm":
-        print(
-            f'sbatch --chdir {id} --job-name {id} --account prod --partition compsnake --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap "{cmd} --profile /projects/caeg/data/resources/profile_production --executor slurm --retries 1"; sleep 1'
-        )
-    else:
-        logging.warning(f"HPC scheduler {args.scheduler} not supported!")
+    print(f'{cmd.format(id=id)}"pixi run --manifest-path {pixi_env} snakemake --snakefile {workflow_path}/workflow/Snakefile --workflow-profile /projects/caeg/data/resources/profile {extra_args} {opts_hpc}"; sleep 0.5')
 
 exit(0)

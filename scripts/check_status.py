@@ -2,20 +2,46 @@
 
 import argparse
 import logging
+import numpy as np
 import pandas as pd
 from pathlib import Path
 
 
-# Allowed status; order matters!
-status_choices = [
-    "RUNNING",
-    "PENDING",
-    "OK",
-    "ERROR",
-    "ERROR_SBATCH",
-    "NOT_RUN",
-    "LOCKED",
-]
+# Log messages and status; order matters!
+status_msgs = {
+    "aeDNA workflow finished successfully!": "OK",
+    "steps (100%) done": "OK",
+    "Directory cannot be locked": "LOCKED",
+    "aeDNA workflow finished with an error!": "ERROR",
+    "At least one job did not complete successfully.": "ERROR",
+    "HTTPError:": "ERROR_NETWORK",
+    ": error: ": "ERROR_SLURM",
+    "Cleaning up log files older than ": "NOT_RUN",
+    "NOT_EXIST": "NOT_EXIST",
+    "RUNNING": "RUNNING",
+    "PENDING": "PENDING",
+    "ERROR_OOM": "ERROR_OOM",
+    "UNKNOWN": "UNKNOWN",
+}
+
+
+def parse_snakemake_logs(log, n_lines=10):
+    if isinstance(log, Path):
+        with open(log, "r") as log_fh:
+            # Read log file
+            log = log_fh.read().splitlines()
+            # Get last unique n_lines
+            log_tail = list(dict.fromkeys(reversed(log)))[0:n_lines]
+            # Search for error messages
+            for msg, status in status_msgs.items():
+                for log_msg in log_tail:
+                    if msg in log_msg:
+                        return status
+            return pd.NA
+    elif pd.isna(log):
+        return "NOT_RUN"
+    else:
+        return pd.NA
 
 
 # Parse command-line arguments
@@ -42,13 +68,13 @@ parser.add_argument(
 parser.add_argument(
     "--hpc-extra",
     action="store",
-    default="--partition compsnake --starttime now-5days",
+    default="--starttime now-10days",
     help="HPC extra query arguments",
 )
 parser.add_argument(
     "-s",
     "--status",
-    choices=status_choices,
+    choices=set(status_msgs.values()),
     action="store",
     help="Status of jobs to print",
 )
@@ -83,23 +109,40 @@ df = pd.concat(
         for job_list in args.job_list
     ]
 )
-
 n_jobs = df.shape[0]
 logging.info(f"Checking {n_jobs} jobs")
-logging.debug(df)
 
 
-# Looking up Snakemake logs
+######################
+### Snakemake logs ###
+######################
 logging.info("Looking up Snakemake log")
 df["snakemake_log"] = df.index.map(
     lambda x: (
         [pd.NA] + sorted((Path(x) / ".snakemake" / "log").glob("20*.*.snakemake.log"))
     ).pop()
 )
+# Parse Snakemake logs
+df["status"] = df["snakemake_log"].map(lambda x: parse_snakemake_logs(x))
+# Check locked runs
+locked_runs = df.index.map(
+    lambda x: any((Path(x) / ".snakemake" / "locks").glob("*.lock"))
+)
+df.loc[locked_runs, "status"] = "LOCKED"
+# Check non-existing runs
+exist_runs = df.index.map(lambda x: Path(x).exists())
+df.loc[~exist_runs, "status"] = "NOT_EXIST"
+logging.debug(f"\n{df}")
 
 
+################
+### HPC logs ###
+################
 logging.info("Querying HPC account manager")
-if args.scheduler == "slurm":
+if args.scheduler == "":
+    logging.info("No HPC scheduler provided. Using Snakemake logs only!")
+    df["status"] = df["status"].fillna("UNKNOWN")
+elif args.scheduler == "slurm":
     # Add HPC scheduler stats
     import subprocess
     from io import StringIO
@@ -118,7 +161,9 @@ if args.scheduler == "slurm":
         stdout=subprocess.PIPE,
     )
     res = (
-        pd.read_csv(StringIO(res.stdout.decode("utf-8")), sep="|")
+        pd.read_csv(
+            StringIO(res.stdout.decode("utf-8")), sep="|", dtype={"JobID": np.uint32}
+        )
         .rename(
             columns={
                 "JobID": "id",
@@ -131,105 +176,44 @@ if args.scheduler == "slurm":
         .set_index(["name", "id"])
     )
 
-    # Add scheduler logs
+    # Rename status
+    res["hpc_status"] = res["hpc_status"].replace(
+        {"COMPLETED": "OK", "FAILED": "ERROR", "OUT_OF_MEMORY": "ERROR_OOM"}
+    )
+    res.loc[res["hpc_status"].str.startswith("CANCELLED"), "hpc_status"] = "ERROR"
+    # Add scheduler log files
     res["hpc_log"] = res.index.map(lambda x: Path(x[0]) / f"slurm-{x[1]}.out")
-    # Remove non-existing logs
-    res = res[res["hpc_log"].map(lambda x: x.exists())]
-
+    # Remove log file for PENDING jobs
+    res.loc[res.hpc_status.eq("PENDING"), "hpc_log"] = pd.NA
+    # Remove missing log files
+    res = res[res["hpc_log"].map(lambda x: True if pd.isna(x) else x.exists())]
     # Reset index to Job Name
     res = res.reset_index().set_index("name")
-
     # Keep only most recent job
-    df = df.join(res[~res.index.duplicated(keep="last")])
+    res = res[~res.index.duplicated(keep="last")]
+
+    # Join HPC info
+    df = df.join(res)
+
+    # Fill in missing status
+    df["status"] = df["status"].fillna(df["hpc_status"])
+    df["hpc_status"] = df["hpc_status"].fillna(df["status"])
+    # PENDING HPC status takes precedence over other
+    df.loc[df["hpc_status"].eq("PENDING"), "status"] = "PENDING"
+    # RUNNING HPC status takes precedence over other
+    df.loc[df["hpc_status"].eq("RUNNING"), "status"] = "RUNNING"
+
+    # Check if status match
+    status_match = df.apply(
+        lambda row: row.status.startswith(row.hpc_status)
+        or row.hpc_status.startswith(row.status),
+        axis=1,
+    )
+    assert status_match.any(), f"Status values do not match:\n{df[~status_match]}"
 else:
-    logging.warning(f"HPC scheduler {args.scheduler} not supported!")
-
-
-# Parse snakemake status
-logging.info("Add Snakemake stats")
-
-
-def get_snakemake_status(log, n_lines=10):
-    # Take most recent log
-    if isinstance(log, Path):
-        with open(log, "r") as log_fh:
-            tail = [
-                line
-                for line in reversed(log_fh.read().splitlines()[-n_lines:])
-                if line.startswith("aeDNA workflow finished")
-                or line.startswith("Directory cannot be locked")
-                or line.startswith("sbatch: error:")
-                or line.startswith("Cleaning up log files older than ")
-            ]
-            return tail.pop(0) if len(tail) > 0 else pd.NA
-    else:
-        return pd.NA
-
-
-df["snakemake_status"] = df[
-    "{}_log".format("hpc" if args.scheduler else "snakemake")
-].map(lambda x: get_snakemake_status(x))
-logging.debug(df.iloc[0])
-
-
-# Fill in missing status
-logging.info("Filling in missing status")
-df.loc[df.snakemake_log.isna(), "snakemake_status"] = "NOT_RUN"
-df.loc[
-    df.snakemake_status.eq("aeDNA workflow finished successfully!"),
-    "snakemake_status",
-] = "OK"
-df.loc[
-    df.snakemake_status.eq("aeDNA workflow finished with an error!"),
-    "snakemake_status",
-] = "ERROR"
-df.loc[
-    df.snakemake_status.str.startswith("sbatch: error: ", na=False),
-    "snakemake_status",
-] = "ERROR_SBATCH"
-df.loc[
-    df.snakemake_status.str.startswith("Directory cannot be locked", na=False),
-    "snakemake_status",
-] = "LOCKED"
-df.loc[
-    df.snakemake_status.str.startswith("Cleaning up log files older than ", na=False),
-    "snakemake_status",
-] = "NOT_RUNNING"
-df.loc[
-    df.snakemake_status.isna(),
-    "snakemake_status",
-] = "RUNNING"
-logging.debug(df.iloc[0])
-
-
-# Compare with HPC status
-if args.scheduler:
-    df.loc[
-        df.hpc_status.eq("COMPLETED") & df.snakemake_status.isin(["OK"]),
-        "status",
-    ] = "OK"
-    df.loc[
-        df.hpc_status.ne("PENDING")
-        & df.snakemake_status.isin(["NOT_RUN", "NOT_RUNNING"]),
-        "status",
-    ] = "NOT_RUN"
-    df.loc[
-        df.hpc_status.eq("PENDING"),
-        "status",
-    ] = "PENDING"
-    df.loc[
-        df.hpc_status.eq("RUNNING") & df.snakemake_status.eq("RUNNING"), "status"
-    ] = "RUNNING"
-    df.loc[
-        (
-            df.hpc_status.isin(["FAILED", "NODE_FAIL"])
-            | df.hpc_status.str.startswith("CANCELLED", na=False)
-        )
-        & df.snakemake_status.isin(["ERROR", "NOT_RUNNING"]),
-        "status",
-    ] = "ERROR"
-else:
-    df["status"] = df["snakemake_status"]
+    logging.error(f"HPC scheduler {args.scheduler} not supported!")
+    exit(1)
+logging.debug(f"\n{df}")
 
 
 assert (
@@ -238,23 +222,23 @@ assert (
 
 
 # Sort by status and remove duplicates
-df["status"] = pd.Categorical(df["status"], status_choices)
+df["status"] = df["status"].fillna("UNKNOWN")
+df["status"] = pd.Categorical(df["status"], sorted(set(status_msgs.values())))
 df = df.sort_values("status")
 df = df[~df.index.duplicated()]
-logging.debug(df[["snakemake_status", "status"]])
-assert (
-    n_jobs == df.shape[0]
-), f"Number of jobs ({n_jobs}) and status ({df.shape[0]}) does not match"
-
 
 # Print summary
 df["total_samples"] = df.groupby("filename").status.transform("count")
 df_status = df.groupby(["filename", "total_samples"]).status.value_counts(sort=False)
-logging.info(df_status[df_status > 0])
+logging.info(f"\n{df_status[df_status > 0]}")
+
+assert (
+    n_jobs == df_status.sum()
+), f"Number of jobs ({n_jobs}) and status ({df_status.sum()}) does not match"
 
 # Filter runs by status and print
 if args.status:
-    for id in df[df.status.eq(args.status)].index:
+    for id in df[df.status.str.startswith(args.status)].index:
         print(id)
 
 exit(0)

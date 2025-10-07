@@ -243,13 +243,21 @@ for in_file in sorted(in_files):
 
     # Add row to DF
     row = pd.DataFrame([row])
-    logging.debug(row)
+    logging.debug(f"\n{row.iloc[0]}")
     units = pd.concat([units, row])
 
 
 if units.shape[0] == 0:
     logging.warning("No valid data files found!")
     exit(0)
+
+
+# Add metadata
+for metadata_default in args.metadata_default:
+    if metadata_default.find("=") > 0:
+        key, value = metadata_default.split("=")
+        if key not in units:
+            units[key] = value
 
 
 ######################
@@ -259,13 +267,6 @@ if units.shape[0] == 0:
 if "date" in units.columns.values:
     units["date"] = pd.to_datetime(units["date"])
 
-
-# Add metadata
-for metadata_default in args.metadata_default:
-    if metadata_default.find("=") > 0:
-        key, value = metadata_default.split("=")
-        if key not in units:
-            units[key] = value
 
 # Fix invalid values
 fix_cols = units.columns.drop("data")
@@ -332,8 +333,8 @@ units = units[sorted(units.columns.values, key=lambda x: col_order.get(x, 999))]
 # Sort rows
 units = units.sort_values(by=list(units.columns.drop(["size_kb", "n_reads"]).values))
 logging.info(f"Units file has {units.shape[0]} rows and {units.shape[1]} columns.")
-logging.debug(units)
-logging.debug(units.dtypes)
+logging.debug(f"\n{units}")
+logging.debug(f"\n{units.dtypes}")
 
 
 #####################
@@ -344,7 +345,7 @@ if out_path_wildcards:
     for keys, units in units.groupby(out_path_wildcards, group_keys=True):
         name = dict(zip(out_path_wildcards, keys))
         logging.debug(f"Group units with output path wildcards: {name}")
-        logging.debug(units)
+        logging.debug(f"\n{units}")
         # Create output path
         out_path = Path(args.out_path.format(**name))
         datasets.append((out_path, units))
@@ -375,7 +376,7 @@ if args.out_stats:
     logging.debug(pd.concat(out_stats))
 
     with open(args.out_stats, "x") as out_stat_fh:
-        np.set_printoptions(legacy="1.25")
+        np.set_printoptions(legacy="1.21")
         out_stat_fh.write(f"# {args}\n")
         pd.concat(out_stats).dropna(axis=1, how="all").to_csv(
             out_stat_fh,
