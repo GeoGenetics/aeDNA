@@ -108,10 +108,15 @@ def main():
     logging.debug(args)
 
     # Create SQLAlchemy engine
+    import os
+    from urllib.parse import urlparse
     from sqlalchemy import create_engine
     from sqlalchemy_utils import database_exists, create_database, drop_database
 
-    engine = create_engine(args.db_url)
+    url = urlparse(args.db_url)
+    username = os.environ.get("SQL_USER", url.username)
+    password = os.environ.get("SQL_PASSWORD", url.password)
+    engine = create_engine(url._replace(netloc=f'{username}:{password}@{url.hostname}:{url.port or 5432}').geturl())
 
     # Checking if DB exists
     if database_exists(engine.url):

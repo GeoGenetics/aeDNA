@@ -33,7 +33,6 @@ properties:
         type: string
     required:
       - multiqc
-      - multiqc_db_url
 
 required:
   - trim
