@@ -13,7 +13,7 @@ do
     snakemake $SNAKEMAKE_OPTS --dag | dot -Tsvg > dag.svg
 
     if [ -d .tests/unit/ ]; then
-	pytest -p no:cacheprovider .tests/unit/
+        pytest -p no:cacheprovider .tests/unit/
     fi
     cd ../
 done
