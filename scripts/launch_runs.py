@@ -84,7 +84,7 @@ elif args.workflow == "caterpillar":
     pixi_env = workflow_path = "/projects/caeg/people/lnc113/workflows/caterpillar"
 
 
-# Infer account/partition
+# Infer hostname, HPC account and partition
 import socket
 hostname = socket.gethostname()
 if hostname.startswith("dandy"):
@@ -100,7 +100,16 @@ else:
     exit(-1)
 
 
-# Infer hostname, HPC account and partition
+# Run Workflow
+if args.submit_snakemake:
+    cmd = f"sbatch --chdir {{id}} --job-name {{id}} --account {hpc_snakemake_account} --partition {hpc_snakemake_partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap="
+    logging.info(f"Workflows will be submitted to the {args.run} HPC, on account '{hpc_snakemake_account}' and partition '{hpc_snakemake_partition}'.")
+else:
+    cmd = f"env --chdir={{id}} bash -c "
+    logging.info(f"Workflows will be run locally on host {hostname}")
+
+
+# Run jobs
 opts = "--jobs 300 --retries 1"
 if args.run == "local":
     logging.info(f"Running jobs locally")
@@ -108,15 +117,6 @@ if args.run == "local":
 elif args.run == "slurm":
     logging.info(f"Jobs will be submitted to the {args.run} HPC, on account '{hpc_job_account}' and partition '{hpc_job_partition}'.")
     opts += f" --executor {args.run} --default-resources slurm_account={hpc_job_account} slurm_partition={hpc_job_partition} tmpdir='{args.tmp_dir}'"
-
-
-# Submit snakemake process
-if args.submit_snakemake:
-    cmd = f"sbatch --chdir {{id}} --job-name {{id}} --account {hpc_snakemake_account} --partition {hpc_snakemake_partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap="
-    logging.info(f"Workflows will be submitted to the {args.run} HPC, on account '{hpc_snakemake_account}' and partition '{hpc_snakemake_partition}'.")
-else:
-    cmd = f"env --chdir={{id}} bash -c "
-    logging.info(f"Workflows will be run locally on host {hostname}")
 
 
 # Read job list
