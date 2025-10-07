@@ -27,4 +27,4 @@ black = "*"
 snakefmt = "*"
 
 [pypi-dependencies]
-snakemake-logger-plugin-snkmt = ">=0.2.1, <0.3"
+snakemake-logger-plugin-snkmt = ">=0.1.4, <0.2"
