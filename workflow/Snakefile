@@ -4,7 +4,7 @@ from urllib.parse import urlparse, urlunparse
 snakemake.utils.min_version("9.0.0")
 
 # Define wrapper versions
-wrapper_ver = "v7.0.0"
+wrapper_ver = "v7.6.0"
 
 # Define base URL
 baseurl = urlparse(workflow.current_basedir.get_path_or_uri())
