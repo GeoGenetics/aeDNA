@@ -7,7 +7,7 @@ version = "1.1.0"
 [tasks]
 
 [dependencies]
-snakemake = ">=9.0.1,<10"
+snakemake = ">=9.0.1,<9.11.3"
 conda = ">=25.1.1,<26"
 python = "<=3.12.8"
 sqlalchemy = ">=2.0.43,<3"
