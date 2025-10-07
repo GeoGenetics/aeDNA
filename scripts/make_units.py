@@ -309,13 +309,14 @@ if "workflow_ver" in out_path_wildcards:
     import git
 
     repo = git.Repo(Path(__file__).resolve(strict=True).parent.parent)
-    tag_recent = [
-        [tag.name, commit.hexsha]
-        for commit in repo.iter_commits()
-        for tag in repo.tags
-        if commit.hexsha == tag.commit.hexsha
-    ][0]
-    units["workflow_ver"] = tag_recent[0]
+    commits = pd.DataFrame([[commit.hexsha, commit.committed_date] for commit in repo.iter_commits()], columns=["hexsha", "date"]).sort_values(by="date")
+    tags = pd.DataFrame([[tag.commit.hexsha, tag.name] for tag in repo.tags], columns=["hexsha", "tag"])
+    commits = pd.merge(commits, tags, how="left", on="hexsha").ffill()
+
+    mask = commits.duplicated(subset="tag")
+    commits.loc[mask, "tag"] = "+" + commits.loc[mask, "tag"]
+
+    units["workflow_ver"] = commits.iloc[-1]["tag"]
 
 
 # Reorder columns
