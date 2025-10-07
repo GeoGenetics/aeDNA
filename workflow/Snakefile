@@ -158,7 +158,7 @@ rule multiqc_trim_upload:
     log:
         "logs/reports/multiqc_trim.upload.log",
     params:
-        db_url=config["report"]["multiqc_db_url"],
+        db_url=config["report"].get("multiqc_db_url"),
     conda:
         "envs/multiqc_upload.yaml"
     localrule: True
@@ -173,7 +173,7 @@ rule multiqc_trim_upload:
 rule target_trim:
     input:
         rules.multiqc_trim_upload.output
-        if config["report"]["multiqc_db_url"]
+        if config["report"].get("multiqc_db_url")
         else rules.multiqc_trim.output,
         rules.trim_all.input.res,
     message:
@@ -209,7 +209,7 @@ use rule multiqc_trim_upload as multiqc_derep_upload with:
 rule target_derep:
     input:
         rules.multiqc_derep_upload.output
-        if config["report"]["multiqc_db_url"]
+        if config["report"].get("multiqc_db_url")
         else rules.multiqc_derep.output,
         rules.derep_all.input.res,
     message:
@@ -253,7 +253,7 @@ use rule multiqc_trim_upload as multiqc_taxon_upload with:
 rule target_taxon:
     input:
         rules.multiqc_taxon_upload.output
-        if config["report"]["multiqc_db_url"]
+        if config["report"].get("multiqc_db_url")
         else rules.multiqc_taxon.output,
         rules.taxon_prefilter_all.input.res,
         rules.taxon_all.input.res,
