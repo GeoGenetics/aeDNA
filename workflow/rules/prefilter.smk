@@ -14,7 +14,7 @@ rule prefilter_reads_taxonomy:
     benchmark:
         "benchmarks/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.jsonl"
     params:
-        extra="-taxnames d__Bacteria,d__Archaea,d__Viruses",
+        extra="-taxnames {}".format(config["prefilter"]["taxa"]),
     conda:
         urlunparse(
             baseurl._replace(path=str(Path(baseurl.path) / "envs" / "metadmg.yaml"))

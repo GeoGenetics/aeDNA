@@ -19,6 +19,11 @@ properties:
 
   prefilter:
     type: object
+    properties:
+      taxa:
+        type: string
+    required:
+      - taxa
 
   euk:
     type: object

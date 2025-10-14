@@ -42,6 +42,8 @@ derep:
 ### ALIGN ###
 #############
 prefilter:
+  taxa: "Bacteria,Archaea,Viruses"
+
   ref:
     prok:
       n_shards: 2
