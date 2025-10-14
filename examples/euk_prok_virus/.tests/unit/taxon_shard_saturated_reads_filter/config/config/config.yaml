@@ -1,0 +1,154 @@
+
+# - Only tested with Phred33 quality scores
+
+samples: config/samples.tsv
+
+units: config/units.tsv
+
+
+
+#############
+### READS ###
+#############
+trim:
+  trim:
+    activate: true
+    tool: adapterremoval
+    params: "--trimns --maxns 10 --trimqualities --minlength 30 --mask-degenerate-bases"
+
+  # Ignored for SE
+  collapse:
+    activate: true
+    params: "--collapse-conservatively"
+
+derep:
+  extension:
+    activate: false
+    k: 16
+    params: "ibb=t prefilter=0 el=100 er=100 ecc=f ecco=f ignorebadquality extendrollback=0"
+
+  derep:
+    activate: true
+    # vsearch or seqkit
+    tool: seqkit
+    params: ""
+
+  low_complex:
+    params: "entropy=0.7 entropywindow=30 entropyk=4"
+
+
+
+#############
+### ALIGN ###
+#############
+prefilter:
+  taxa: "Bacteria,Archaea,Viruses"
+
+  ref:
+    prok:
+      n_shards: 2
+      path: "data/prok.{n_shard}-of-2.fas.gz"
+      map:
+        tool: bowtie2
+        params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal -N 1"
+        bt2l: False
+      acc2taxid: "data/prok.acc2taxid.gz"
+    virus:
+      n_shards: 1
+      path: "data/virus.1-of-1.fas.gz"
+      map:
+        tool: bowtie2
+        params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
+        bt2l: False
+      acc2taxid: "data/virus.acc2taxid.gz"
+
+  filter:
+    saturated_reads:
+      activate: true
+      n_alns: 10
+
+  bam_filter:
+    reassign:
+      activate: false
+      params: "--iters 0 --min-read-ani 92 --min-read-count 3 --scale 0 --reference-lengths genomes.len.map"
+
+    filter:
+      activate: false
+      params: "--min-read-ani 92 --min-read-count 3 --min-normalized-entropy 0.6 --min-normalized-gini 0.4 --min-avg-read-ani 94 --reference-lengths genomes.len.map"
+
+    lca:
+      activate: false
+      params: "--lca-rank genus --reference-lengths genomes.len.map"
+
+  taxonomy:
+    nodes: "data/taxdump/nodes.dmp"
+    names: "data/taxdump/names.dmp"
+
+  metadmg:
+    damage:
+      params: "--print_length 15"
+
+    lca:
+      params: "--fix_ncbi 0 --how_many 25 --weight_type 1 --edit_dist_max 10000 --lca_rank genus"
+
+    dfit:
+      params: "--nopt 5 --showfits 2"
+
+
+euk:
+  ref:
+    mitoch:
+      n_shards: 1
+      path: "data/mitoch.1-of-1.fas.gz"
+      map:
+        tool: bowtie2
+        params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
+        bt2l: False
+      acc2taxid: "data/mitoch.acc2taxid.gz"
+    plastid:
+      n_shards: 1
+      path: "data/plastid.1-of-1.fas.gz"
+      map:
+        tool: bowtie2
+        params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
+        bt2l: False
+      acc2taxid: "data/plastid.acc2taxid.gz"
+
+  filter:
+    saturated_reads:
+      activate: true
+      n_alns: 10
+
+  bam_filter:
+    reassign:
+      activate: false
+      params: "--iters 0 --min-read-ani 92 --min-read-count 3 --scale 0"
+
+    filter:
+      activate: false
+      params: "--min-read-ani 92 --min-read-count 3 --min-normalized-entropy 0.6 --min-normalized-gini 0.4 --min-avg-read-ani 92"
+
+    lca:
+      activate: false
+      params: "--lca-rank genus"
+
+  taxonomy:
+    nodes: "data/taxdump/nodes.dmp"
+    names: "data/taxdump/names.dmp"
+
+  metadmg:
+    damage:
+      params: "--print_length 15"
+
+    lca:
+      params: "--fix_ncbi 0 --how_many 15 --sim_score_low 0.95 --weight_type 0 --lca_rank genus"
+
+    dfit:
+      params: "--nopt 5 --showfits 2"
+
+
+############
+## REPORT ##
+############
+report:
+  multiqc: "--verbose --cl-config 'custom_logo: data/KU_long.png' --cl-config 'custom_logo_title: CAEG - Center for Ancient Environmental Genomics' --cl-config 'custom_logo_url: https://globe.ku.dk/research/caeg/'"
