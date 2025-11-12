@@ -38,16 +38,16 @@ parser.add_argument(
     help="How to run jobs?",
 )
 parser.add_argument(
-    "--submit-snakemake",
+    "--snakemake-submit",
     action="store_true",
     default=False,
     help="Submit Snakemake as an HPC job",
 )
 parser.add_argument(
-    "--tmp-dir",
+    "--snakemake-logger",
     action="store",
-    default="/projects/caeg/scratch/production/",
-    help="Path to temp folder",
+    default="--logger snkmt --logger-snkmt-db snkmt.db",
+    help="Snakemake logger command",
 )
 parser.add_argument(
     "-l",
@@ -59,6 +59,7 @@ parser.add_argument(
 )
 args, extra_args = parser.parse_known_args()
 extra_args = " ".join(extra_args)
+extra_args += " --jobs 300 --retries 1"
 
 
 # Set logger
@@ -71,10 +72,14 @@ logging.basicConfig(
 )
 
 
-# Infer Pixi env and workflow paths
+# Infer pixi_env/workflow paths, and add extra options
 if args.workflow == "prod":
     pixi_env = workflow_path = "/projects/caeg/apps/aeDNA"
-    extra_args += " --profile /projects/caeg/data/resources/profile_production"
+    import os
+
+    if os.environ.get("CAEG_QC_USER") and os.environ.get("CAEG_QC_PASSWORD"):
+        # extra_args += """ --config 'report={multiqc_db_url: "postgresql+psycopg2://dandypdb01fl.unicph.domain:5432/caeg_qc"}'"""
+        extra_args += " --profile /projects/caeg/data/resources/profile_production"
 elif args.workflow == "prod-legacy":
     pixi_env = "/projects/caeg/apps/aeDNA"
     workflow_path = "/projects/caeg/apps/aeDNA-legacy"
@@ -86,6 +91,7 @@ elif args.workflow == "caterpillar":
 
 # Infer hostname, HPC account and partition
 import socket
+
 hostname = socket.gethostname()
 if hostname.startswith("dandy"):
     hpc_snakemake_account = hpc_job_account = "prod"
@@ -100,23 +106,25 @@ else:
     exit(-1)
 
 
-# Run Workflow
-if args.submit_snakemake:
+# Workflow run command
+if args.snakemake_submit:
+    logging.info(
+        f"Workflows will be submitted to the {args.run} HPC, on account '{hpc_snakemake_account}' and partition '{hpc_snakemake_partition}'."
+    )
     cmd = f"sbatch --chdir {{id}} --job-name {{id}} --account {hpc_snakemake_account} --partition {hpc_snakemake_partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap="
-    logging.info(f"Workflows will be submitted to the {args.run} HPC, on account '{hpc_snakemake_account}' and partition '{hpc_snakemake_partition}'.")
 else:
-    cmd = f"env --chdir={{id}} bash -c "
     logging.info(f"Workflows will be run locally on host {hostname}")
+    cmd = f"env --chdir={{id}} bash -c "
 
 
-# Run jobs
-opts = "--jobs 300 --retries 1"
+# Jobs run command
 if args.run == "local":
     logging.info(f"Running jobs locally")
-    opts += f" --default-resources tmpdir='{args.tmp_dir}'"
 elif args.run == "slurm":
-    logging.info(f"Jobs will be submitted to the {args.run} HPC, on account '{hpc_job_account}' and partition '{hpc_job_partition}'.")
-    opts += f" --executor {args.run} --default-resources slurm_account={hpc_job_account} slurm_partition={hpc_job_partition} tmpdir='{args.tmp_dir}'"
+    logging.info(
+        f"Jobs will be submitted to the {args.run} HPC, on account '{hpc_job_account}' and partition '{hpc_job_partition}'."
+    )
+    extra_args += f" --executor {args.run} --default-resources slurm_account={hpc_job_account} slurm_partition={hpc_job_partition}"
 
 
 # Read job list
@@ -138,6 +146,8 @@ logging.debug(df)
 logging.info("Build command")
 
 for id in df.index:
-    print(f'{cmd.format(id=id)}"pixi run --manifest-path {pixi_env} snakemake --snakefile {workflow_path}/workflow/Snakefile --workflow-profile /projects/caeg/data/resources/profile {extra_args} {opts}"; sleep 0.5')
+    print(
+        f'{cmd.format(id=id)}"pixi run --manifest-path {pixi_env} snakemake --snakefile {workflow_path}/workflow/Snakefile --workflow-profile /projects/caeg/data/resources/profile {args.snakemake_logger} {extra_args}"; sleep 0.5'
+    )
 
 exit(0)
