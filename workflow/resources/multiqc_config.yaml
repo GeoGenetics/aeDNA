@@ -67,53 +67,61 @@ table_cond_formatting_colours:
 module_order:
   - samtools:
       name: 'Samtools'
-      anchor: 'samtools'
+      anchor: 'euk-samtools'
+      info: 'Samtools stats.'
       path_filters:
-        - '*/aligns/samtools_stats/*'
+        - '*/aligns/*'
 
   - bowtie2:
       name: 'Bowtie2'
-      anchor: 'bowtie2'
+      anchor: 'euk-bowtie2'
       path_filters:
-        - '*/shards/bowtie2/*'
+        - '*/shards/*'
 
   - fastqc:
       name: 'FastQC (prefilter)'
-      anchor: 'fastqc_prefilter'
+      anchor: 'prefilter-fastqc'
       info: 'FastQC results after prefiltering.'
       path_filters:
-        - '*/fastqc/prefilter/*'
+        - '*/prefilter/*'
 
   - samtools:
       name: 'Samtools (prefilter)'
-      anchor: 'samtools_prefilter'
-      info: 'Samtools Stats for prefiltering.'
+      anchor: 'prefilter-samtools'
+      info: 'Samtools stats after prefiltering.'
       path_filters:
-        - '*/prefilter_aligns/samtools_stats/*'
+        - '*/prefilter_aligns/*'
 
   - bowtie2:
       name: 'Bowtie2 (prefilter)'
-      anchor: 'bowtie2_prefilter'
+      anchor: 'prefilter-bowtie2'
       info: 'Bowtie2 results after prefiltering.'
       path_filters:
-        - '*/prefilter_shards/bowtie2/*'
+        - '*/prefilter_shards/*'
 
   - nonpareil:
       name: 'nonpareil (low complexity)'
-      anchor: 'low_complexity'
+      anchor: 'low_complexity-nonpareil'
       info: 'nonpareil results after removing low complexity reads.'
       path_filters:
         - '*/low_complexity/*'
 
   - fastqc:
       name: 'FastQC (low complexity)'
-      anchor: 'low_complexity'
+      anchor: 'low_complexity-fastqc'
       info: 'FastQC results after removing low complexity reads.'
       path_filters:
-        - '*/fastqc/low_complexity/*'
+        - '*/low_complexity/*'
+
+  - bbtools:
+      name: 'BBTools (low complexity)'
+      anchor: 'low_complexity'
+      info: 'Remove low complexity reads.'
+      path_filters:
+        - '*/low_complexity/*'
 
   - bbmap:
-      name: 'BBDuk'
+      name: 'BBTools (low complexity)'
       anchor: 'low_complexity'
       info: 'Remove low complexity reads.'
       path_filters:
@@ -121,66 +129,66 @@ module_order:
 
   - nonpareil:
       name: 'nonpareil (represent. read)'
-      anchor: 'repres'
+      anchor: 'represent_read-nonpareil'
       info: 'nonpareil results for representative reads.'
       path_filters:
         - '*/represent/grep/*'
 
   - fastqc:
       name: 'FastQC (represent. read)'
-      anchor: 'repres'
+      anchor: 'represent_read-fastqc'
       info: 'FastQC results for representative reads.'
       path_filters:
-        - '*/fastqc/represent/grep/*'
+        - '*/represent/grep/*'
 
   - nonpareil:
       name: 'nonpareil (dereplicated)'
-      anchor: 'derep'
+      anchor: 'derep-nonpareil'
       info: 'nonpareil results for dereplicated reads.'
       path_filters:
         - '*/derep/*'
 
   - fastqc:
       name: 'FastQC (dereplicated)'
-      anchor: 'derep'
+      anchor: 'derep-fastqc'
       info: 'FastQC results for dereplicated reads.'
       path_filters:
-        - '*/fastqc/derep/*'
+        - '*/derep/*'
 
   - nonpareil:
-      name: 'nonpareil (extension)'
-      anchor: 'extension'
+      name: 'nonpareil (read extension)'
+      anchor: 'read_extension-nonpareil'
       info: 'nonpareil results for extended reads.'
       path_filters:
         - '*/extend/tadpole/*'
 
   - fastqc:
-      name: 'FastQC (extension)'
-      anchor: 'extension'
+      name: 'FastQC (read extension)'
+      anchor: 'read_extension-fastqc'
       info: 'FastQC results AFTER read extension.'
       path_filters:
-        - '*/fastqc/extend/tadpole/*'
+        - '*/extend/tadpole/*'
 
   - nonpareil:
       name: 'nonpareil (merged lanes)'
-      anchor: 'merge_lanes'
+      anchor: 'merge_lanes-nonpareil'
       info: 'nonpareil results for all reads after trimming and QC.'
       path_filters:
         - '*/merge_lanes/*'
 
   - fastqc:
       name: 'FastQC (merged lanes)'
-      anchor: 'merge_lanes'
+      anchor: 'merge_lanes-fastqc'
       info: 'FastQC results for all reads after trimming and QC.'
       path_filters:
-        - '*/fastqc/merge_lanes/*'
+        - '*/merge_lanes/*'
 
   - fastqc:
-      name: 'FastQC (trimmed)'
-      anchor: 'trimmed'
+      name: 'FastQC (trim)'
+      anchor: 'trim-fastqc'
       info: 'FastQC results AFTER adapter trimming and QC.'
       path_filters:
-        - '*/fastqc/trim/*'
+        - '*/trim/*'
 
   - adapterremoval
 
@@ -197,59 +205,10 @@ module_order:
 
   - fastqc:
       name: 'FastQC (raw)'
-      anchor: 'raw'
+      anchor: 'raw-fastqc'
       info: 'FastQC results BEFORE adapter trimming and QC.'
       path_filters:
-        - '*/fastqc/raw/*'
-
-
-
-table_columns_visible:
-  picard:
-    PCT_PF_READS_ALIGNED:    True
-    file_validation_status:  False
-  Samtools Flagstat:
-    mapped_passed:           True
-  FastQC (trimmed):
-    percent_duplicates:      False
-    avg_sequence_length:     True
-    median_sequence_length:  False
-  FastQC (raw):
-    percent_duplicates:      False
-    avg_sequence_length:     False
-    median_sequence_length:  False
-    percent_gc:              False
-    total_sequences:         False
-
-
-
-table_columns_placement:
-  Picard:
-    file_validation_status:  2130
-    summed_median:           2140
-    summed_mean:             2150
-    file_validation_status:  2160
-    WARNING_count:           2190
-    ERROR_count:             2190
-  BamSorMaDup:
-    PERCENT_DUPLICATION:     2300
-  Samtools Flagstat:
-    mapped_passed:           2400
-  FastQC (trimmed):
-    percent_duplicates:      2600
-    percent_gc:              2610
-    avg_sequence_length:     2620
-    median_sequence_length:  2630
-    percent_fails:           2640
-    total_sequences:         2650
-  FastQC (raw):
-    percent_duplicates:      2700
-    percent_gc:              2710
-    avg_sequence_length:     2720
-    median_sequence_length:  2730
-    percent_fails:           2740
-    total_sequences:         2750
-
+        - '*/raw/*'
 
 
 ## Module specific configs

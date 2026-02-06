@@ -7,13 +7,21 @@ from pathlib import Path
 from subprocess import check_output
 
 
+cmp_cmds = {
+    ".gz": ["zcmp"],
+    ".bz2": ["bzcmp"],
+    ".xz": ["xzcmp"],
+    ".bam": ["gatk", "CompareSAMs", "--LENIENT_HEADER"],
+}
+
+
 class OutputChecker:
     def __init__(self, data_path, expected_path, workdir):
         self.data_path = data_path
         self.expected_path = expected_path
         self.workdir = workdir
 
-    def check(self):
+    def check(self, cmp_cmds = cmp_cmds):
         # Input files
         input_files = set(
             (Path(path) / f).relative_to(self.data_path)
@@ -42,18 +50,10 @@ class OutputChecker:
 
         # Compare output and expected files
         for f in expected_files:
-            self.compare_files(self.expected_path / f, self.workdir / f)
+            self.compare_files(self.expected_path / f, self.workdir / f, cmp_cmds)
 
-    def compare_files(self, expected_file, generated_file):
-        if expected_file.suffix == ".gz":
-            cmp = ["zcmp"]
-        elif expected_file.suffix == ".bz2":
-            cmp = ["bzcmp"]
-        elif expected_file.suffix == ".xz":
-            cmp = ["xzcmp"]
-        elif expected_file.suffix == ".bam":
-            cmp = ["gatk", "CompareSAMs", "--LENIENT_HEADER"]
-        else:
-            cmp = ["cmp"]
-
-        check_output(cmp + [expected_file, generated_file])
+    def compare_files(self, expected_file, generated_file, cmp_cmds):
+        check_output(
+            cmp_cmds.get(expected_file.suffix, ["cmp"])
+            + [expected_file, generated_file]
+        )

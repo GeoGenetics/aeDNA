@@ -3,8 +3,6 @@ from urllib.parse import urlparse, urlunparse
 
 snakemake.utils.min_version("9.13.5")
 
-# Define wrapper versions
-wrapper_ver = "v7.9.1"
 
 # Define base URL
 baseurl = urlparse(workflow.current_basedir.get_path_or_uri(secret_free=True))
@@ -138,7 +136,7 @@ rule multiqc_trim:
     log:
         "logs/reports/multiqc.trim.log",
     benchmark:
-        "benchmarks/reports/multiqc.trim.log"
+        "benchmarks/reports/multiqc.trim.jsonl"
     params:
         extra=f"--force --clean-up " + config["report"]["multiqc"],
     localrule: True
@@ -147,12 +145,12 @@ rule multiqc_trim:
         mem=lambda w, attempt: f"{10* attempt} GiB",
         runtime=lambda w, attempt: f"{30* attempt} m",
     wrapper:
-        f"{wrapper_ver}/bio/multiqc"
+        "v9.0.0/bio/multiqc"
 
 
 rule multiqc_trim_upload:
     input:
-        json=rules.multiqc_trim.output.data,
+        zip=rules.multiqc_trim.output.data,
     output:
         touch("stats/reports/multiqc_trim.upload.flag"),
     log:
@@ -167,7 +165,7 @@ rule multiqc_trim_upload:
         mem=lambda w, attempt: f"{1* attempt} GiB",
         runtime=lambda w, attempt: f"{30* attempt} m",
     shell:
-        "python {base_dir}/scripts/multiqc_upload.py --db-upload {input.json} --db-url {params.db_url} --log-level INFO 2> {log}"
+        "python {base_dir}/scripts/multiqc_upload.py --db-upload {input.zip} --db-url {params.db_url} --log-level INFO 2> {log}"
 
 
 rule target_trim:
@@ -194,12 +192,12 @@ use rule multiqc_trim as multiqc_derep with:
     log:
         "logs/reports/multiqc.derep.log",
     benchmark:
-        "benchmarks/reports/multiqc.derep.log"
+        "benchmarks/reports/multiqc.derep.jsonl"
 
 
 use rule multiqc_trim_upload as multiqc_derep_upload with:
     input:
-        json=rules.multiqc_derep.output.data,
+        zip=rules.multiqc_derep.output.data,
     output:
         touch("stats/reports/multiqc_derep.upload.flag"),
     log:
@@ -238,12 +236,12 @@ use rule multiqc_derep as multiqc_taxon with:
     log:
         "logs/reports/multiqc.taxon.log",
     benchmark:
-        "benchmarks/reports/multiqc.taxon.log"
+        "benchmarks/reports/multiqc.taxon.jsonl"
 
 
 use rule multiqc_trim_upload as multiqc_taxon_upload with:
     input:
-        json=rules.multiqc_taxon.output.data,
+        zip=rules.multiqc_taxon.output.data,
     output:
         touch("stats/reports/multiqc_taxon.upload.flag"),
     log:
