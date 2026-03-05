@@ -65,7 +65,7 @@ rule prefilter_reads_extract:
     params:
         command="grep",
         extra="--invert-match --delete-matched",
-    threads: 4
+    threads: 2
     resources:
         mem=lambda w, input, attempt: f"{2* attempt} GiB",
         runtime=lambda w, input, attempt: f"{(0.06* input.size_gb+1)* attempt} h",
@@ -105,4 +105,4 @@ rule prefilter_fastqc:
         mem=lambda w, attempt: f"{3* attempt} GiB",
         runtime=lambda w, attempt: f"{2* attempt} h",
     wrapper:
-        "v9.0.0/bio/fastqc"
+        "v7.6.0/bio/fastqc"

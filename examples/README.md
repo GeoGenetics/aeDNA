@@ -13,3 +13,20 @@
 
 ![filegraph.svg](euk_prok_virus/filegraph.svg)
 </details>
+
+
+# Empty - 1 negative control
+<details><summary>Rulegraph</summary>
+
+![rulegraph.svg](empty/rulegraph.svg)
+</details>
+
+<details><summary>DAG</summary>
+
+![dag.svg](empty/dag.svg)
+</details>
+
+<details><summary>Filegraph</summary>
+
+![filegraph.svg](empty/filegraph.svg)
+</details>

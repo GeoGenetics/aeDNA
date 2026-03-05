@@ -41,6 +41,8 @@ def test_trim_adapterremoval_fastq_pe(conda_prefix):
                 "--show-failed-logs",
                 "-j1",
                 "--target-files-omit-workdir-adjustment",
+                "--allowed-rules",
+                "trim_adapterremoval_fastq_pe",
                 "--configfile",
                 "config/config.yaml",
                 "--software-deployment-method",

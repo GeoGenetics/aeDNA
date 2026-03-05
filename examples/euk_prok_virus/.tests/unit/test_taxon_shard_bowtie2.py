@@ -42,6 +42,8 @@ def test_taxon_shard_bowtie2(conda_prefix):
                 "-j1",
                 "-c2",
                 "--target-files-omit-workdir-adjustment",
+                "--allowed-rules",
+                "taxon_shard_bowtie2",
                 "--configfile",
                 "config/config.yaml",
                 "--software-deployment-method",
