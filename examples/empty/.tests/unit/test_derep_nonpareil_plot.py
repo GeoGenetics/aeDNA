@@ -2,6 +2,7 @@
 Rule test code for unit testing of rules generated with Snakemake 9.16.4.dev3.
 """
 
+
 import os
 import sys
 import shutil
@@ -14,7 +15,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 def test_derep_nonpareil_plot(conda_prefix):
 
-    with tempfile.TemporaryDirectory(delete=False) as tmpdir:
+    with tempfile.TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
         config_path = Path(".tests/unit/derep_nonpareil_plot/config")
         data_path = Path(".tests/unit/derep_nonpareil_plot/data")
@@ -56,7 +57,7 @@ def test_derep_nonpareil_plot(conda_prefix):
 
         # Check the output byte by byte using cmp/zmp/bzcmp/xzcmp.
         # To modify this behavior, you can inherit from common.OutputChecker in here
-        # and overwrite the method `compare_files(generated_file, expected_file),
+        # and overwrite the method `compare_files(generated_file, expected_file), 
         # also see common.py.
         import common
 

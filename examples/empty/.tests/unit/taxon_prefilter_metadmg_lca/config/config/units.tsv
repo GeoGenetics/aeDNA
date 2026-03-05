@@ -1,0 +1,3 @@
+# Adapter list: https://gist.github.com/photocyte/3edd9401d0b13476e60f8b104c2575f8
+sample	library	barcode	flowcell	lane	seq_type	library_type	material	data	machine	run_n	center	platform	adapters	sample_n	date
+HD827sonic_1	lib1	ACGGAACAxACGAGAAC	HKTG2BGXG	L001	PE	ds	DNA	data/empty_L001_R{Read}.fq.gz	NDX550220	98	HYDRA_GEN	ILLUMINA	AGATCGGAAGAGCACACGTCTGAACTCCAGTCA,AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT	S1	21-09-2021

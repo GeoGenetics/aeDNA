@@ -33,7 +33,7 @@ def test_taxon_prefilter_shard_saturated_reads_remove(conda_prefix):
                 "python",
                 "-m",
                 "snakemake",
-                "temp/prefilter_shards/saturated_reads/remove/HD827sonic_1_lib1_collapsed.prok.2-of-2.bam",
+                "temp/prefilter_shards/saturated_reads/remove/HD827sonic_1_lib1_collapsed.virus.1-of-1.bam",
                 "--snakefile",
                 "../../workflow/Snakefile",
                 "-f",

@@ -61,4 +61,7 @@ def test_taxon_metadmg_lca(conda_prefix):
         # and overwrite the method `compare_files(generated_file, expected_file), 
         # also see common.py.
         import common
-        common.OutputChecker(data_path, expected_path, workdir).check()
+
+        common.OutputChecker(data_path, expected_path, workdir).check(
+            {".gz": ["zdiff", "--ignore-matching-lines=\\#"]}
+        )

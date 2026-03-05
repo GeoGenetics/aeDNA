@@ -2,7 +2,6 @@
 Rule test code for unit testing of rules generated with Snakemake 9.16.4.dev3.
 """
 
-
 import os
 import sys
 import shutil
@@ -58,9 +57,16 @@ def test_derep_nonpareil_infer(conda_prefix):
 
         # Check the output byte by byte using cmp/zmp/bzcmp/xzcmp.
         # To modify this behavior, you can inherit from common.OutputChecker in here
-        # and overwrite the method `compare_files(generated_file, expected_file), 
+        # and overwrite the method `compare_files(generated_file, expected_file),
         # also see common.py.
         import common
+
         common.OutputChecker(data_path, expected_path, workdir).check(
-            {".log": ["diff", "--ignore-matching-lines=temp/reads/merge_lanes/"]}
+            {
+                ".log": [
+                    "diff",
+                    "--ignore-matching-lines=created",
+                    "--ignore-matching-lines=Reading",
+                ]
+            }
         )

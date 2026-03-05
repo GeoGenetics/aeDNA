@@ -33,7 +33,7 @@ def test_taxon_prefilter_shard_sort_query(conda_prefix):
                 "python",
                 "-m",
                 "snakemake",
-                "temp/prefilter_shards/sort_query/HD827sonic_1_lib1_collapsed.prok.2-of-2.bam",
+                "temp/prefilter_shards/sort_query/HD827sonic_1_lib1_collapsed.virus.1-of-1.bam",
                 "--snakefile",
                 "../../workflow/Snakefile",
                 "-f",
