@@ -238,7 +238,7 @@ def upload_report(engine, report_data, force=False):
             plot_config = copy.deepcopy(plot_data.get("config", plot_data["pconfig"]))
 
             for dst_idx, dataset in enumerate(plot_data["datasets"]):
-                dataset_id = dataset['uid']
+                dataset_id = dataset["uid"]
                 logging.info(f"Parsing dataset {dataset_id}")
                 dls = None
                 dataset_name = None
