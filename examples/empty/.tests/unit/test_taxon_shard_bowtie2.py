@@ -2,7 +2,6 @@
 Rule test code for unit testing of rules generated with Snakemake 9.16.4.dev3.
 """
 
-
 import os
 import sys
 import shutil
@@ -33,7 +32,7 @@ def test_taxon_shard_bowtie2(conda_prefix):
                 "python",
                 "-m",
                 "snakemake",
-                "temp/shards/bowtie2/HD827sonic_1_lib1_collapsed.mitoch.1-of-1.bam",
+                "temp/shards/bowtie2/HD827sonic_1_lib1_collapsed.plastid.1-of-1.bam",
                 "--snakefile",
                 "../../workflow/Snakefile",
                 "-f",
@@ -56,7 +55,8 @@ def test_taxon_shard_bowtie2(conda_prefix):
 
         # Check the output byte by byte using cmp/zmp/bzcmp/xzcmp.
         # To modify this behavior, you can inherit from common.OutputChecker in here
-        # and overwrite the method `compare_files(generated_file, expected_file), 
+        # and overwrite the method `compare_files(generated_file, expected_file),
         # also see common.py.
         import common
+
         common.OutputChecker(data_path, expected_path, workdir).check()
