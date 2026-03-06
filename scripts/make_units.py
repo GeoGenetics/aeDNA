@@ -42,14 +42,14 @@ parser.add_argument(
     "--in-regex",
     action="store",
     type=str,
-    default="^(?!Undetermined).*.(sam|bam|fastq|fq)(.gz)?$",
+    default="^(?!Undetermined).*.(sam|bam|cram|fastq|fq)(.gz)?$",
     help="Regex to filter input files",
 )
 parser.add_argument(
     "-r",
     "--regex",
     action="store",
-    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell_pos>[AB])(?P<flowcell>H[A-Z0-9]{8})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10})-(?P<subsample>[^_-]+)-(?P<archive>[^_]+)_(?P<sample_n>S\d+)_(?P<lane>L\d{3})_(?P<read>R[12])_001",
+    default=r"\/(?P<date>\d{8})_(?P<machine>[A-Z]{1,2}\d{5})_(?P<run_n>\d{4})_(?P<flowcell_pos>[AB])(?P<flowcell>[A-Z0-9]{9})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10})(-(?P<subsample>[^_]+))?-(?P<archive>[^_]+)_(?P<sample_n>S\d+)_(?P<lane>L\d{3})_(?P<read>R[12])_001",
     help="Regex to extract identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
@@ -268,6 +268,10 @@ if "date" in units.columns.values:
     units["date"] = pd.to_datetime(units["date"])
 
 
+# Remove adapters if file SAM/BAM/CRAM
+units.loc[units.data.str.contains(r"\.(?:sam|bam|cram)$"), "adapters"] = pd.NA
+
+
 # Fix invalid values
 fix_cols = units.columns.drop("data")
 units[fix_cols] = units[fix_cols].replace(args.rm_chars, value="", regex=True)
@@ -399,12 +403,14 @@ if args.out_stats:
         )
 
 
-if not args.dryrun:
-    for out_path, units in datasets:
+for out_path, units in datasets:
+    if args.dryrun:
+        assert not out_path.exists()
+    else:
         # Create folders
         out_path.mkdir(parents=True, exist_ok=args.force)
         # Save units.tsv file
-        units.dropna(axis=1, how="all").to_csv(
+        units.drop(["extra_file_md5"], axis=1).dropna(axis=1, how="all").to_csv(
             out_path / "units.tsv",
             sep="\t",
             index=False,

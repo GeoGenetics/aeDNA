@@ -97,10 +97,13 @@ if hostname.startswith("dandy"):
     hpc_snakemake_account = hpc_job_account = "prod"
     hpc_job_partition = "compregular"
     hpc_snakemake_partition = "compsnake"
+    hpc_snakemake_qos = ""
+    hpc_job_qos = ""
 elif hostname.startswith("rubus"):
     hpc_snakemake_account = hpc_job_account = "bench"
-    hpc_snakemake_partition = "epyc_long,xeon_fat_long"
-    hpc_job_partition = "epyc,epyc_noht,xeon_fat"
+    hpc_snakemake_partition = hpc_job_partition = "rubus"
+    hpc_snakemake_qos = "long"
+    hpc_job_qos = "normal"
 else:
     logging.error(f"Host {hostname} not supported yet!")
     exit(-1)
@@ -108,10 +111,18 @@ else:
 
 # Workflow run command
 if args.snakemake_submit:
-    logging.info(
-        f"Workflows will be submitted to the {args.run} HPC, on account '{hpc_snakemake_account}' and partition '{hpc_snakemake_partition}'."
-    )
-    cmd = f"sbatch --chdir {{id}} --job-name {{id}} --account {hpc_snakemake_account} --partition {hpc_snakemake_partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap="
+    logging.info(f"Workflows will be submitted to the {args.run} HPC, on:")
+    cmd = f"sbatch --chdir {{id}} --job-name {{id}}"
+    if hpc_snakemake_account:
+        logging.info(f"  - account: {hpc_snakemake_account}")
+        cmd += f" --account {hpc_snakemake_account}"
+    if hpc_snakemake_partition:
+        logging.info(f"  - partition: {hpc_snakemake_partition}")
+        cmd += f" --partition {hpc_snakemake_partition}"
+    if hpc_snakemake_qos:
+        logging.info(f"  - qos: {hpc_snakemake_qos}")
+        cmd += f" --qos {hpc_snakemake_qos}"
+    cmd += f" --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap="
 else:
     logging.info(f"Workflows will be run locally on host {hostname}")
     cmd = f"env --chdir={{id}} bash -c "
@@ -124,7 +135,10 @@ elif args.run == "slurm":
     logging.info(
         f"Jobs will be submitted to the {args.run} HPC, on account '{hpc_job_account}' and partition '{hpc_job_partition}'."
     )
-    extra_args += f" --executor {args.run} --default-resources slurm_account={hpc_job_account} slurm_partition={hpc_job_partition}"
+    extra_args += (
+        f" --executor {args.run} --default-resources slurm_account={hpc_job_account} slurm_partition={hpc_job_partition}"
+        + (f" --slurm-qos {hpc_job_qos}" if hpc_job_qos else "")
+    )
 
 
 # Read job list

@@ -21,6 +21,7 @@ status_msgs = {
     "RUNNING": "RUNNING",
     "PENDING": "PENDING",
     "ERROR_OOM": "ERROR_OOM",
+    "NODE_FAIL": "NODE_FAIL",
     "UNKNOWN": "UNKNOWN",
 }
 
@@ -74,8 +75,9 @@ parser.add_argument(
 parser.add_argument(
     "-s",
     "--status",
-    choices=set(status_msgs.values()),
     action="store",
+    nargs="+",
+    choices=set(status_msgs.values()),
     help="Status of jobs to print",
 )
 parser.add_argument(
@@ -147,21 +149,23 @@ elif args.scheduler == "slurm":
     import subprocess
     from io import StringIO
 
+    hpc_cmd = [
+        "sacct",
+        "--allocations",
+        "--parsable2",
+        "--endtime",
+        "now",
+        "--format",
+        "JobId,JobName%-500,State,End",
+    ] + args.hpc_extra.split(" ")
+    logging.debug(" ".join(hpc_cmd))
+
     res = subprocess.run(
-        [
-            "sacct",
-            "--allocations",
-            "--parsable2",
-            "--endtime",
-            "now",
-            "--format",
-            "JobId, JobName%-500, State, End",
-        ]
-        + args.hpc_extra.split(" "),
+        hpc_cmd,
         stdout=subprocess.PIPE,
     )
     res = (
-        pd.read_csv(StringIO(res.stdout.decode("utf-8")), sep="|")
+        pd.read_csv(StringIO(res.stdout.decode("utf-8")), sep="|", low_memory=False)
         .rename(
             columns={
                 "JobID": "id",
@@ -170,7 +174,7 @@ elif args.scheduler == "slurm":
                 "End": "time_end",
             }
         )
-        .astype({"id": np.uint32})
+        .astype({"id": np.uint64})
         .sort_values("time_end")
         .set_index(["name", "id"])
     )
@@ -185,7 +189,7 @@ elif args.scheduler == "slurm":
     # Remove log file for PENDING jobs
     res.loc[res.hpc_status.eq("PENDING"), "hpc_log"] = pd.NA
     # Remove missing log files
-    res = res[res["hpc_log"].map(lambda x: True if pd.isna(x) else x.exists())]
+    res = res.loc[res["hpc_log"].map(lambda x: True if pd.isna(x) else x.exists())]
     # Reset index to Job Name
     res = res.reset_index().set_index("name")
     # Keep only most recent job
@@ -237,7 +241,7 @@ assert (
 
 # Filter runs by status and print
 if args.status:
-    for id in df[df.status.str.startswith(args.status)].index:
+    for id in df[df.status.isin(args.status)].index:
         print(id)
 
 exit(0)
