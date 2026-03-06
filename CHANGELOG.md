@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0](https://github.com/GeoGenetics/aeDNA/compare/v1.0.8...v1.1.0) (2026-03-06)
+
+
+### Features
+
+* Allow passing of username and password through env variables ([#23](https://github.com/GeoGenetics/aeDNA/issues/23)) ([546d675](https://github.com/GeoGenetics/aeDNA/commit/546d6758b79e5649f175fc1373f1c5b10687a20e))
+
+
+### Bug Fixes
+
+* Bump wrappers ([#24](https://github.com/GeoGenetics/aeDNA/issues/24)) ([63a57ab](https://github.com/GeoGenetics/aeDNA/commit/63a57ab636caf4299faa9b59d028cb6bfd025ad5))
+* multiqc config, tweak res ([#20](https://github.com/GeoGenetics/aeDNA/issues/20)) ([b491e25](https://github.com/GeoGenetics/aeDNA/commit/b491e2577f8a80f223f933ff568e19f62c3950a1))
+* update helper scripts ([#21](https://github.com/GeoGenetics/aeDNA/issues/21)) ([0bb216d](https://github.com/GeoGenetics/aeDNA/commit/0bb216d50b1da39bf2b3bd29d782eaf92c7ac3e4))
+* update helper scripts ([#26](https://github.com/GeoGenetics/aeDNA/issues/26)) ([84e8a9f](https://github.com/GeoGenetics/aeDNA/commit/84e8a9fe039324ea6d8cfd6c0eccc25e8ae1cbeb))
+
 ## [1.0.8](https://github.com/GeoGenetics/aeDNA/compare/v1.0.7...v1.0.8) (2025-07-25)
 
 
