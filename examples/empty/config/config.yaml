@@ -152,3 +152,4 @@ euk:
 ############
 report:
   multiqc: "--verbose --cl-config 'custom_logo: data/KU_long.png' --cl-config 'custom_logo_title: CAEG - Center for Ancient Environmental Genomics' --cl-config 'custom_logo_url: https://globe.ku.dk/research/caeg/'"
+  multiqc_db_url: "sqlite:///test_qc.sqlite"
