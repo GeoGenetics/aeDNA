@@ -2,7 +2,6 @@
 Rule test code for unit testing of rules generated with Snakemake 9.16.4.dev3.
 """
 
-
 import os
 import sys
 import shutil
@@ -17,9 +16,15 @@ def test_taxon_prefilter_shard_saturated_reads_extract(conda_prefix):
 
     with tempfile.TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        config_path = Path(".tests/unit/taxon_prefilter_shard_saturated_reads_extract/config")
-        data_path = Path(".tests/unit/taxon_prefilter_shard_saturated_reads_extract/data")
-        expected_path = Path(".tests/unit/taxon_prefilter_shard_saturated_reads_extract/expected")
+        config_path = Path(
+            ".tests/unit/taxon_prefilter_shard_saturated_reads_extract/config"
+        )
+        data_path = Path(
+            ".tests/unit/taxon_prefilter_shard_saturated_reads_extract/data"
+        )
+        expected_path = Path(
+            ".tests/unit/taxon_prefilter_shard_saturated_reads_extract/expected"
+        )
 
         # Copy config to the temporary workdir.
         shutil.copytree(config_path, workdir)
@@ -55,7 +60,8 @@ def test_taxon_prefilter_shard_saturated_reads_extract(conda_prefix):
 
         # Check the output byte by byte using cmp/zmp/bzcmp/xzcmp.
         # To modify this behavior, you can inherit from common.OutputChecker in here
-        # and overwrite the method `compare_files(generated_file, expected_file), 
+        # and overwrite the method `compare_files(generated_file, expected_file),
         # also see common.py.
         import common
+
         common.OutputChecker(data_path, expected_path, workdir).check()

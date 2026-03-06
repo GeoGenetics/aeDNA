@@ -1,6 +1,6 @@
- [      0.0]   The file temp/reads/merge_lanes/Lib_LVsim1_collapsed.fastq.gz.enve-tmp.1859557 was created
+ [      0.0]   The file temp/reads/merge_lanes/Lib_LVsim1_collapsed.fastq.gz.enve-tmp.10975 was created
  [      0.0]    Reducing query reads (-X) to 1992
- [      0.0]  Reading temp/reads/merge_lanes/Lib_LVsim1_collapsed.fastq.gz.enve-tmp.1859557
+ [      0.0]  Reading temp/reads/merge_lanes/Lib_LVsim1_collapsed.fastq.gz.enve-tmp.10975
  [      0.0]   Picking 1992 random sequences
  [      0.0]   Counting kmers
  [      0.0]  Read file with 2657 sequences

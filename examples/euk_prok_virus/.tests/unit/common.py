@@ -21,7 +21,7 @@ class OutputChecker:
         self.expected_path = expected_path
         self.workdir = workdir
 
-    def check(self, cmp_cmds = cmp_cmds):
+    def check(self, cmp_cmds=cmp_cmds):
         # Input files
         input_files = set(
             (Path(path) / f).relative_to(self.data_path)

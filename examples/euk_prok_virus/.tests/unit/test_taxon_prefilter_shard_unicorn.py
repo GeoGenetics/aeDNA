@@ -2,7 +2,6 @@
 Rule test code for unit testing of rules generated with Snakemake 9.16.4.dev3.
 """
 
-
 import os
 import sys
 import shutil
@@ -33,8 +32,8 @@ def test_taxon_prefilter_shard_unicorn(conda_prefix):
                 "python",
                 "-m",
                 "snakemake",
-                "temp/prefilter_shards/unicorn/Lib_LVsim1_collapsed.prok.1-of-2.bam",
-                "stats/prefilter_shards/unicorn/Lib_LVsim1_collapsed.prok.1-of-2.tsv",
+                "temp/prefilter_shards/unicorn/Lib_LVsim1_collapsed.prok.2-of-2.bam",
+                "stats/prefilter_shards/unicorn/Lib_LVsim1_collapsed.prok.2-of-2.tsv",
                 "--snakefile",
                 "../../workflow/Snakefile",
                 "-f",
@@ -56,7 +55,8 @@ def test_taxon_prefilter_shard_unicorn(conda_prefix):
 
         # Check the output byte by byte using cmp/zmp/bzcmp/xzcmp.
         # To modify this behavior, you can inherit from common.OutputChecker in here
-        # and overwrite the method `compare_files(generated_file, expected_file), 
+        # and overwrite the method `compare_files(generated_file, expected_file),
         # also see common.py.
         import common
+
         common.OutputChecker(data_path, expected_path, workdir).check()

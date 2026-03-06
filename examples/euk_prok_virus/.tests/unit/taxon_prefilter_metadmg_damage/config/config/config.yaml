@@ -144,7 +144,7 @@ euk:
       params: "--fix_ncbi 0 --how_many 15 --sim_score_low 0.95 --weight_type 0 --lca_rank genus"
 
     dfit:
-      params: "--nopt 5 --showfits 2"
+      params: "--nopt 5 --showfits 2 --seed 12345"
 
 
 ############
