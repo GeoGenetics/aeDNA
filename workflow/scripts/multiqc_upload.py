@@ -108,10 +108,25 @@ def main():
     logging.debug(args)
 
     # Create SQLAlchemy engine
+    import os
+    from furl import furl
     from sqlalchemy import create_engine
+    from sqlalchemy.engine import URL
     from sqlalchemy_utils import database_exists, create_database, drop_database
 
-    engine = create_engine(args.db_url)
+    if args.db_url:
+
+        url = furl(args.db_url)
+
+    url_config = {
+        "drivername": os.getenv("PGSCHEME", url.scheme),
+        "username": os.getenv("PGUSER", url.username),
+        "password": os.getenv("PGPASSWORD", url.password),
+        "host": os.getenv("PGHOST", url.host),
+        "port": os.getenv("PGPORT", url.port),
+        "database": os.getenv("PGDATABASE", str(url.path)),
+    }
+    engine = create_engine(URL.create(**url_config))
 
     # Checking if DB exists
     if database_exists(engine.url):

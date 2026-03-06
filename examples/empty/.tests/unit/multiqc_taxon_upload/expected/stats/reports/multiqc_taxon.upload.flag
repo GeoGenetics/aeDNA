@@ -1,1 +1,161 @@
-Uploaded file reports/multiqc_data.taxon.zip into sqlite:///test_qc.sqlite
+INFO:DB sqlite:///test_qc.sqlite does not exist.
+INFO:Reading file reports/multiqc_data.taxon.zip
+INFO:Uploading report v1.33 to DB...
+INFO:Adding report record to DB
+INFO:Adding report metadata to DB
+INFO:Parsing section multiqc_samtools_stats_euk-samtools
+INFO:Parsing section multiqc_bowtie2_euk-bowtie2
+INFO:Parsing section multiqc_fastqc_prefilter-fastqc
+INFO:Parsing section multiqc_samtools_stats_prefilter-samtools
+INFO:Parsing section multiqc_bowtie2_prefilter-bowtie2
+INFO:Parsing section multiqc_fastqc_low_complexity-fastqc
+INFO:Parsing section multiqc_fastqc_derep-fastqc
+INFO:Parsing section multiqc_nonpareil_merge_lanes-nonpareil
+INFO:Parsing section multiqc_fastqc_merge_lanes-fastqc
+INFO:Parsing section multiqc_fastqc_trim-fastqc
+INFO:Parsing section multiqc_adapter_removal
+INFO:Parsing section multiqc_fastqc_raw-fastqc
+INFO:Parsing section multiqc_general_stats
+INFO:Parsing plot samtools_alignment_plot
+INFO:Parsing dataset samtools_alignment_plot
+INFO:Parsing plot samtools-stats-dp
+WARNING:Plot type violin plot is not supported
+INFO:Parsing plot bowtie2_se_plot
+INFO:Parsing dataset bowtie2_se_plot
+INFO:Parsing plot prefilter-fastqc_sequence_counts_plot
+INFO:Parsing dataset prefilter-fastqc_sequence_counts_plot
+INFO:Parsing plot prefilter-fastqc_per_base_sequence_quality_plot
+INFO:Parsing dataset prefilter-fastqc_per_base_sequence_quality_plot
+INFO:Parsing plot prefilter-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing dataset prefilter-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing plot prefilter-fastqc_per_sequence_gc_content_plot
+INFO:Parsing dataset prefilter-fastqc_per_sequence_gc_content_plot_Percentages
+INFO:Parsing dataset prefilter-fastqc_per_sequence_gc_content_plot_Counts
+INFO:Parsing plot prefilter-fastqc_per_base_n_content_plot
+INFO:Parsing dataset prefilter-fastqc_per_base_n_content_plot
+INFO:Parsing plot fastqc_sequence_length_distribution_plot
+INFO:Parsing dataset fastqc_sequence_length_distribution_plot
+INFO:Parsing plot prefilter-fastqc_sequence_duplication_levels_plot
+INFO:Parsing dataset prefilter-fastqc_sequence_duplication_levels_plot
+INFO:Parsing plot prefilter-fastqc_overrepresented_sequences_plot
+INFO:Parsing dataset prefilter-fastqc_overrepresented_sequences_plot
+INFO:Parsing plot prefilter-fastqc_top_overrepresented_sequences_table
+WARNING:Plot type violin plot is not supported
+INFO:Parsing plot prefilter-fastqc_adapter_content_plot
+INFO:Parsing dataset prefilter-fastqc_adapter_content_plot
+INFO:Parsing plot prefilter-fastqc-status-check-heatmap
+WARNING:Plot type heatmap is not supported
+INFO:Parsing plot samtools_alignment_plot-1
+INFO:Parsing dataset samtools_alignment_plot
+INFO:Parsing plot samtools-stats-dp-1
+WARNING:Plot type violin plot is not supported
+INFO:Parsing plot bowtie2_se_plot-1
+INFO:Parsing dataset bowtie2_se_plot
+INFO:Parsing plot low_complexity-fastqc_sequence_counts_plot
+INFO:Parsing dataset low_complexity-fastqc_sequence_counts_plot
+INFO:Parsing plot low_complexity-fastqc_per_base_sequence_quality_plot
+INFO:Parsing dataset low_complexity-fastqc_per_base_sequence_quality_plot
+INFO:Parsing plot low_complexity-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing dataset low_complexity-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing plot low_complexity-fastqc_per_sequence_gc_content_plot
+INFO:Parsing dataset low_complexity-fastqc_per_sequence_gc_content_plot_Percentages
+INFO:Parsing dataset low_complexity-fastqc_per_sequence_gc_content_plot_Counts
+INFO:Parsing plot low_complexity-fastqc_per_base_n_content_plot
+INFO:Parsing dataset low_complexity-fastqc_per_base_n_content_plot
+INFO:Parsing plot fastqc_sequence_length_distribution_plot-1
+INFO:Parsing dataset fastqc_sequence_length_distribution_plot
+INFO:Parsing plot low_complexity-fastqc_sequence_duplication_levels_plot
+INFO:Parsing dataset low_complexity-fastqc_sequence_duplication_levels_plot
+INFO:Parsing plot low_complexity-fastqc-status-check-heatmap
+WARNING:Plot type heatmap is not supported
+INFO:Parsing plot derep-fastqc_sequence_counts_plot
+INFO:Parsing dataset derep-fastqc_sequence_counts_plot
+INFO:Parsing plot derep-fastqc_per_base_sequence_quality_plot
+INFO:Parsing dataset derep-fastqc_per_base_sequence_quality_plot
+INFO:Parsing plot derep-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing dataset derep-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing plot derep-fastqc_per_sequence_gc_content_plot
+INFO:Parsing dataset derep-fastqc_per_sequence_gc_content_plot_Percentages
+INFO:Parsing dataset derep-fastqc_per_sequence_gc_content_plot_Counts
+INFO:Parsing plot derep-fastqc_per_base_n_content_plot
+INFO:Parsing dataset derep-fastqc_per_base_n_content_plot
+INFO:Parsing plot fastqc_sequence_length_distribution_plot-2
+INFO:Parsing dataset fastqc_sequence_length_distribution_plot
+INFO:Parsing plot derep-fastqc_sequence_duplication_levels_plot
+INFO:Parsing dataset derep-fastqc_sequence_duplication_levels_plot
+INFO:Parsing plot derep-fastqc-status-check-heatmap
+WARNING:Plot type heatmap is not supported
+INFO:Parsing plot nonpareil-table
+WARNING:Plot type violin plot is not supported
+INFO:Parsing plot nonpareil-redundancy-plot
+INFO:Parsing dataset nonpareil-redundancy-plot_Combined
+INFO:Parsing dataset nonpareil-redundancy-plot_Observed
+INFO:Parsing plot merge_lanes-fastqc_sequence_counts_plot
+INFO:Parsing dataset merge_lanes-fastqc_sequence_counts_plot
+INFO:Parsing plot merge_lanes-fastqc_per_base_sequence_quality_plot
+INFO:Parsing dataset merge_lanes-fastqc_per_base_sequence_quality_plot
+INFO:Parsing plot merge_lanes-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing dataset merge_lanes-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing plot merge_lanes-fastqc_per_sequence_gc_content_plot
+INFO:Parsing dataset merge_lanes-fastqc_per_sequence_gc_content_plot_Percentages
+INFO:Parsing dataset merge_lanes-fastqc_per_sequence_gc_content_plot_Counts
+INFO:Parsing plot merge_lanes-fastqc_per_base_n_content_plot
+INFO:Parsing dataset merge_lanes-fastqc_per_base_n_content_plot
+INFO:Parsing plot fastqc_sequence_length_distribution_plot-3
+INFO:Parsing dataset fastqc_sequence_length_distribution_plot
+INFO:Parsing plot merge_lanes-fastqc_sequence_duplication_levels_plot
+INFO:Parsing dataset merge_lanes-fastqc_sequence_duplication_levels_plot
+INFO:Parsing plot merge_lanes-fastqc-status-check-heatmap
+WARNING:Plot type heatmap is not supported
+INFO:Parsing plot trim-fastqc_sequence_counts_plot
+INFO:Parsing dataset trim-fastqc_sequence_counts_plot
+INFO:Parsing plot trim-fastqc_per_base_sequence_quality_plot
+INFO:Parsing dataset trim-fastqc_per_base_sequence_quality_plot
+INFO:Parsing plot trim-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing dataset trim-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing plot trim-fastqc_per_sequence_gc_content_plot
+INFO:Parsing dataset trim-fastqc_per_sequence_gc_content_plot_Percentages
+INFO:Parsing dataset trim-fastqc_per_sequence_gc_content_plot_Counts
+INFO:Parsing plot trim-fastqc_per_base_n_content_plot
+INFO:Parsing dataset trim-fastqc_per_base_n_content_plot
+INFO:Parsing plot fastqc_sequence_length_distribution_plot-4
+INFO:Parsing dataset fastqc_sequence_length_distribution_plot
+INFO:Parsing plot trim-fastqc_sequence_duplication_levels_plot
+INFO:Parsing dataset trim-fastqc_sequence_duplication_levels_plot
+INFO:Parsing plot trim-fastqc_overrepresented_sequences_plot
+INFO:Parsing dataset trim-fastqc_overrepresented_sequences_plot
+INFO:Parsing plot trim-fastqc_top_overrepresented_sequences_table
+WARNING:Plot type violin plot is not supported
+INFO:Parsing plot trim-fastqc-status-check-heatmap
+WARNING:Plot type heatmap is not supported
+INFO:Parsing plot ar_retained_plot
+INFO:Parsing dataset ar_retained_plot
+INFO:Parsing plot ar_length_count_plot
+INFO:Parsing dataset ar_length_count_plot_All
+INFO:Parsing dataset ar_length_count_plot_Mate1
+INFO:Parsing dataset ar_length_count_plot_Mate2
+INFO:Parsing dataset ar_length_count_plot_Singleton
+INFO:Parsing dataset ar_length_count_plot_Collapsed
+INFO:Parsing dataset ar_length_count_plot_Collapsed_Truncated
+INFO:Parsing dataset ar_length_count_plot_Discarded
+INFO:Parsing plot raw-fastqc_sequence_counts_plot
+INFO:Parsing dataset raw-fastqc_sequence_counts_plot
+INFO:Parsing plot raw-fastqc_per_base_sequence_quality_plot
+INFO:Parsing dataset raw-fastqc_per_base_sequence_quality_plot
+INFO:Parsing plot raw-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing dataset raw-fastqc_per_sequence_quality_scores_plot
+INFO:Parsing plot raw-fastqc_per_sequence_gc_content_plot
+INFO:Parsing dataset raw-fastqc_per_sequence_gc_content_plot_Percentages
+INFO:Parsing dataset raw-fastqc_per_sequence_gc_content_plot_Counts
+INFO:Parsing plot raw-fastqc_per_base_n_content_plot
+INFO:Parsing dataset raw-fastqc_per_base_n_content_plot
+INFO:Parsing plot fastqc_sequence_length_distribution_plot-5
+INFO:Parsing dataset fastqc_sequence_length_distribution_plot
+INFO:Parsing plot raw-fastqc_sequence_duplication_levels_plot
+INFO:Parsing dataset raw-fastqc_sequence_duplication_levels_plot
+INFO:Parsing plot raw-fastqc_adapter_content_plot
+INFO:Parsing dataset raw-fastqc_adapter_content_plot
+INFO:Parsing plot raw-fastqc-status-check-heatmap
+WARNING:Plot type heatmap is not supported
+INFO:Parsing plot general_stats_table
+WARNING:Plot type violin plot is not supported

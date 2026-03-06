@@ -167,7 +167,7 @@ rule multiqc_trim_upload:
     shell:
         """
         python {base_dir}/scripts/multiqc_upload.py --db-upload {input.zip} --db-url {params.db_url} --log-level INFO 2> {log};
-        echo "Uploaded file {input.zip} into {params.db_url}" > {output[0]};
+        cut -d ":" -f 4- {log} > {output[0]};
         """
 
 
