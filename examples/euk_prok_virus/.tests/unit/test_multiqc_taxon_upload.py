@@ -59,5 +59,5 @@ def test_multiqc_taxon_upload(conda_prefix):
         import common
 
         common.OutputChecker(data_path, expected_path, workdir).check(
-            {".falg": ["diff", "--ignore-matching-lines=Uploading"]}
+            {".flag": ["diff", "--ignore-matching-lines=Uploading"]}
         )
