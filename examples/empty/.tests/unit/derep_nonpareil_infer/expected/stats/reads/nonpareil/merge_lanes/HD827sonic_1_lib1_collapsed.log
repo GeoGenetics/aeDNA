@@ -1,0 +1,10 @@
+ [      0.0]    Reducing query reads (-X) to 0
+ [      0.0]  Reading /tmp/tmpb4lbyy7k
+ [      0.0]   Picking 0 random sequences
+ [      0.0]   Counting kmers
+ [      0.0]  Read file with 1 sequences
+ [      0.0]  Average read length is 100.000000bp
+ [      0.0]  Sub-sampling library
+ [      0.0]     Sampling at 0.000000%
+ [      0.0]  Evaluating consistency
+ [      0.0]  Everything seems correct

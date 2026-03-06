@@ -1,6 +1,6 @@
 # aeDNA - a customizable Snakemake workflow for ancient environmental DNA
 
-[![Snakemake](https://img.shields.io/badge/snakemake-≥9.0.0-brightgreen.svg)](https://snakemake.bitbucket.io)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥9.16.3-brightgreen.svg)](https://snakemake.bitbucket.io)
 ![CI](https://github.com/GeoGenetics/aeDNA/actions/workflows/ci.yml/badge.svg)
 
 This workflow combines several modules to build a workflow for ancient environmental DNA (aeDNA) analyses and QC:
@@ -37,51 +37,46 @@ The easiet way to deploy `snakemake` is to [install pixi](https://pixi.sh/latest
     * Missing values can be specified by empty columns or by writing `NA`.
     * To facilitate things, the helper script `make_units.py` is provided that, from a list of FASTQ files, generates a folder structure with all necessary files to run (NB: always manually check files before running workflow!).
 
-4. Define your `TOKEN`
-```
-export GITHUB_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
 #### Step 2: Test workflow
 
-5. Test your configuration:
+4. Test your configuration:
 
-  5.1. Perform a dry-run:
+  4.1. Perform a dry-run:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --dry-run
 ```
 
-  5.2. Confirm workflow analyses by checking the DAG:
+  4.2. Confirm workflow analyses by checking the DAG:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --dag | dot -Tsvg > dag.svg
 ```
 
-  5.3. Optionaly, create all needed `conda` environments beforehand:
+  4.3. Optionaly, create all needed `conda` environments beforehand:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --jobs 1 --conda-create-envs-only
 ```
 
 #### Step 3: Execute workflow
-6. Execute the workflow, using `$N` cores, either:
+5. Execute the workflow, using `$N` cores, either:
 
-  6.1. locally:
+  5.1. locally:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --jobs $N --software-deployment-method conda
 ```
 
-  6.2. in a [SLURM](https://slurm.schedmd.com/overview.html) cluster environment:
+  5.2. in a [SLURM](https://slurm.schedmd.com/overview.html) cluster environment:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --jobs $N --software-deployment-method conda --executor slurm
 ```
 
-  6.3. Optionally, you can also use binaries from local modules, by adding `env-modules` to `--software-deployment-method`:
+  5.3. Optionally, you can also use binaries from local modules, by adding `env-modules` to `--software-deployment-method`:
 ```
 pixi run snakemake [...] --software-deployment-method env-modules conda [...]
 ```
 
 #### Step 4: Check results
 
-7. After successful execution, you can create a self-contained interactive HTML report:
+6. After successful execution, you can create a self-contained interactive HTML report:
 ```
 pixi run snakemake --snakefile <path to Snakfile> --configfile config/config.yaml --report report.html
 ```

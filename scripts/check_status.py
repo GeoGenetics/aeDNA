@@ -161,9 +161,7 @@ elif args.scheduler == "slurm":
         stdout=subprocess.PIPE,
     )
     res = (
-        pd.read_csv(
-            StringIO(res.stdout.decode("utf-8")), sep="|", dtype={"JobID": np.uint32}
-        )
+        pd.read_csv(StringIO(res.stdout.decode("utf-8")), sep="|")
         .rename(
             columns={
                 "JobID": "id",
@@ -172,6 +170,7 @@ elif args.scheduler == "slurm":
                 "End": "time_end",
             }
         )
+        .astype({"id": np.uint32})
         .sort_values("time_end")
         .set_index(["name", "id"])
     )

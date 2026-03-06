@@ -1,0 +1,33 @@
+ [      0.0]   The file temp/reads/merge_lanes/Lib_LVsim1_collapsed.fastq.gz.enve-tmp.10975 was created
+ [      0.0]    Reducing query reads (-X) to 1992
+ [      0.0]  Reading temp/reads/merge_lanes/Lib_LVsim1_collapsed.fastq.gz.enve-tmp.10975
+ [      0.0]   Picking 1992 random sequences
+ [      0.0]   Counting kmers
+ [      0.0]  Read file with 2657 sequences
+ [      0.0]  Average read length is 74.365826bp
+ [      0.0]  Sub-sampling library
+ [      0.0]     Sampling at 0.000000%
+ [      0.0]     Sampling at 0.055855%
+ [      0.0]     Sampling at 0.079792%
+ [      0.0]     Sampling at 0.113989%
+ [      0.0]     Sampling at 0.162841%
+ [      0.0]     Sampling at 0.232631%
+ [      0.0]     Sampling at 0.332329%
+ [      0.0]     Sampling at 0.474756%
+ [      0.0]     Sampling at 0.678223%
+ [      0.0]     Sampling at 0.968890%
+ [      0.0]     Sampling at 1.384129%
+ [      0.0]     Sampling at 1.977327%
+ [      0.0]     Sampling at 2.824752%
+ [      0.0]     Sampling at 4.035361%
+ [      0.0]     Sampling at 5.764801%
+ [      0.0]     Sampling at 8.235430%
+ [      0.0]     Sampling at 11.764900%
+ [      0.0]     Sampling at 16.807000%
+ [      0.0]     Sampling at 24.010000%
+ [      0.0]     Sampling at 34.300000%
+ [      0.0]     Sampling at 49.000000%
+ [      0.0]     Sampling at 70.000000%
+ [      0.0]     Sampling at 100.000000%
+ [      0.0]  Evaluating consistency
+ [      0.0]  Everything seems correct

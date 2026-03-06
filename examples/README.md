@@ -1,15 +1,32 @@
-# HD827sonic - 2 samples over 2 reference collections
+# Euk / Prok / Virus - 1 sample (simulated) over 2 reference collections
 <details><summary>Rulegraph</summary>
 
-![rulegraph.svg](HD827sonic/rulegraph.svg)
+![rulegraph.svg](euk_prok_virus/rulegraph.svg)
 </details>
 
 <details><summary>DAG</summary>
 
-![dag.svg](HD827sonic/dag.svg)
+![dag.svg](euk_prok_virus/dag.svg)
 </details>
 
 <details><summary>Filegraph</summary>
 
-![filegraph.svg](HD827sonic/filegraph.svg)
+![filegraph.svg](euk_prok_virus/filegraph.svg)
+</details>
+
+
+# Empty - 1 negative control
+<details><summary>Rulegraph</summary>
+
+![rulegraph.svg](empty/rulegraph.svg)
+</details>
+
+<details><summary>DAG</summary>
+
+![dag.svg](empty/dag.svg)
+</details>
+
+<details><summary>Filegraph</summary>
+
+![filegraph.svg](empty/filegraph.svg)
 </details>
