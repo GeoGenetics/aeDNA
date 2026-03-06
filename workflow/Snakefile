@@ -152,7 +152,7 @@ rule multiqc_trim_upload:
     input:
         zip=rules.multiqc_trim.output.data,
     output:
-        touch("stats/reports/multiqc_trim.upload.flag"),
+        "stats/reports/multiqc_trim.upload.flag",
     log:
         "logs/reports/multiqc_trim.upload.log",
     params:
@@ -165,7 +165,10 @@ rule multiqc_trim_upload:
         mem=lambda w, attempt: f"{1* attempt} GiB",
         runtime=lambda w, attempt: f"{30* attempt} m",
     shell:
-        "python {base_dir}/scripts/multiqc_upload.py --db-upload {input.zip} --db-url {params.db_url} --log-level INFO 2> {log}"
+        """
+        python {base_dir}/scripts/multiqc_upload.py --db-upload {input.zip} --db-url {params.db_url} --log-level INFO 2> {log};
+        echo "Uploaded file {input.zip} into {params.db_url}" > {output[0]};
+        """
 
 
 rule target_trim:
