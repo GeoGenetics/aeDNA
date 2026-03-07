@@ -4,7 +4,7 @@ Common code for unit testing of rules generated with Snakemake 9.16.4.dev3.
 
 import os
 from pathlib import Path
-from subprocess import check_output
+from subprocess import check_output, STDERR
 
 
 cmp_cmds = {
@@ -56,6 +56,6 @@ class OutputChecker:
         check_output(
             cmp_cmds.get(expected_file.suffix, ["cmp"])
             + [expected_file, generated_file],
-            stdout=subprocess.STDERR,
-            stderr=subprocess.STDERR,
+            stdout=STDERR,
+            stderr=STDERR,
         )
