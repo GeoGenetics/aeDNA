@@ -28,21 +28,21 @@ class OutputChecker:
             for path, subdirs, files in os.walk(self.data_path)
             for f in files
         )
-        print(f"input: {input_files}")  # DEBUG
+        print(f"input_files: {input_files}")  # DEBUG
         # Workdir files
         workdir_files = set(
             (Path(path) / f).relative_to(self.workdir)
             for path, subdirs, files in os.walk(self.workdir)
             for f in files
         )
-        print(f"workdir: {workdir_files}")  # DEBUG
+        print(f"workdir_files: {workdir_files}")  # DEBUG
         # Expected files
         expected_files = set(
             (Path(path) / f).relative_to(self.expected_path)
             for path, subdirs, files in os.walk(self.expected_path)
             for f in files
         )
-        print(f"expected: {expected_files}")  # DEBUG
+        print(f"expected_files: {expected_files}")  # DEBUG
 
         assert expected_files.issubset(
             workdir_files
@@ -58,4 +58,4 @@ class OutputChecker:
             + [expected_file, generated_file],
             stderr=STDOUT,
         )
-        print("output: " + output.decode("utf-8"))  # DEBUG
+        print("check_output: " + output.decode("utf-8"))  # DEBUG
