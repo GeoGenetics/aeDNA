@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     env:
-      PGSCHEME: sqlite
+      SQL_DRIVER: sqlite
 
     steps:
       - uses: actions/checkout@v4

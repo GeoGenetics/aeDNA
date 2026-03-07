@@ -119,7 +119,7 @@ def main():
         url = furl(args.db_url)
 
     url_config = {
-        "drivername": os.getenv("PGSCHEME", url.scheme),
+        "drivername": os.getenv("SQL_DRIVER", url.scheme),
         "username": os.getenv("PGUSER", url.username),
         "password": os.getenv("PGPASSWORD", url.password),
         "host": os.getenv("PGHOST", url.host),
