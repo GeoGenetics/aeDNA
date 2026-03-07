@@ -58,4 +58,4 @@ class OutputChecker:
             + [expected_file, generated_file],
             stderr=STDOUT,
         )
-        print(output.decode("utf-8"))  # DEBUG
+        print("output: " + output.decode("utf-8"))  # DEBUG
