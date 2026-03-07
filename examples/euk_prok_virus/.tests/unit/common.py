@@ -53,9 +53,9 @@ class OutputChecker:
             self.compare_files(self.expected_path / f, self.workdir / f, cmp_cmds)
 
     def compare_files(self, expected_file, generated_file, cmp_cmds):
-        check_output(
+        output = check_output(
             cmp_cmds.get(expected_file.suffix, ["cmp"])
             + [expected_file, generated_file],
-            stdout=STDOUT,
             stderr=STDOUT,
         )
+        print(output.decode("utf-8"))  # DEBUG
