@@ -4,7 +4,7 @@ Common code for unit testing of rules generated with Snakemake 9.16.4.dev3.
 
 import os
 from pathlib import Path
-from subprocess import check_output
+from subprocess import check_output, STDOUT
 
 
 cmp_cmds = {
@@ -28,21 +28,21 @@ class OutputChecker:
             for path, subdirs, files in os.walk(self.data_path)
             for f in files
         )
-        print(f"input: {input_files}")  # DEBUG
+        print(f"input_files: {input_files}")  # DEBUG
         # Workdir files
         workdir_files = set(
             (Path(path) / f).relative_to(self.workdir)
             for path, subdirs, files in os.walk(self.workdir)
             for f in files
         )
-        print(f"workdir: {workdir_files}")  # DEBUG
+        print(f"workdir_files: {workdir_files}")  # DEBUG
         # Expected files
         expected_files = set(
             (Path(path) / f).relative_to(self.expected_path)
             for path, subdirs, files in os.walk(self.expected_path)
             for f in files
         )
-        print(f"expected: {expected_files}")  # DEBUG
+        print(f"expected_files: {expected_files}")  # DEBUG
 
         assert expected_files.issubset(
             workdir_files
@@ -53,7 +53,9 @@ class OutputChecker:
             self.compare_files(self.expected_path / f, self.workdir / f, cmp_cmds)
 
     def compare_files(self, expected_file, generated_file, cmp_cmds):
-        check_output(
+        output = check_output(
             cmp_cmds.get(expected_file.suffix, ["cmp"])
-            + [expected_file, generated_file]
+            + [expected_file, generated_file],
+            stderr=STDOUT,
         )
+        print("check_output: " + output.decode("utf-8"))  # DEBUG

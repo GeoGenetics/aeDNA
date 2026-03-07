@@ -19,15 +19,15 @@ from models import (
 
 def delete_report(session, report_id):
     # Delete plot data
-    logging.debug(f"Deleting report {report.id} from table 'plot_data'.")
+    logging.debug(f"Deleting report {report_id} from table 'plot_data'.")
     session.query(PlotData).filter(PlotData.report_id == report_id).delete()
     session.commit()
     # Delete plot category
-    logging.debug(f"Deleting report {report.id} from table 'plot_category'.")
+    logging.debug(f"Deleting report {report_id} from table 'plot_category'.")
     session.query(PlotCategory).filter(PlotCategory.report_id == report_id).delete()
     session.commit()
     # Delete plot config
-    logging.debug(f"Deleting report {report.id} from table 'plot_config'.")
+    logging.debug(f"Deleting report {report_id} from table 'plot_config'.")
     session.query(PlotConfig).filter(
         PlotConfig.config_id.in_(
             session.query(PlotConfig.config_id)
@@ -42,11 +42,11 @@ def delete_report(session, report_id):
     ).delete(synchronize_session="fetch")
     session.commit()
     # Delete sample data
-    logging.debug(f"Deleting report {report.id} from table 'sample_data'.")
+    logging.debug(f"Deleting report {report_id} from table 'sample_data'.")
     session.query(SampleData).filter(SampleData.report_id == report_id).delete()
     session.commit()
     # Delete sample data type
-    logging.debug(f"Deleting report {report.id} from table 'sample_data_type'.")
+    logging.debug(f"Deleting report {report_id} from table 'sample_data_type'.")
     session.query(SampleDataType).filter(
         SampleDataType.sample_data_type_id.in_(
             session.query(SampleDataType.sample_data_type_id)
@@ -56,17 +56,18 @@ def delete_report(session, report_id):
     ).delete(synchronize_session="fetch")
     session.commit()
     # Delete report metadata
-    logging.debug(f"Deleting report {report.id} from table 'report_meta'.")
+    logging.debug(f"Deleting report {report_id} from table 'report_meta'.")
     session.query(ReportMeta).filter(ReportMeta.report_id == report_id).delete()
     session.commit()
     # Delete sample
-    logging.debug(f"Deleting report {report.id} from table 'sample'.")
+    logging.debug(f"Deleting report {report_id} from table 'sample'.")
     session.query(Sample).filter(Sample.report_id == report_id).delete()
     session.commit()
     # Delete report
-    logging.debug(f"Deleting report {report.id} from table 'report'.")
+    logging.debug(f"Deleting report {report_id} from table 'report'.")
     session.query(Report).filter(Report.report_id == report_id).delete()
     session.commit()
+    session.expunge_all()
 
 
 def upload_report(engine, report_data, force=False):
@@ -237,6 +238,8 @@ def upload_report(engine, report_data, force=False):
             plot_config = copy.deepcopy(plot_data.get("config", plot_data["pconfig"]))
 
             for dst_idx, dataset in enumerate(plot_data["datasets"]):
+                dataset_id = dataset["uid"]
+                logging.info(f"Parsing dataset {dataset_id}")
                 dls = None
                 dataset_name = None
                 if "data_labels" in plot_config and dst_idx < len(
@@ -259,7 +262,7 @@ def upload_report(engine, report_data, force=False):
                     session.query(PlotConfig)
                     .filter(
                         PlotConfig.config_type == plot_data["plot_type"],
-                        PlotConfig.config_name == plot_id,
+                        PlotConfig.config_name == dataset_id,
                         PlotConfig.config_dataset == dataset_name,
                     )
                     .first()
@@ -270,7 +273,7 @@ def upload_report(engine, report_data, force=False):
                     logging.debug("Adding plot config to DB")
                     plot_config_record = PlotConfig(
                         config_type=plot_data["plot_type"],
-                        config_name=plot_id,
+                        config_name=dataset_id,
                         config_dataset=dataset_name,
                         data=json.dumps(plot_config),
                     )
@@ -371,7 +374,7 @@ def upload_report(engine, report_data, force=False):
                             {
                                 x: y
                                 for x, y in list(line_data.items())
-                                if x not in ["data"]
+                                if x not in ["data", "pairs"]
                             }
                         )
                         if plot_category:

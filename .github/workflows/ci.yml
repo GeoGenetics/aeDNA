@@ -38,6 +38,8 @@ jobs:
     strategy:
       fail-fast: false
     runs-on: ubuntu-latest
+    env:
+      SQL_DRIVER: sqlite
 
     steps:
       - uses: actions/checkout@v4
