@@ -12,13 +12,13 @@ from subprocess import check_output
 sys.path.insert(0, os.path.dirname(__file__))
 
 
-def test_taxon_align_stats(conda_prefix):
+def test_multiqc_taxon_upload(conda_prefix):
 
     with tempfile.TemporaryDirectory() as tmpdir:
         workdir = Path(tmpdir) / "workdir"
-        config_path = Path(".tests/unit/taxon_align_stats/config")
-        data_path = Path(".tests/unit/taxon_align_stats/data")
-        expected_path = Path(".tests/unit/taxon_align_stats/expected")
+        config_path = Path(".tests/unit/multiqc_taxon_upload/config")
+        data_path = Path(".tests/unit/multiqc_taxon_upload/data")
+        expected_path = Path(".tests/unit/multiqc_taxon_upload/expected")
 
         # Copy config to the temporary workdir.
         shutil.copytree(config_path, workdir)
@@ -32,7 +32,7 @@ def test_taxon_align_stats(conda_prefix):
                 "python",
                 "-m",
                 "snakemake",
-                "stats/aligns/samtools_stats/HD827sonic_1_lib1_collapsed.txt",
+                "stats/reports/multiqc_taxon.upload.flag",
                 "--snakefile",
                 "../../workflow/Snakefile",
                 "-f",
@@ -41,7 +41,7 @@ def test_taxon_align_stats(conda_prefix):
                 "-j1",
                 "--target-files-omit-workdir-adjustment",
                 "--allowed-rules",
-                "taxon_align_stats",
+                "multiqc_taxon_upload",
                 "--configfile",
                 "config/config.yaml",
                 "--software-deployment-method",
@@ -60,10 +60,10 @@ def test_taxon_align_stats(conda_prefix):
 
         common.OutputChecker(data_path, expected_path, workdir).check(
             {
-                ".txt": [
+                ".flag": [
                     "diff",
-                    "--ignore-matching-lines=samtools",
-                    "--ignore-matching-lines=command",
+                    "--ignore-matching-lines=Uploading",
+                    "--ignore-matching-lines=tzname",
                 ]
             }
         )

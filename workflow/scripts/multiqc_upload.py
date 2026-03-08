@@ -109,14 +109,24 @@ def main():
 
     # Create SQLAlchemy engine
     import os
-    from urllib.parse import urlparse
+    from furl import furl
     from sqlalchemy import create_engine
+    from sqlalchemy.engine import URL
     from sqlalchemy_utils import database_exists, create_database, drop_database
 
-    url = urlparse(args.db_url)
-    username = os.environ.get("SQL_USER", url.username)
-    password = os.environ.get("SQL_PASSWORD", url.password)
-    engine = create_engine(url._replace(netloc=f'{username}:{password}@{url.hostname}:{url.port or 5432}').geturl())
+    if args.db_url:
+
+        url = furl(args.db_url)
+
+    url_config = {
+        "drivername": os.getenv("SQL_DRIVER", url.scheme),
+        "username": os.getenv("PGUSER", url.username),
+        "password": os.getenv("PGPASSWORD", url.password),
+        "host": os.getenv("PGHOST", url.host),
+        "port": os.getenv("PGPORT", url.port),
+        "database": os.getenv("PGDATABASE", str(url.path)),
+    }
+    engine = create_engine(URL.create(**url_config))
 
     # Checking if DB exists
     if database_exists(engine.url):

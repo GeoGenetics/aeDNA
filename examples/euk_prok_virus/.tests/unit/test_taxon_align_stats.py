@@ -59,5 +59,11 @@ def test_taxon_align_stats(conda_prefix):
         import common
 
         common.OutputChecker(data_path, expected_path, workdir).check(
-            {".txt": ["diff", "--ignore-matching-lines=\\#"]}
+            {
+                ".txt": [
+                    "diff",
+                    "--ignore-matching-lines=samtools",
+                    "--ignore-matching-lines=command",
+                ]
+            }
         )
