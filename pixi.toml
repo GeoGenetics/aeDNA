@@ -18,14 +18,14 @@ sqlalchemy-utils = ">=0.42.0,<1"
 psycopg2 = ">=2.9.10,<3"
 
 [environments]
-test = { features = ["test"]}
+test = { features = ["test"] }
 format = { features = ["format"], no-default-feature = true }
 
 [feature.test.dependencies]
-pytest = "*"
-graphviz = "*"
+pytest = ">=9.0.2"
+graphviz = ">=12.2.1"
 gatk4 = ">=4.0.51,<5"
 
 [feature.format.dependencies]
-black = "*"
-snakefmt = "*"
+ruff = ">=0.15.1"
+snakefmt = ">=0.11.5"

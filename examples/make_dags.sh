@@ -4,7 +4,7 @@ set -euxo pipefail
 
 SNAKEMAKE_OPTS="--snakefile ../../workflow/Snakefile --configfile config/config.yaml --software-deployment-method conda --keep-storage-local-copies --forceall $@"
 
-for TEST in euk_prok_virus empty
+for TEST in euk_prok_virus empty dragen
 do
     cd $TEST/
     snakemake $SNAKEMAKE_OPTS --dryrun

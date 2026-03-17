@@ -7,12 +7,12 @@ rule prefilter_reads_taxonomy:
         acc2taxid=rules.taxon_prefilter_metadmg_lca.input.acc2taxid,
     output:
         read_id=temp(
-            "temp/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.read_ids"
+            "<temp>/<reads>/prefilter/taxonomy/{sample}_{library}_{read_type_map}.read_ids"
         ),
     log:
-        "logs/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.log",
+        "<logs>/<reads>/prefilter/taxonomy/{sample}_{library}_{read_type_map}.log",
     benchmark:
-        "benchmarks/reads/prefilter/taxonomy/{sample}_{library}_{read_type_map}.jsonl"
+        "<benchmarks>/<reads>/prefilter/taxonomy/{sample}_{library}_{read_type_map}.jsonl"
     params:
         extra="-taxnames {}".format(config["prefilter"]["taxa"]),
     conda:
@@ -33,12 +33,12 @@ rule prefilter_reads_merge:
         saturated=rules.taxon_prefilter_shard_saturated_reads_filter.output.read_id,
     output:
         read_id=temp(
-            "temp/reads/prefilter/merge/{sample}_{library}_{read_type_map}.read_ids"
+            "<temp>/<reads>/prefilter/merge/{sample}_{library}_{read_type_map}.read_ids"
         ),
     log:
-        "logs/reads/prefilter/merge/{sample}_{library}_{read_type_map}.log",
+        "<logs>/<reads>/prefilter/merge/{sample}_{library}_{read_type_map}.log",
     benchmark:
-        "benchmarks/reads/prefilter/merge/{sample}_{library}_{read_type_map}.jsonl"
+        "<benchmarks>/<reads>/prefilter/merge/{sample}_{library}_{read_type_map}.jsonl"
     localrule: True
     threads: 1
     resources:
@@ -57,11 +57,11 @@ rule prefilter_reads_extract:
             otherwise=rules.prefilter_reads_taxonomy.output.read_id,
         ),
     output:
-        fq="results/reads/prefilter/extract/{sample}_{library}_{read_type_map}.fastq.gz",
+        fq="<results>/<reads>/prefilter/extract/{sample}_{library}_{read_type_map}.fastq.gz",
     log:
-        "logs/reads/prefilter/extract/{sample}_{library}_{read_type_map}.log",
+        "<logs>/<reads>/prefilter/extract/{sample}_{library}_{read_type_map}.log",
     benchmark:
-        "benchmarks/reads/prefilter/extract/{sample}_{library}_{read_type_map}.jsonl"
+        "<benchmarks>/<reads>/prefilter/extract/{sample}_{library}_{read_type_map}.jsonl"
     params:
         command="grep",
         extra="--invert-match --delete-matched",
@@ -73,16 +73,22 @@ rule prefilter_reads_extract:
         "v7.9.1/bio/seqkit"
 
 
-use rule shard_bowtie2 from workflow_taxon_prefilter as taxon_prefilter_shard_bowtie2 with:
-    input:
-        sample=workflow_taxon.get_data,
-        idx=workflow_taxon_prefilter.get_index,
+def get_data_prefilter(wildcards):
+    return [rules.prefilter_reads_extract.output.fq]
+
+
+workflow_taxon.get_data = get_data_prefilter
 
 
 use rule shard_bowtie2 from workflow_taxon as taxon_shard_bowtie2 with:
     input:
-        sample=[rules.prefilter_reads_extract.output.fq],
-        idx=workflow_taxon.get_index,
+        sample=get_data_prefilter,
+        idx=workflow_taxon.get_bowtie2_index,
+
+
+use rule shard_dragen_csv from workflow_taxon as taxon_shard_dragen_csv with:
+    input:
+        sample=get_data_prefilter,
 
 
 ##########
@@ -94,12 +100,12 @@ rule prefilter_fastqc:
     input:
         rules.prefilter_reads_extract.output.fq,
     output:
-        html="stats/reads/fastqc/prefilter/{sample}_{library}_{read_type_map}.html",
-        zip="stats/reads/fastqc/prefilter/{sample}_{library}_{read_type_map}_fastqc.zip",
+        html="<stats>/<reads>/fastqc/prefilter/{sample}_{library}_{read_type_map}.html",
+        zip="<stats>/<reads>/fastqc/prefilter/{sample}_{library}_{read_type_map}_fastqc.zip",
     log:
-        "logs/reads/fastqc/prefilter/{sample}_{library}_{read_type_map}.log",
+        "<logs>/<reads>/fastqc/prefilter/{sample}_{library}_{read_type_map}.log",
     benchmark:
-        "benchmarks/reads/fastqc/prefilter/{sample}_{library}_{read_type_map}.jsonl"
+        "<benchmarks>/<reads>/fastqc/prefilter/{sample}_{library}_{read_type_map}.jsonl"
     threads: 4
     resources:
         mem=lambda w, attempt: f"{3* attempt} GiB",

@@ -1,0 +1,149 @@
+
+# - Only tested with Phred33 quality scores
+
+samples: config/samples.tsv
+
+units: config/units.tsv
+
+
+
+#############
+### READS ###
+#############
+trim:
+  trim:
+    activate: true
+    tool: adapterremoval
+    params: "--trimns --maxns 10 --trimqualities --minlength 30 --mask-degenerate-bases --seed 12345"
+
+  # Ignored for SE
+  collapse:
+    activate: true
+    params: "--collapse-conservatively"
+
+derep:
+  extension:
+    activate: false
+    k: 16
+    params: "ibb=t prefilter=0 el=100 er=100 ecc=f ecco=f ignorebadquality extendrollback=0"
+
+  derep:
+    activate: true
+    # vsearch or seqkit
+    tool: seqkit
+    params: ""
+
+  low_complex:
+    params: "entropy=0.7 entropywindow=30 entropyk=4"
+
+
+
+#############
+### ALIGN ###
+#############
+prefilter:
+  taxa: "Bacteria,Archaea,Viruses"
+
+  ref:
+    hires_organelles_viruses_smags:
+      n_shards: 2
+      path: "/staging/hash_tables/hires_organelles_viruses_smags.{n_shard}"
+      map:
+        tool: dragen
+        params: "--Mapper.edit-mode=1"
+      acc2taxid: "data/prok.acc2taxid.gz"
+    human_genome:
+      n_shards: 1
+      path: "/staging/hash_tables/GCF_000001405.40_GRCh38.p14_genomic"
+      map:
+        tool: dragen
+        params: "--Mapper.edit-mode=0"
+      acc2taxid: "data/human.acc2taxid.gz"
+
+  filter:
+    saturated_reads:
+      activate: true
+      n_alns: 500
+
+  bam_filter:
+    reassign:
+      activate: false
+      params: "--iters 0 --min-read-ani 92 --min-read-count 3 --scale 0 --reference-lengths genomes.len.map"
+
+    filter:
+      activate: false
+      params: "--min-read-ani 92 --min-read-count 3 --min-normalized-entropy 0.6 --min-normalized-gini 0.4 --min-avg-read-ani 94 --reference-lengths genomes.len.map"
+
+    lca:
+      activate: false
+      params: "--lca-rank genus --reference-lengths genomes.len.map"
+
+  taxonomy:
+    nodes: "/datasets/globe_databases/gtdb-hires/20240313a/taxonomy/nodes.dmp"
+    names: "/datasets/globe_databases/gtdb-hires/20240313a/taxonomy/names.dmp"
+
+  metadmg:
+    damage:
+      params: "--print_length 15"
+
+    lca:
+      params: "--fix_ncbi 0 --how_many 25 --weight_type 1 --edit_dist_max 10000 --lca_rank genus"
+
+    dfit:
+      params: "--nopt 5 --showfits 2"
+
+
+euk:
+  ref:
+    refseq_mitoch:
+      n_shards: 1
+      path: "/staging/hash_tables/refseq_mitochondrion.genomic/"
+      map: &map_euk_dragen
+        tool: dragen
+        params: "--Mapper.edit-mode=0"
+      acc2taxid: "data/mitoch.acc2taxid.gz"
+    core_nt:
+      n_shards: 4
+      path: "/staging/hash_tables/core_nt.{n_shard}"
+      map:
+        <<: *map_euk_dragen
+      acc2taxid: "data/core_nt.acc2taxid.gz"
+
+  filter:
+    saturated_reads:
+      activate: true
+      n_alns: 500
+
+  bam_filter:
+    reassign:
+      activate: false
+      params: "--iters 0 --min-read-ani 92 --min-read-count 3 --scale 0"
+
+    filter:
+      activate: false
+      params: "--min-read-ani 92 --min-read-count 3 --min-normalized-entropy 0.6 --min-normalized-gini 0.4 --min-avg-read-ani 92"
+
+    lca:
+      activate: false
+      params: "--lca-rank genus"
+
+  taxonomy:
+    nodes: "data/taxdump/nodes.dmp"
+    names: "data/taxdump/names.dmp"
+
+  metadmg:
+    damage:
+      params: "--print_length 15"
+
+    lca:
+      params: "--fix_ncbi 0 --how_many 15 --sim_score_low 0.95 --weight_type 0 --edit_dist_max 10000 --lca_rank genus"
+
+    dfit:
+      params: "--nopt 5 --showfits 2 --seed 12345"
+
+
+############
+## REPORT ##
+############
+report:
+  multiqc: "--no-ai --verbose --cl-config 'custom_logo: data/KU_long.png' --cl-config 'custom_logo_title: CAEG - Center for Ancient Environmental Genomics' --cl-config 'custom_logo_url: https://globe.ku.dk/research/caeg/'"
