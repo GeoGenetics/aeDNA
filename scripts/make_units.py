@@ -42,14 +42,14 @@ parser.add_argument(
     "--in-regex",
     action="store",
     type=str,
-    default="^(?!Undetermined).*.(sam|bam|cram|fastq|fq)(.gz)?$",
+    default="^(?!Undetermined).*.(sam|bam|fastq|fq)(.gz)?$",
     help="Regex to filter input files",
 )
 parser.add_argument(
     "-r",
     "--regex",
     action="store",
-    default=r"\/(?P<date>\d{8})_(?P<machine>[A-Z]{1,2}\d{5})_(?P<run_n>\d{4})_(?P<flowcell_pos>[AB])(?P<flowcell>[A-Z0-9]{9})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10})(-(?P<subsample>[^_]+))?-(?P<archive>[^_]+)_(?P<sample_n>S\d+)_(?P<lane>L\d{3})_(?P<read>R[12])_001",
+    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell_pos>[AB])(?P<flowcell>H[A-Z0-9]{8})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10})-(?P<subsample>[^_-]+)-(?P<archive>[^_]+)_(?P<sample_n>S\d+)_(?P<lane>L\d{3})_(?P<read>R[12])_001",
     help="Regex to extract identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
@@ -243,21 +243,13 @@ for in_file in sorted(in_files):
 
     # Add row to DF
     row = pd.DataFrame([row])
-    logging.debug(f"\n{row.iloc[0]}")
+    logging.debug(row)
     units = pd.concat([units, row])
 
 
 if units.shape[0] == 0:
     logging.warning("No valid data files found!")
     exit(0)
-
-
-# Add metadata
-for metadata_default in args.metadata_default:
-    if metadata_default.find("=") > 0:
-        key, value = metadata_default.split("=")
-        if key not in units:
-            units[key] = value
 
 
 ######################
@@ -268,9 +260,12 @@ if "date" in units.columns.values:
     units["date"] = pd.to_datetime(units["date"])
 
 
-# Remove adapters if file SAM/BAM/CRAM
-units.loc[units.data.str.contains(r"\.(?:sam|bam|cram)$"), "adapters"] = pd.NA
-
+# Add metadata
+for metadata_default in args.metadata_default:
+    if metadata_default.find("=") > 0:
+        key, value = metadata_default.split("=")
+        if key not in units:
+            units[key] = value
 
 # Fix invalid values
 fix_cols = units.columns.drop("data")
@@ -310,27 +305,39 @@ if args.extra_file.exists() and "extra_file_md5" in out_path_wildcards:
 
 # Add workflow_ver (current workflow version), if present in out_path
 if "workflow_ver" in out_path_wildcards:
-    import git
+    repo_root = Path(__file__).resolve(strict=True).parent.parent
+    workflow_ver = None
 
-    repo = git.Repo(Path(__file__).resolve(strict=True).parent.parent)
-    commits = pd.DataFrame(
-        [[commit.hexsha, commit.committed_date] for commit in repo.iter_commits()],
-        columns=["hexsha", "date"],
-    ).sort_values(by="date")
-    tags = pd.DataFrame(
-        [[tag.commit.hexsha, tag.name] for tag in repo.tags], columns=["hexsha", "tag"]
-    )
-    commits = pd.merge(commits, tags, how="left", on="hexsha")
-    # if no tag, use commit hexsha
-    commits["tag"] = commits["tag"].fillna(commits["hexsha"])
+    # Prefer GitPython if available, but do not require it.
+    try:
+        import git  # type: ignore
 
-    # Sanity check
-    commits_no_tag = commits[commits.tag.str.len() == 40]
-    assert all(
-        commits_no_tag["hexsha"].eq(commits_no_tag["tag"])
-    ), "Commits HEX SHA do not match!"
+        repo = git.Repo(repo_root)
+        try:
+            workflow_ver = repo.git.describe("--tags", "--always")
+        except Exception:
+            workflow_ver = repo.head.commit.hexsha[:12]
+    except ModuleNotFoundError:
+        logging.warning(
+            "GitPython not installed; falling back to `git describe` for workflow_ver."
+        )
 
-    units["workflow_ver"] = commits.iloc[-1]["tag"]
+    if workflow_ver is None:
+        import subprocess
+
+        try:
+            workflow_ver = subprocess.check_output(
+                ["git", "-C", str(repo_root), "describe", "--tags", "--always"],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            ).strip()
+        except Exception:
+            workflow_ver = "unknown"
+            logging.warning(
+                "Could not determine workflow_ver from git; using 'unknown'."
+            )
+
+    units["workflow_ver"] = workflow_ver
 
 
 # Reorder columns
@@ -348,8 +355,8 @@ units = units[sorted(units.columns.values, key=lambda x: col_order.get(x, 999))]
 # Sort rows
 units = units.sort_values(by=list(units.columns.drop(["size_kb", "n_reads"]).values))
 logging.info(f"Units file has {units.shape[0]} rows and {units.shape[1]} columns.")
-logging.debug(f"\n{units}")
-logging.debug(f"\n{units.dtypes}")
+logging.debug(units)
+logging.debug(units.dtypes)
 
 
 #####################
@@ -360,7 +367,7 @@ if out_path_wildcards:
     for keys, units in units.groupby(out_path_wildcards, group_keys=True):
         name = dict(zip(out_path_wildcards, keys))
         logging.debug(f"Group units with output path wildcards: {name}")
-        logging.debug(f"\n{units}")
+        logging.debug(units)
         # Create output path
         out_path = Path(args.out_path.format(**name))
         datasets.append((out_path, units))
@@ -391,7 +398,7 @@ if args.out_stats:
     logging.debug(pd.concat(out_stats))
 
     with open(args.out_stats, "x") as out_stat_fh:
-        np.set_printoptions(legacy="1.21")
+        np.set_printoptions(legacy="1.25")
         out_stat_fh.write(f"# {args}\n")
         pd.concat(out_stats).dropna(axis=1, how="all").to_csv(
             out_stat_fh,
@@ -403,14 +410,12 @@ if args.out_stats:
         )
 
 
-for out_path, units in datasets:
-    if args.dryrun:
-        assert not out_path.exists()
-    else:
+if not args.dryrun:
+    for out_path, units in datasets:
         # Create folders
         out_path.mkdir(parents=True, exist_ok=args.force)
         # Save units.tsv file
-        units.drop(["extra_file_md5"], axis=1).dropna(axis=1, how="all").to_csv(
+        units.dropna(axis=1, how="all").to_csv(
             out_path / "units.tsv",
             sep="\t",
             index=False,
