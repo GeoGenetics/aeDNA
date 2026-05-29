@@ -55,6 +55,19 @@ parser.add_argument(
     help="Slurm partition (only used when --scheduler slurm).",
 )
 parser.add_argument(
+    "--account",
+    action="store",
+    default="prod",
+    help="Slurm account (only used when --scheduler slurm).",
+)
+parser.add_argument(
+    "--jobs",
+    action="store",
+    type=int,
+    default=100,
+    help="Maximum number of parallel jobs submitted to slurm (passed as --jobs to snakemake).",
+)
+parser.add_argument(
     "-l",
     "--loglevel",
     action="store",
@@ -131,7 +144,7 @@ for id in df.index:
         print(f"env --chdir={id} {cmd}")
     elif args.scheduler == "slurm":
         print(
-            f'sbatch --chdir {id} --job-name {id} --account prod --partition {args.partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap "{cmd} --profile /projects/caeg/data/resources/profile_production --executor slurm --retries 1"; sleep 1'
+            f'sbatch --chdir {id} --job-name {id} --account {args.account} --partition {args.partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap "{cmd} --profile /projects/caeg/data/resources/profile_production --executor slurm --jobs {args.jobs} --retries 1"; sleep 1'
         )
     else:
         logging.warning(f"HPC scheduler {args.scheduler} not supported!")
