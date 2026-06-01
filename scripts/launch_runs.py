@@ -77,7 +77,7 @@ parser.add_argument(
 )
 args, extra_args = parser.parse_known_args()
 extra_args = " ".join(extra_args)
-
+extra_args += " --jobs 300 --retries 1"
 
 # Set logger
 loglevel = getattr(logging, args.loglevel.upper(), None)
@@ -100,11 +100,9 @@ df = pd.concat(
     ]
 )
 
-
 n_jobs = df.shape[0]
 logging.info(f"Launching {n_jobs} jobs")
-logging.debug(df)
-
+logging.debug(f"\n{df}")
 
 logging.info("Build base command")
 local_repo_root = Path(__file__).resolve(strict=True).parent.parent
@@ -144,7 +142,7 @@ for id in df.index:
         print(f"env --chdir={id} {cmd}")
     elif args.scheduler == "slurm":
         print(
-            f'sbatch --chdir {id} --job-name {id} --account {args.account} --partition {args.partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap "{cmd} --profile /projects/caeg/data/resources/profile_production --executor slurm --jobs {args.jobs} --retries 1"; sleep 1'
+            f'sbatch --chdir {id} --job-name {id} --account {args.account} --partition {args.partition} --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap "{cmd} --profile /projects/caeg/data/resources/profile_production --executor slurm {extra_args}"; sleep 1'
         )
     else:
         logging.warning(f"HPC scheduler {args.scheduler} not supported!")

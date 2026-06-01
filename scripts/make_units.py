@@ -91,6 +91,7 @@ parser.add_argument(
     action="store",
     nargs="+",
     default=[
+        f"date={pd.Timestamp.today().normalize().strftime('%Y-%m-%d')}",
         "sample=Lib",
         "material=DNA",
         "flowcell_pos=X",
@@ -195,8 +196,6 @@ out_path_wildcards = list(
     set([key.split("[")[0] for _, key, _, _ in Formatter().parse(args.out_path) if key])
 )
 
-# Default values used when an out-path wildcard is not present in parsed metadata.
-# Keep date as datetime so format specs like {date:%Y%m%d} work.
 out_path_defaults = {
     "sample": "sample",
     "project": "project",
@@ -261,7 +260,7 @@ for in_file in sorted(in_files):
 
     # Add row to DF
     row = pd.DataFrame([row])
-    logging.debug(row)
+    logging.debug(f"\n{row.iloc[0]}")
     units = pd.concat([units, row])
 
 
@@ -339,39 +338,16 @@ if args.extra_file.exists() and "extra_file_md5" in out_path_wildcards:
 
 # Add workflow_ver (current workflow version), if present in out_path
 if "workflow_ver" in out_path_wildcards:
-    repo_root = Path(__file__).resolve(strict=True).parent.parent
-    workflow_ver = None
+    import git
 
-    # Prefer GitPython if available, but do not require it.
-    try:
-        import git  # type: ignore
-
-        repo = git.Repo(repo_root)
-        try:
-            workflow_ver = repo.git.describe("--tags", "--always")
-        except Exception:
-            workflow_ver = repo.head.commit.hexsha[:12]
-    except ModuleNotFoundError:
-        logging.warning(
-            "GitPython not installed; falling back to `git describe` for workflow_ver."
-        )
-
-    if workflow_ver is None:
-        import subprocess
-
-        try:
-            workflow_ver = subprocess.check_output(
-                ["git", "-C", str(repo_root), "describe", "--tags", "--always"],
-                text=True,
-                stderr=subprocess.DEVNULL,
-            ).strip()
-        except Exception:
-            workflow_ver = "unknown"
-            logging.warning(
-                "Could not determine workflow_ver from git; using 'unknown'."
-            )
-
-    units["workflow_ver"] = workflow_ver
+    repo = git.Repo(Path(__file__).resolve(strict=True).parent.parent)
+    tag_recent = [
+        [tag.name, commit.hexsha]
+        for commit in repo.iter_commits()
+        for tag in repo.tags
+        if commit.hexsha == tag.commit.hexsha
+    ][0]
+    units["workflow_ver"] = tag_recent[0]
 
 
 # Reorder columns
@@ -401,7 +377,7 @@ if out_path_wildcards:
     for keys, units in units.groupby(out_path_wildcards, group_keys=True):
         name = dict(zip(out_path_wildcards, keys))
         logging.debug(f"Group units with output path wildcards: {name}")
-        logging.debug(units)
+        logging.debug(f"\n{units}")
         # Create output path
         out_path = Path(args.out_path.format(**name))
         datasets.append((out_path, units))
