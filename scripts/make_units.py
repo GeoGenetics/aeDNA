@@ -49,7 +49,7 @@ parser.add_argument(
     "-r",
     "--regex",
     action="store",
-    default=r"\/(?P<date>\d{8})_(?P<machine>A\d{5})_(?P<run_n>\d{4})_(?P<flowcell_pos>[AB])(?P<flowcell>H[A-Z0-9]{8})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10})-(?P<subsample>[^_-]+)-(?P<archive>[^_]+)_(?P<sample_n>S\d+)_(?P<lane>L\d{3})_(?P<read>R[12])_001",
+    default=r"\/(?P<date>\d{8})_(?P<machine>[A-Z]{1,2}\d{5})_(?P<run_n>\d{4})_(?P<flowcell_pos>[AB])(?P<flowcell>[A-Z0-9]{9})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10})(-(?P<subsample>[^_]+))?-(?P<archive>[^_]+)_(?P<sample_n>S\d+)_(?P<lane>L\d{3})_(?P<read>R[12])_001",
     help="Regex to extract identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
@@ -389,8 +389,8 @@ units = units[sorted(units.columns.values, key=lambda x: col_order.get(x, 999))]
 # Sort rows
 units = units.sort_values(by=list(units.columns.drop(["size_kb", "n_reads"]).values))
 logging.info(f"Units file has {units.shape[0]} rows and {units.shape[1]} columns.")
-logging.debug(units)
-logging.debug(units.dtypes)
+logging.debug(f"\n{units}")
+logging.debug(f"\n{units.dtypes}")
 
 
 #####################
@@ -444,8 +444,10 @@ if args.out_stats:
         )
 
 
-if not args.dryrun:
-    for out_path, units in datasets:
+for out_path, units in datasets:
+    if args.dryrun:
+        assert not out_path.exists()
+    else:
         # Create folders
         out_path.mkdir(parents=True, exist_ok=args.force)
         # Save units.tsv file
