@@ -173,7 +173,11 @@ if args.extra_file.find(":") > 0:
 else:
     args.extra_file = Path(args.extra_file)
     extra_file_name = args.extra_file.name
-assert args.extra_file.exists(), "Extra file does not exist."
+if not args.extra_file.exists():
+    parser.error(
+        "Extra file does not exist: "
+        f"{args.extra_file}. Pass --extra-file name:/path/to/file with a valid path."
+    )
 
 
 # Add extra metadata
@@ -190,6 +194,20 @@ from string import Formatter
 out_path_wildcards = list(
     set([key.split("[")[0] for _, key, _, _ in Formatter().parse(args.out_path) if key])
 )
+
+# Default values used when an out-path wildcard is not present in parsed metadata.
+# Keep date as datetime so format specs like {date:%Y%m%d} work.
+out_path_defaults = {
+    "sample": "sample",
+    "project": "project",
+    "library": "library",
+    "flowcell_pos": "X",
+    "flowcell": "HXXXXXXXX",
+    "lane": "L001",
+    "date": pd.Timestamp.today().normalize(),
+    "workflow_ver": "unknown",
+    "extra_file_md5": "noextra",
+}
 
 
 ###########
@@ -255,11 +273,6 @@ if units.shape[0] == 0:
 ######################
 ### FORMAT COLUMNS ###
 ######################
-# Format date column (if present)
-if "date" in units.columns.values:
-    units["date"] = pd.to_datetime(units["date"])
-
-
 # Add metadata
 for metadata_default in args.metadata_default:
     if metadata_default.find("=") > 0:
@@ -267,9 +280,30 @@ for metadata_default in args.metadata_default:
         if key not in units:
             units[key] = value
 
+# Add missing fields used in out-path formatting.
+missing_out_path_fields = [
+    key for key in out_path_wildcards if key not in units.columns.values
+]
+if missing_out_path_fields:
+    logging.warning(
+        "Missing out-path fields in parsed metadata: %s. Applying defaults.",
+        ", ".join(sorted(missing_out_path_fields)),
+    )
+for key in missing_out_path_fields:
+    units[key] = out_path_defaults.get(key, f"unknown_{key}")
+
 # Fix invalid values
 fix_cols = units.columns.drop("data")
 units[fix_cols] = units[fix_cols].replace(args.rm_chars, value="", regex=True)
+
+# Normalize date column after metadata/default injection.
+if "date" in units.columns.values:
+    units["date"] = pd.to_datetime(units["date"], errors="coerce")
+    if units["date"].isna().any():
+        logging.warning(
+            "Some date values could not be parsed. Using today's date for invalid rows."
+        )
+        units.loc[units["date"].isna(), "date"] = out_path_defaults["date"]
 
 
 # Fix seq_type info and collapse
