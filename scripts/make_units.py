@@ -196,18 +196,6 @@ out_path_wildcards = list(
     set([key.split("[")[0] for _, key, _, _ in Formatter().parse(args.out_path) if key])
 )
 
-out_path_defaults = {
-    "sample": "sample",
-    "project": "project",
-    "library": "library",
-    "flowcell_pos": "X",
-    "flowcell": "HXXXXXXXX",
-    "lane": "L001",
-    "date": pd.Timestamp.today().normalize(),
-    "workflow_ver": "unknown",
-    "extra_file_md5": "noextra",
-}
-
 
 ###########
 ### LOG ###
@@ -288,8 +276,6 @@ if missing_out_path_fields:
         "Missing out-path fields in parsed metadata: %s. Applying defaults.",
         ", ".join(sorted(missing_out_path_fields)),
     )
-for key in missing_out_path_fields:
-    units[key] = out_path_defaults.get(key, f"unknown_{key}")
 
 # Fix invalid values
 fix_cols = units.columns.drop("data")
@@ -339,15 +325,11 @@ if args.extra_file.exists() and "extra_file_md5" in out_path_wildcards:
 # Add workflow_ver (current workflow version), if present in out_path
 if "workflow_ver" in out_path_wildcards:
     import git
-
     repo = git.Repo(Path(__file__).resolve(strict=True).parent.parent)
-    tag_recent = [
-        [tag.name, commit.hexsha]
-        for commit in repo.iter_commits()
-        for tag in repo.tags
-        if commit.hexsha == tag.commit.hexsha
-    ][0]
-    units["workflow_ver"] = tag_recent[0]
+    try:
+        units["workflow_ver"] = repo.git.describe("--tags", "--exact-match")
+    except Exception:
+        units["workflow_ver"] = repo.head.commit.hexsha
 
 
 # Reorder columns

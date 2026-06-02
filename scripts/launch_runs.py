@@ -61,13 +61,6 @@ parser.add_argument(
     help="Slurm account (only used when --scheduler slurm).",
 )
 parser.add_argument(
-    "--jobs",
-    action="store",
-    type=int,
-    default=100,
-    help="Maximum number of parallel jobs submitted to slurm (passed as --jobs to snakemake).",
-)
-parser.add_argument(
     "-l",
     "--loglevel",
     action="store",
@@ -87,6 +80,18 @@ logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+
+# Jobs run command
+if args.run == "local":
+    logging.info(f"Running jobs locally")
+elif args.run == "slurm":
+    logging.info(
+        f"Jobs will be submitted to the {args.run} HPC, on account '{hpc_job_account}' and partition '{hpc_job_partition}'."
+    )
+    extra_args += (
+        f" --executor {args.run} --default-resources slurm_account={hpc_job_account} slurm_partition={hpc_job_partition}"
+        + (f" --slurm-qos {hpc_job_qos}" if hpc_job_qos else "")
+    )
 
 
 # Read job list
