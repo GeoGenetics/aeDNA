@@ -42,7 +42,7 @@ parser.add_argument(
     "--in-regex",
     action="store",
     type=str,
-    default="^(?!Undetermined).*.(sam|bam|cram|fastq|fq)(.gz)?$",
+    default="^(?!Undetermined).*.(sam|bam|fastq|fq)(.gz)?$",
     help="Regex to filter input files",
 )
 parser.add_argument(
@@ -91,6 +91,7 @@ parser.add_argument(
     action="store",
     nargs="+",
     default=[
+        f"date={pd.Timestamp.today().normalize().strftime('%Y-%m-%d')}",
         "sample=Lib",
         "material=DNA",
         "flowcell_pos=X",
@@ -173,7 +174,11 @@ if args.extra_file.find(":") > 0:
 else:
     args.extra_file = Path(args.extra_file)
     extra_file_name = args.extra_file.name
-assert args.extra_file.exists(), "Extra file does not exist."
+if not args.extra_file.exists():
+    parser.error(
+        "Extra file does not exist: "
+        f"{args.extra_file}. Pass --extra-file name:/path/to/file with a valid path."
+    )
 
 
 # Add extra metadata
@@ -252,6 +257,9 @@ if units.shape[0] == 0:
     exit(0)
 
 
+######################
+### FORMAT COLUMNS ###
+######################
 # Add metadata
 for metadata_default in args.metadata_default:
     if metadata_default.find("=") > 0:
@@ -259,22 +267,28 @@ for metadata_default in args.metadata_default:
         if key not in units:
             units[key] = value
 
-
-######################
-### FORMAT COLUMNS ###
-######################
-# Format date column (if present)
-if "date" in units.columns.values:
-    units["date"] = pd.to_datetime(units["date"])
-
-
-# Remove adapters if file SAM/BAM/CRAM
-units.loc[units.data.str.contains(r"\.(?:sam|bam|cram)$"), "adapters"] = pd.NA
-
+# Add missing fields used in out-path formatting.
+missing_out_path_fields = [
+    key for key in out_path_wildcards if key not in units.columns.values
+]
+if missing_out_path_fields:
+    logging.warning(
+        "Missing out-path fields in parsed metadata: %s. Applying defaults.",
+        ", ".join(sorted(missing_out_path_fields)),
+    )
 
 # Fix invalid values
 fix_cols = units.columns.drop("data")
 units[fix_cols] = units[fix_cols].replace(args.rm_chars, value="", regex=True)
+
+# Normalize date column after metadata/default injection.
+if "date" in units.columns.values:
+    units["date"] = pd.to_datetime(units["date"], errors="coerce")
+    if units["date"].isna().any():
+        logging.warning(
+            "Some date values could not be parsed. Using today's date for invalid rows."
+        )
+        units.loc[units["date"].isna(), "date"] = out_path_defaults["date"]
 
 
 # Fix seq_type info and collapse
@@ -311,26 +325,11 @@ if args.extra_file.exists() and "extra_file_md5" in out_path_wildcards:
 # Add workflow_ver (current workflow version), if present in out_path
 if "workflow_ver" in out_path_wildcards:
     import git
-
     repo = git.Repo(Path(__file__).resolve(strict=True).parent.parent)
-    commits = pd.DataFrame(
-        [[commit.hexsha, commit.committed_date] for commit in repo.iter_commits()],
-        columns=["hexsha", "date"],
-    ).sort_values(by="date")
-    tags = pd.DataFrame(
-        [[tag.commit.hexsha, tag.name] for tag in repo.tags], columns=["hexsha", "tag"]
-    )
-    commits = pd.merge(commits, tags, how="left", on="hexsha")
-    # if no tag, use commit hexsha
-    commits["tag"] = commits["tag"].fillna(commits["hexsha"])
-
-    # Sanity check
-    commits_no_tag = commits[commits.tag.str.len() == 40]
-    assert all(
-        commits_no_tag["hexsha"].eq(commits_no_tag["tag"])
-    ), "Commits HEX SHA do not match!"
-
-    units["workflow_ver"] = commits.iloc[-1]["tag"]
+    try:
+        units["workflow_ver"] = repo.git.describe("--tags", "--exact-match")
+    except Exception:
+        units["workflow_ver"] = repo.head.commit.hexsha
 
 
 # Reorder columns
@@ -391,7 +390,7 @@ if args.out_stats:
     logging.debug(pd.concat(out_stats))
 
     with open(args.out_stats, "x") as out_stat_fh:
-        np.set_printoptions(legacy="1.21")
+        np.set_printoptions(legacy="1.25")
         out_stat_fh.write(f"# {args}\n")
         pd.concat(out_stats).dropna(axis=1, how="all").to_csv(
             out_stat_fh,
@@ -410,7 +409,7 @@ for out_path, units in datasets:
         # Create folders
         out_path.mkdir(parents=True, exist_ok=args.force)
         # Save units.tsv file
-        units.drop(["extra_file_md5"], axis=1).dropna(axis=1, how="all").to_csv(
+        units.dropna(axis=1, how="all").to_csv(
             out_path / "units.tsv",
             sep="\t",
             index=False,
