@@ -1,7 +1,7 @@
 import pandas as pd
 from urllib.parse import urlparse, urlunparse
 
-snakemake.utils.min_version("9.16.3")
+snakemake.utils.min_version("9.22.0")
 
 
 # Define base URL
@@ -33,18 +33,17 @@ module workflow_derep:
 use rule * from workflow_derep as derep_*
 
 
-d1 = ["benchmarks", "logs", "reports", "results", "stats", "temp"]
-d2 = ["reads", "shards", "aligns", "metadmg", "reports"]
-from itertools import product
-
-
 module workflow_taxon_prefilter:
     snakefile:
         github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.11.2")
     config:
         {"units": units, "cfg": config["prefilter"]}
-    replace_prefix:
-        {f"{d1}/{d2}/": f"{d1}/prefilter_{d2}/" for d1, d2 in product(d1, d2)}
+    pathvars:
+        reads="prefilter_reads",
+        shards="prefilter_shards",
+        aligns="prefilter_aligns",
+        metadmg="prefilter_metadmg",
+        reports="prefilter_reports",
 
 
 use rule * from workflow_taxon_prefilter as taxon_prefilter_*
@@ -58,6 +57,13 @@ module workflow_taxon:
 
 
 use rule * from workflow_taxon as taxon_*
+
+
+pathvars:
+    stats="stats",
+    temp="temp",
+    reads="reads",
+    shards="shards",
 
 
 include: "rules/prefilter.smk"
@@ -74,17 +80,13 @@ onerror:
 ##################
 ### PRINT INFO ###
 ##################
-import pwd
 import git
 import json
-import socket
-import hashlib
 import datetime
 from snakemake.logging import logger
 
 base_dir = Path(workflow.basedir).resolve(strict=True)
 repo = git.Repo(base_dir.parent)
-logger.info(f"Snakemake version: {snakemake.common.__version__}")
 tag_recent = [
     [tag.name, commit.hexsha]
     for commit in repo.iter_commits()
@@ -99,21 +101,8 @@ logger.info(
         commit_tag=tag_recent[0],
     )
 )
-logger.info(
-    "Run started: {time} @ {host} ({user})".format(
-        time=str(datetime.datetime.now()),
-        host=socket.gethostname(),
-        user=pwd.getpwuid(os.getuid())[0],
-    )
-)
-logger.info(f"Workflow base dir: {base_dir}")
-logger.info(f"Executing in: {workflow.workdir_init}")
 config_json = json.dumps(config, sort_keys=True).encode("utf-8")
-logger.info(
-    "Config JSON MD5: {md5sum} ({json})".format(
-        md5sum=hashlib.md5(config_json).hexdigest(), json=config_json
-    )
-)
+logger.info(f"Config JSON: {config_json}")
 # Log current samples
 logger.info("Samples:")
 logger.info(samples.to_string(index=False))
@@ -148,8 +137,17 @@ rule multiqc_trim:
         "v8.1.1/bio/multiqc"
 
 
+rule target_trim:
+    input:
+        rules.multiqc_trim.output,
+        rules.trim_all.input.res,
+    message:
+        "Read trimming finished successfully!"
+
+
 rule multiqc_trim_upload:
     input:
+        rules.target_trim.input,
         zip=rules.multiqc_trim.output.data,
     output:
         "stats/reports/multiqc_trim.upload.flag",
@@ -171,16 +169,6 @@ rule multiqc_trim_upload:
         """
 
 
-rule target_trim:
-    input:
-        rules.multiqc_trim_upload.output
-        if config["report"].get("multiqc_db_url")
-        else rules.multiqc_trim.output,
-        rules.trim_all.input.res,
-    message:
-        "Read trimming finished successfully!"
-
-
 #####
 
 
@@ -198,23 +186,22 @@ use rule multiqc_trim as multiqc_derep with:
         "benchmarks/reports/multiqc.derep.jsonl"
 
 
+rule target_derep:
+    input:
+        rules.multiqc_derep.output,
+        rules.derep_all.input.res,
+    message:
+        "Read dereplication finished successfully!"
+
+
 use rule multiqc_trim_upload as multiqc_derep_upload with:
     input:
+        rules.target_derep.input,
         zip=rules.multiqc_derep.output.data,
     output:
         touch("stats/reports/multiqc_derep.upload.flag"),
     log:
         "logs/reports/multiqc_derep.upload.log",
-
-
-rule target_derep:
-    input:
-        rules.multiqc_derep_upload.output
-        if config["report"].get("multiqc_db_url")
-        else rules.multiqc_derep.output,
-        rules.derep_all.input.res,
-    message:
-        "Read dereplication finished successfully!"
 
 
 #####
@@ -242,22 +229,21 @@ use rule multiqc_derep as multiqc_taxon with:
         "benchmarks/reports/multiqc.taxon.jsonl"
 
 
-use rule multiqc_trim_upload as multiqc_taxon_upload with:
-    input:
-        zip=rules.multiqc_taxon.output.data,
-    output:
-        touch("stats/reports/multiqc_taxon.upload.flag"),
-    log:
-        "logs/reports/multiqc_taxon.upload.log",
-
-
 rule target_taxon:
     input:
-        rules.multiqc_taxon_upload.output
-        if config["report"].get("multiqc_db_url")
-        else rules.multiqc_taxon.output,
+        rules.multiqc_taxon.output,
         rules.taxon_prefilter_all.input.res,
         rules.taxon_all.input.res,
     message:
         "Taxonomic assignment finished successfully!"
     default_target: True
+
+
+use rule multiqc_trim_upload as multiqc_taxon_upload with:
+    input:
+        rules.target_taxon.input,
+        zip=rules.multiqc_taxon.output.data,
+    output:
+        touch("stats/reports/multiqc_taxon.upload.flag"),
+    log:
+        "logs/reports/multiqc_taxon.upload.log",

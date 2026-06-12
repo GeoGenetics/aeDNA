@@ -13,16 +13,16 @@ rule prefilter_reads_taxonomy:
         "<logs>/<reads>/prefilter/taxonomy/{sample}_{library}_{read_type_map}.log",
     benchmark:
         "<benchmarks>/<reads>/prefilter/taxonomy/{sample}_{library}_{read_type_map}.jsonl"
-    params:
-        extra="-taxnames {}".format(config["prefilter"]["taxa"]),
     conda:
         urlunparse(
             baseurl._replace(path=str(Path(baseurl.path) / "envs" / "metadmg.yaml"))
         )
     threads: 1
     resources:
-        mem=lambda w, input, attempt: f"{2* attempt} GiB",
+        mem=lambda w, input, attempt: f"{10* attempt} GiB",
         runtime=lambda w, input, attempt: f"{(0.05* input.size_gb+0.5)* attempt} h",
+    params:
+        extra="-taxnames {}".format(config["prefilter"]["taxa"]),
     shell:
         "(extract_reads bytaxid -hts {input.bam} -names {input.names} -nodes {input.nodes} -acc2tax <(cat {input.acc2taxid}) {params.extra} -strict 1 -forcedump 1 -out - -type sam | awk '!/^@/' | cut -f 1 | uniq > {output.read_id}) 2> {log}"
 
@@ -62,13 +62,13 @@ rule prefilter_reads_extract:
         "<logs>/<reads>/prefilter/extract/{sample}_{library}_{read_type_map}.log",
     benchmark:
         "<benchmarks>/<reads>/prefilter/extract/{sample}_{library}_{read_type_map}.jsonl"
-    params:
-        command="grep",
-        extra="--invert-match --delete-matched",
     threads: 2
     resources:
         mem=lambda w, input, attempt: f"{2* attempt} GiB",
         runtime=lambda w, input, attempt: f"{(0.06* input.size_gb+1)* attempt} h",
+    params:
+        command="grep",
+        extra="--invert-match --delete-matched",
     wrapper:
         "v7.9.1/bio/seqkit"
 
@@ -86,7 +86,15 @@ use rule shard_bowtie2 from workflow_taxon as taxon_shard_bowtie2 with:
         idx=workflow_taxon.get_bowtie2_index,
 
 
-use rule shard_dragen_csv from workflow_taxon as taxon_shard_dragen_csv with:
+use rule shard_bwa_aln from workflow_taxon as taxon_shard_shard_bwa_aln with:
+    input:
+        fastq=get_data_prefilter,
+        idx=lambda w: multiext(
+            config["ref"][w.ref]["path"], ".amb", ".ann", ".bwt", ".pac", ".sa"
+        ),
+
+
+use rule shard_dragen from workflow_taxon as taxon_shard_dragen with:
     input:
         sample=get_data_prefilter,
 
