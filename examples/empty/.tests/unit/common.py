@@ -11,7 +11,7 @@ cmp_cmds = {
     ".gz": ["zcmp"],
     ".bz2": ["bzcmp"],
     ".xz": ["xzcmp"],
-    ".bam": ["gatk", "CompareSAMs", "--LENIENT_HEADER"],
+    ".bam": ["picard", "CompareSAMs", "--LENIENT_HEADER"],
 }
 
 
