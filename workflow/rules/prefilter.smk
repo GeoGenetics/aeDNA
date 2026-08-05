@@ -64,7 +64,7 @@ rule prefilter_reads_extract:
         "<benchmarks>/<reads>/prefilter/extract/{sample}_{library}_{read_type_map}.jsonl"
     threads: 2
     resources:
-        mem=lambda w, input, attempt: f"{2* attempt} GiB",
+        mem=lambda w, input, attempt: f"{5* attempt} GiB",
         runtime=lambda w, input, attempt: f"{(0.06* input.size_gb+1)* attempt} h",
     params:
         command="grep",

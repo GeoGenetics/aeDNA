@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-
 # Log messages and status; order matters!
 status_msgs = {
     "aeDNA workflow finished successfully!": "OK",
@@ -16,6 +15,7 @@ status_msgs = {
     "At least one job did not complete successfully.": "ERROR",
     "HTTPError:": "ERROR_NETWORK",
     ": error: ": "ERROR_SLURM",
+    "PermissionError": "ERROR_PERM",
     "Cleaning up log files older than ": "NOT_RUN",
     "NOT_EXIST": "NOT_EXIST",
     "RUNNING": "RUNNING",
@@ -23,6 +23,7 @@ status_msgs = {
     "ERROR_OOM": "ERROR_OOM",
     "NODE_FAIL": "NODE_FAIL",
     "UNKNOWN": "UNKNOWN",
+    "Unlocked working directory.": "UNKNOWN",
 }
 
 
@@ -69,7 +70,7 @@ parser.add_argument(
 parser.add_argument(
     "--hpc-extra",
     action="store",
-    default="--starttime now-10days",
+    default="--starttime now-7days",
     help="HPC extra query arguments",
 )
 parser.add_argument(
@@ -77,6 +78,7 @@ parser.add_argument(
     "--status",
     action="store",
     nargs="+",
+    default=["ERROR"],
     choices=set(status_msgs.values()),
     help="Status of jobs to print",
 )
@@ -105,14 +107,15 @@ logging.basicConfig(
 logging.info("Reading input file(s)")
 df = pd.concat(
     [
-        pd.read_table(
-            job_list, header=None, index_col=0, usecols=[0], comment="#"
-        ).assign(filename=job_list)
+        pd.read_table(job_list, header=None, names=["path"], usecols=[0], comment="#")
+        .set_index("path")
+        .assign(filename=job_list)
         for job_list in args.job_list
     ]
 )
 n_jobs = df.shape[0]
 logging.info(f"Checking {n_jobs} jobs")
+logging.debug(f"\n{df}")
 
 
 ######################
@@ -156,7 +159,7 @@ elif args.scheduler == "slurm":
         "--endtime",
         "now",
         "--format",
-        "JobId,JobName%-500,State,End",
+        "JobIdRaw,JobName%-500,State,End",
     ] + args.hpc_extra.split(" ")
     logging.debug(" ".join(hpc_cmd))
 
@@ -164,16 +167,19 @@ elif args.scheduler == "slurm":
         hpc_cmd,
         stdout=subprocess.PIPE,
     )
+    res = pd.read_csv(
+        StringIO(res.stdout.decode("utf-8")), sep="|", low_memory=False
+    ).rename(
+        columns={
+            "JobIDRaw": "id",
+            "JobName": "name",
+            "State": "hpc_status",
+            "End": "time_end",
+        }
+    )
+    # Ignore batch jobs
     res = (
-        pd.read_csv(StringIO(res.stdout.decode("utf-8")), sep="|", low_memory=False)
-        .rename(
-            columns={
-                "JobID": "id",
-                "JobName": "name",
-                "State": "hpc_status",
-                "End": "time_end",
-            }
-        )
+        res[res["name"].ne("sbatch")]
         .astype({"id": np.uint64})
         .sort_values("time_end")
         .set_index(["name", "id"])
@@ -241,7 +247,10 @@ assert (
 
 # Filter runs by status and print
 if args.status:
-    for id in df[df.status.isin(args.status)].index:
-        print(id)
+    logging.info(f"Print jobs with status {args.status}:")
+    for job in (
+        df[df.status.isin(args.status)].sort_values(by=["filename"]).itertuples()
+    ):
+        print(f"{job.Index}\t{job.filename}\t{job.time_end}")
 
 exit(0)

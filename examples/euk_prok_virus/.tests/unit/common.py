@@ -1,5 +1,5 @@
 """
-Common code for unit testing of rules generated with Snakemake 9.16.4.dev3.
+Common code for unit testing of rules generated with Snakemake 9.24.0.
 """
 
 import os
@@ -11,7 +11,6 @@ cmp_cmds = {
     ".gz": ["zcmp"],
     ".bz2": ["bzcmp"],
     ".xz": ["xzcmp"],
-    ".bam": ["picard", "CompareSAMs", "--LENIENT_HEADER"],
 }
 
 
@@ -21,7 +20,7 @@ class OutputChecker:
         self.expected_path = expected_path
         self.workdir = workdir
 
-    def check(self, cmp_cmds=cmp_cmds):
+    def check(self, cmp_cmds = cmp_cmds):
         # Input files
         input_files = set(
             (Path(path) / f).relative_to(self.data_path)
