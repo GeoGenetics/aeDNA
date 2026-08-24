@@ -34,16 +34,16 @@ use rule * from workflow_derep as derep_*
 
 
 module workflow_taxon_prefilter:
-    snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.12.0")
-    config:
-        {"units": units, "cfg": config["prefilter"]}
     pathvars:
         reads="prefilter_reads",
         shards="prefilter_shards",
         aligns="prefilter_aligns",
         metadmg="prefilter_metadmg",
         reports="prefilter_reports",
+    snakefile:
+        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.12.0")
+    config:
+        {"units": units, "cfg": config["prefilter"]}
 
 
 use rule * from workflow_taxon_prefilter as taxon_prefilter_*
@@ -126,13 +126,13 @@ rule multiqc_trim:
         "logs/reports/multiqc.trim.log",
     benchmark:
         "benchmarks/reports/multiqc.trim.jsonl"
-    params:
-        extra=f"--force --clean-up " + config["report"]["multiqc"],
     localrule: True
     threads: 1
     resources:
         mem=lambda w, attempt: f"{10* attempt} GiB",
         runtime=lambda w, attempt: f"{30* attempt} m",
+    params:
+        extra=f"--force --clean-up " + config["report"]["multiqc"],
     wrapper:
         "v9.15.0/bio/multiqc"
 
@@ -153,19 +153,19 @@ rule multiqc_trim_upload:
         "stats/reports/multiqc_trim.upload.flag",
     log:
         "logs/reports/multiqc_trim.upload.log",
-    params:
-        db_url=config["report"].get("multiqc_db_url"),
+    localrule: True
     conda:
         "envs/multiqc_upload.yaml"
-    localrule: True
     threads: 1
     resources:
         mem=lambda w, attempt: f"{1* attempt} GiB",
         runtime=lambda w, attempt: f"{30* attempt} m",
+    params:
+        db_url=config["report"].get("multiqc_db_url"),
     shell:
         """
-        python {base_dir}/scripts/multiqc_upload.py --db-upload {input.zip} --db-url {params.db_url} --log-level INFO 2> {log};
-        cut -d ":" -f 4- {log} > {output[0]};
+        python {base_dir}/scripts/multiqc_upload.py --db-upload {input.zip} --db-url {params.db_url} --log-level INFO 2>{log}
+        cut -d ":" -f 4- {log} >{output[0]}
         """
 
 
@@ -230,13 +230,13 @@ use rule multiqc_derep as multiqc_taxon with:
 
 
 rule target_taxon:
+    default_target: True
     input:
         rules.multiqc_taxon.output,
         rules.taxon_prefilter_all.input.res,
         rules.taxon_all.input.res,
     message:
         "Taxonomic assignment finished successfully!"
-    default_target: True
 
 
 use rule multiqc_trim_upload as multiqc_taxon_upload with:
