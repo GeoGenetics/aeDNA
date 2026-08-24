@@ -48,7 +48,7 @@ parser.add_argument(
 parser.add_argument(
     "--in-checks",
     action="store",
-    default=['len(list((args.in_folder / "../").glob("seqcenter.*.done"))) == 1'],
+    default=['len(list((args.in_folder / "../").glob("seqcenter.done"))) == 1'],
     help="Checks to perform.",
 )
 parser.add_argument(

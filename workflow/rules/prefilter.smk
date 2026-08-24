@@ -70,7 +70,7 @@ rule prefilter_reads_extract:
         command="grep",
         extra="--invert-match --delete-matched",
     wrapper:
-        "v7.9.1/bio/seqkit"
+        "v9.15.0/bio/seqkit"
 
 
 def get_data_prefilter(wildcards):
@@ -119,4 +119,4 @@ rule prefilter_fastqc:
         mem=lambda w, attempt: f"{3* attempt} GiB",
         runtime=lambda w, attempt: f"{2* attempt} h",
     wrapper:
-        "v7.6.0/bio/fastqc"
+        "v9.15.0/bio/fastqc"
