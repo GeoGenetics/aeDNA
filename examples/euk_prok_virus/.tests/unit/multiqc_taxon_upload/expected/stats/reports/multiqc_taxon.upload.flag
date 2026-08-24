@@ -1,4 +1,5 @@
 INFO:DB sqlite:///test_qc.sqlite does not exist.
+WARNING:Creating DB sqlite:///test_qc.sqlite!
 INFO:Reading file reports/multiqc_data.taxon.zip
 INFO:Uploading report v1.33 to DB...
 INFO:Adding report record to DB

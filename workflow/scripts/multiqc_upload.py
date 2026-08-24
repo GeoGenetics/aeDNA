@@ -115,7 +115,6 @@ def main():
     from sqlalchemy_utils import database_exists, create_database, drop_database
 
     if args.db_url:
-
         url = furl(args.db_url)
 
     url_config = {
@@ -126,6 +125,7 @@ def main():
         "port": os.getenv("PGPORT", url.port),
         "database": os.getenv("PGDATABASE", str(url.path)),
     }
+    logging.debug(url_config)
     engine = create_engine(URL.create(**url_config))
 
     # Checking if DB exists
@@ -139,10 +139,8 @@ def main():
     else:
         logging.info(f"DB {engine.url} does not exist.")
         # Creating DB
-        if args.db_create:
-            logging.warning(f"Creating DB {engine.url}!")
-            create_database(engine.url)
-            exit(0)
+        logging.warning(f"Creating DB {engine.url}!")
+        create_database(engine.url)
 
     for file_upload in args.db_upload:
         # Load MultiQC JSON files

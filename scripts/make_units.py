@@ -46,10 +46,16 @@ parser.add_argument(
     help="Regex to filter input files",
 )
 parser.add_argument(
+    "--in-checks",
+    action="store",
+    default=['len(list((args.in_folder / "../").glob("seqcenter.done"))) == 1'],
+    help="Checks to perform.",
+)
+parser.add_argument(
     "-r",
     "--regex",
     action="store",
-    default=r"\/(?P<date>\d{8})_(?P<machine>[A-Z]{1,2}\d{5})_(?P<run_n>\d{4})_(?P<flowcell_pos>[AB])(?P<flowcell>[A-Z0-9]{9})(_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10})(-(?P<subsample>[^_]+))?-(?P<archive>[^_]+)_(?P<sample_n>S\d+)_(?P<lane>L\d{3})_(?P<read>R[12])_001",
+    default=r"\/(?P<date>\d{8})_(?P<machine>[A-Z]{1,2}\d{5})_(?P<run_n>\d{4})_(?P<flowcell_pos>[AB])(?P<flowcell>[A-Z0-9]{9})(?:_(?P<pool_tag>[A-Z0-9]+))?(_\w+)?\/(?P<project>[^\/]+)\/(?P<library>LV\d{10}(?:c\d{1,3})?)(?:-(?P<subsample>[^_-]+))?(?:-(?P<archive>[^_]+))?_(?P<sample_n>S\d+)_(?P<lane>L\d{3})_(?P<read>R[12])_001",
     help="Regex to extract identifiers. For help, see: https://docs.python.org/3/library/re.html#regular-expression-syntax",
 )
 parser.add_argument(
@@ -111,7 +117,7 @@ parser.add_argument(
     "--extra-file",
     action="store",
     type=str,
-    default="config.yaml:/projects/caeg/data/resources/config/PROD.latest.config.yaml",
+    default="config.yaml:/datasets/caeg_production/resources/config/PROD.latest.config.yaml",
     help="Extra file (e.g. config.yaml) to be copied to the final folder.",
 )
 parser.add_argument(
@@ -150,6 +156,11 @@ args = parser.parse_args()
 if args.in_folder:
     # Read all files from input folder
     in_files = args.in_folder.glob("*.*")
+    # Apply checks
+    for check in args.in_checks:
+        if not (eval(check) or args.force):
+            logging.error(f"check '{check}' failed!")
+            exit(-1)
 else:
     # If no input folder, read from STDIN
     in_files = [
@@ -164,7 +175,6 @@ in_files = [
     for in_file in in_files
     if in_file.is_file() and re.search(args.in_regex, in_file.name)
 ]
-
 
 # Extra file
 if args.extra_file.find(":") > 0:
@@ -403,43 +413,53 @@ if args.out_stats:
         )
 
 
+# Check that output paths do not exist
+out_path_exists = [out_path for out_path, units in datasets if out_path.exists()]
+assert (
+    len(out_path_exists) == 0
+), f"Paths ({len(out_path_exists)} out of {len(datasets)}) already exist:\n{out_path_exists}"
+
+
+if args.dryrun:
+    logging.info("Dryrun, so no files were generated.")
+    exit(0)
+
+
+# Create paths
 for out_path, units in datasets:
-    if args.dryrun:
-        assert not out_path.exists()
-    else:
-        # Create folders
-        out_path.mkdir(parents=True, exist_ok=args.force)
-        # Save units.tsv file
-        units.drop(["extra_file_md5"], axis=1).dropna(axis=1, how="all").to_csv(
-            out_path / "units.tsv",
+    # Create folders
+    out_path.mkdir(parents=True, exist_ok=args.force)
+    # Save units.tsv file
+    units.drop(["extra_file_md5"], axis=1).dropna(axis=1, how="all").to_csv(
+        out_path / "units.tsv",
+        sep="\t",
+        index=False,
+        mode="w" if args.force else "x",
+    )
+    if "sample" in units:
+        samples = (
+            units["sample"]
+            .copy()
+            .to_frame()
+            .drop_duplicates()
+            .sort_values(by=["sample"])
+        )
+        samples[["alias", "group", "condition"]] = [np.nan, np.nan, args.condition]
+        # Save samples.tsv file
+        samples.to_csv(
+            out_path / "samples.tsv",
             sep="\t",
             index=False,
             mode="w" if args.force else "x",
         )
-        if "sample" in units:
-            samples = (
-                units["sample"]
-                .copy()
-                .to_frame()
-                .drop_duplicates()
-                .sort_values(by=["sample"])
-            )
-            samples[["alias", "group", "condition"]] = [np.nan, np.nan, args.condition]
-            # Save samples.tsv file
-            samples.to_csv(
-                out_path / "samples.tsv",
-                sep="\t",
-                index=False,
-                mode="w" if args.force else "x",
-            )
-        # Copy extra file
-        if args.extra_file.exists():
-            logging.debug("Copying extra file.")
-            open(out_path / extra_file_name, "w" if args.force else "x").write(
-                open(args.extra_file, "r").read()
-            )
+    # Copy extra file
+    if args.extra_file.exists():
+        logging.debug("Copying extra file.")
+        open(out_path / extra_file_name, "w" if args.force else "x").write(
+            open(args.extra_file, "r").read()
+        )
 
-        logging.info(f"Unit {out_path} created!")
+    logging.info(f"Unit {out_path} created!")
 
 
 exit(0)

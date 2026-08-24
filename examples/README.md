@@ -15,18 +15,18 @@
 </details>
 
 
-# Empty - 1 negative control
+# DRAGEN - 1 sample (simulated) over 2 reference collections
 <details><summary>Rulegraph</summary>
 
-![rulegraph.svg](empty/rulegraph.svg)
+![rulegraph.svg](dragen/rulegraph.svg)
 </details>
 
 <details><summary>DAG</summary>
 
-![dag.svg](empty/dag.svg)
+![dag.svg](dragen/dag.svg)
 </details>
 
 <details><summary>Filegraph</summary>
 
-![filegraph.svg](empty/filegraph.svg)
+![filegraph.svg](dragen/filegraph.svg)
 </details>

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
+import socket
 import argparse
 import logging
 import pandas as pd
 from pathlib import Path
-
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(
@@ -30,23 +30,42 @@ parser.add_argument(
     help="Workflow to use",
 )
 parser.add_argument(
+    "-t",
+    "--target",
+    action="store",
+    default="",
+    help="Workflow target.",
+)
+parser.add_argument(
     "-r",
     "--run",
     action="store",
     default="local",
     choices=["local", "slurm"],
-    help="How to run jobs?",
+    help="Where to run?",
 )
 parser.add_argument(
-    "--snakemake-submit",
+    "--submit-workflow",
     action="store_true",
     default=False,
-    help="Submit Snakemake as an HPC job",
+    help="Submit workflow as a job to HPC",
 )
 parser.add_argument(
-    "--snakemake-logger",
+    "--submit-jobs",
+    action="store_true",
+    default=False,
+    help="Submit jobs to HPC",
+)
+parser.add_argument(
+    "--default-args",
     action="store",
-    default="--logger snkmt --logger-snkmt-db snkmt.db",
+    nargs="+",
+    default=[
+        "--configfile",
+        "config/config.yaml",
+        "--workflow-profile",
+        "/datasets/caeg_production/resources/profile/PROD.profile.yaml",
+    ],
     help="Snakemake logger command",
 )
 parser.add_argument(
@@ -58,8 +77,10 @@ parser.add_argument(
     help="Log verbosity level",
 )
 args, extra_args = parser.parse_known_args()
-extra_args = " ".join(extra_args)
-extra_args += " --jobs 300 --retries 1"
+extra_args.extend(args.default_args)
+assert args.run == "local" or (
+    args.run != "local" and (args.submit_workflow or args.submit_jobs)
+), "cannot submit jobs to local"
 
 
 # Set logger
@@ -75,11 +96,6 @@ logging.basicConfig(
 # Infer pixi_env/workflow paths, and add extra options
 if args.workflow == "prod":
     pixi_env = workflow_path = "/projects/caeg/apps/aeDNA"
-    import os
-
-    if os.environ.get("CAEG_QC_USER") and os.environ.get("CAEG_QC_PASSWORD"):
-        # extra_args += """ --config 'report={multiqc_db_url: "postgresql+psycopg2://dandypdb01fl.unicph.domain:5432/caeg_qc"}'"""
-        extra_args += " --profile /projects/caeg/data/resources/profile_production"
 elif args.workflow == "prod-legacy":
     pixi_env = "/projects/caeg/apps/aeDNA"
     workflow_path = "/projects/caeg/apps/aeDNA-legacy"
@@ -90,55 +106,44 @@ elif args.workflow == "caterpillar":
 
 
 # Infer hostname, HPC account and partition
-import socket
-
 hostname = socket.gethostname()
-if hostname.startswith("dandy"):
-    hpc_snakemake_account = hpc_job_account = "prod"
-    hpc_job_partition = "compregular"
-    hpc_snakemake_partition = "compsnake"
-    hpc_snakemake_qos = ""
-    hpc_job_qos = ""
-elif hostname.startswith("rubus"):
-    hpc_snakemake_account = hpc_job_account = "bench"
-    hpc_snakemake_partition = hpc_job_partition = "rubus"
-    hpc_snakemake_qos = "long"
-    hpc_job_qos = "normal"
-else:
-    logging.error(f"Host {hostname} not supported yet!")
-    exit(-1)
+if args.run != "local":
+    if hostname.startswith("dandy"):
+        hpc_snakemake_account = hpc_job_account = "prod"
+        hpc_snakemake_partition = "compsnake"
+        hpc_job_partition = "compregular,compdragen"
+        hpc_snakemake_qos = ""
+        hpc_job_qos = ""
+    elif hostname.startswith("rubus"):
+        hpc_snakemake_account = hpc_job_account = "bench"
+        hpc_snakemake_partition = hpc_job_partition = "rubus"
+        hpc_snakemake_qos = "long"
+        hpc_job_qos = "normal"
+    else:
+        logging.error(f"Host {hostname} not supported yet!")
+        exit(-1)
 
 
 # Workflow run command
-if args.snakemake_submit:
-    logging.info(f"Workflows will be submitted to the {args.run} HPC, on:")
-    cmd = f"sbatch --chdir {{id}} --job-name {{id}}"
-    if hpc_snakemake_account:
-        logging.info(f"  - account: {hpc_snakemake_account}")
-        cmd += f" --account {hpc_snakemake_account}"
-    if hpc_snakemake_partition:
-        logging.info(f"  - partition: {hpc_snakemake_partition}")
-        cmd += f" --partition {hpc_snakemake_partition}"
+if args.submit_workflow:
+    cmd = f"sbatch --chdir {{id}} --job-name {{id}} --account {hpc_snakemake_account} --partition {hpc_snakemake_partition}"
     if hpc_snakemake_qos:
-        logging.info(f"  - qos: {hpc_snakemake_qos}")
         cmd += f" --qos {hpc_snakemake_qos}"
-    cmd += f" --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap="
+    cmd += " --cpus-per-task 1 --mem 1G --time 5-00 --no-requeue --wrap="
+    logging.info(f"Workflows will be submitted to the {args.run} HPC with:\n{cmd}")
 else:
+    cmd = "env --chdir={id} bash -c "
     logging.info(f"Workflows will be run locally on host {hostname}")
-    cmd = f"env --chdir={{id}} bash -c "
 
 
-# Jobs run command
-if args.run == "local":
-    logging.info(f"Running jobs locally")
-elif args.run == "slurm":
-    logging.info(
-        f"Jobs will be submitted to the {args.run} HPC, on account '{hpc_job_account}' and partition '{hpc_job_partition}'."
-    )
-    extra_args += (
-        f" --executor {args.run} --default-resources slurm_account={hpc_job_account} slurm_partition={hpc_job_partition}"
-        + (f" --slurm-qos {hpc_job_qos}" if hpc_job_qos else "")
-    )
+# Submit jobs
+if args.submit_jobs:
+    extra_args.extend(["--executor", args.run, "--slurm-jobname-prefix", "PROD_"])
+    if hpc_job_qos:
+        extra_args.append(f"--slurm-qos {hpc_job_qos}")
+    logging.info(f"Jobs will be submitted to the {args.run} HPC with {extra_args}")
+else:
+    logging.info(f"Jobs will be run locally on host {hostname} with {extra_args}")
 
 
 # Read job list
@@ -159,9 +164,11 @@ logging.debug(df)
 # Print command
 logging.info("Build command")
 
+extra_args = " ".join(extra_args)
+
 for id in df.index:
     print(
-        f'{cmd.format(id=id)}"pixi run --manifest-path {pixi_env} snakemake --snakefile {workflow_path}/workflow/Snakefile --workflow-profile /projects/caeg/data/resources/profile {args.snakemake_logger} {extra_args}"; sleep 0.5'
+        f'{cmd.format(id=id)}"pixi run --manifest-path {pixi_env} snakemake {args.target} --snakefile {workflow_path}/workflow/Snakefile {extra_args.format(id=id)}"; sleep 0.5'
     )
 
 exit(0)

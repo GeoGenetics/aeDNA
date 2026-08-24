@@ -1,5 +1,5 @@
 """
-Rule test code for unit testing of rules generated with Snakemake 9.16.4.dev3.
+Rule test code for unit testing of rules generated with Snakemake 9.24.0.
 """
 
 import os
@@ -62,8 +62,7 @@ def test_multiqc_taxon_upload(conda_prefix):
             {
                 ".flag": [
                     "diff",
-                    "--ignore-matching-lines=Uploading",
-                    "--ignore-matching-lines=tzname",
+                    "--ignore-matching-lines=interpreter",
                 ]
             }
         )
