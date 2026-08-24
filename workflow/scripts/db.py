@@ -80,6 +80,7 @@ def upload_report(engine, report_data, force=False):
     with Session(engine) as session:
         import getpass
         from dateutil import parser
+        from dateutil.tz import gettz
 
         ### Check if report exists by hash
         report_exists = (
@@ -134,7 +135,10 @@ def upload_report(engine, report_data, force=False):
         logging.info("Adding report record to DB")
         report_record = Report(
             report_hash=report_data["config_report_hash"],
-            created_at=parser.parse(report_data["report_creation_date"]),
+            created_at=parser.parse(report_data["report_creation_date"], tzinfos = {
+                "CET": gettz("Europe/Copenhagen"),
+                "CEST": gettz("Europe/Copenhagen"),
+            }),
         )
         session.add(report_record)
         session.commit()
