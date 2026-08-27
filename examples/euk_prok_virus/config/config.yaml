@@ -41,9 +41,7 @@ derep:
 #############
 ### ALIGN ###
 #############
-prefilter:
-  taxa: "Bacteria,Archaea,Viruses"
-
+taxon:
   taxonomy:
     nodes: "data/taxdump/nodes.dmp"
     names: "data/taxdump/names.dmp"
@@ -52,7 +50,7 @@ prefilter:
     prok:
       n_shards: 2
       path: "data/prok.{n_shard}-of-2.fas.gz"
-      map:
+      map: &map_prok_bowtie2
         tool: bowtie2
         params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal -N 1"
         bt2l: False
@@ -61,43 +59,12 @@ prefilter:
       n_shards: 1
       path: "data/virus.1-of-1.fas.gz"
       map:
-        tool: bowtie2
-        params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
-        bt2l: False
+        <<: *map_prok_bowtie2
       acc2taxid: "data/virus.acc2taxid.gz"
-
-  filter:
-    saturated_reads:
-      activate: true
-      n_alns: 10
-
-  unicorn:
-    refstats:
-      params: "--minrefl 1 --minreads 1 --rank genus"
-    taxstats:
-      params: "-k 17 --minrefl  1 --minreads 1 --minmani 0 --minalnas -Inf --maxdust 100"
-
-  metadmg:
-    damage:
-      params: "--print_length 15"
-
-    lca:
-      params: "--fix_ncbi 0 --how_many 25 --weight_type 1 --edit_dist_max 10000 --lca_rank genus"
-
-    dfit:
-      params: "--nopt 5 --showfits 2"
-
-
-euk:
-  taxonomy:
-    nodes: "data/taxdump/nodes.dmp"
-    names: "data/taxdump/names.dmp"
-
-  ref:
     mitoch:
       n_shards: 1
       path: "data/mitoch.1-of-1.fas.gz"
-      map:
+      map: &map_euk_bowtie2
         tool: bowtie2
         params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
         bt2l: False
@@ -106,9 +73,7 @@ euk:
       n_shards: 1
       path: "data/plastid.1-of-1.fas.gz"
       map:
-        tool: bowtie2
-        params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
-        bt2l: False
+        <<: *map_prok_bowtie2
       acc2taxid: "data/plastid.acc2taxid.gz"
 
   filter:
