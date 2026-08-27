@@ -32,7 +32,7 @@ def test_multiqc_taxon_upload(conda_prefix):
                 "python",
                 "-m",
                 "snakemake",
-                "stats/reports/multiqc_taxon.upload.flag",
+                "temp/reports/multiqc_taxon.upload.log",
                 "--snakefile",
                 "../../workflow/Snakefile",
                 "-f",
