@@ -17,15 +17,7 @@ properties:
   derep:
     type: object
 
-  prefilter:
-    type: object
-    properties:
-      taxa:
-        type: string
-    required:
-      - taxa
-
-  euk:
+  taxon:
     type: object
 
   report:
@@ -42,6 +34,5 @@ properties:
 required:
   - trim
   - derep
-  - prefilter
-  - euk
+  - taxon
   - report
