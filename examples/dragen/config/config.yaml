@@ -41,9 +41,7 @@ derep:
 #############
 ### ALIGN ###
 #############
-prefilter:
-  taxa: "Bacteria,Archaea,Viruses"
-
+taxon:
   taxonomy:
     nodes: "data/taxdump/nodes.dmp"
     names: "data/taxdump/names.dmp"
@@ -52,46 +50,16 @@ prefilter:
     hires_organelles_viruses_smags:
       n_shards: 2
       path: "/staging/hash_tables/hires-organelles-viruses-smags.{n_shard}"
-      map:
+      map: &map_prok_dragen
         tool: dragen
-        params: "--Mapper.edit-mode=1"
+        params: "--Aligner.global=1 --Aligner.match-score=0 --Aligner.match-n-score=-1 --Aligner.mismatch-pen=4 --Aligner.gap-open-pen=0 --Aligner.gap-ext-pen=4 --Aligner.aln-min-score=0 --Aligner.min-score-coeff=-0.4 --Aligner.sec-aligns=2000 --Aligner.supp-aligns=0 --Aligner.hard-clips=0 --Aligner.sec-score-delta=100 --Mapper.edit-mode=1 --Mapper.max-seed-freq=256 --Mapper.reduce-seed-ext=1 --Mapper.intvl-target-hits=256 --Mapper.intvl-max-hits=256 --Mapper.intvl-sample-hits=256 --Mapper.seed-density=1.0 --Mapper.edit-seed-num=80 --Mapper.edit-read-len=100 --Mapper.edit-chain-limit=29 --filter-flags-from-output=4"
       acc2taxid: "data/prok.acc2taxid.gz"
     human_genome:
       n_shards: 1
       path: "/staging/hash_tables/GCF_000001405.40_GRCh38.p14_genomic"
       map:
-        tool: dragen
-        params: "--Aligner.global=1 --Aligner.match-score=0 --Aligner.match-n-score=-1 --Aligner.mismatch-pen=4 --Aligner.gap-open-pen=0 --Aligner.gap-ext-pen=4 --Aligner.aln-min-score=0 --Aligner.min-score-coeff=-0.4 --Aligner.sec-aligns=2000 --Aligner.supp-aligns=0 --Aligner.hard-clips=0 --Aligner.sec-score-delta=100 --Mapper.edit-mode=1 --Mapper.max-seed-freq=256 --Mapper.reduce-seed-ext=1 --Mapper.intvl-target-hits=256 --Mapper.intvl-max-hits=256 --Mapper.intvl-sample-hits=256 --Mapper.seed-density=1.0 --Mapper.edit-seed-num=80 --Mapper.edit-read-len=100 --Mapper.edit-chain-limit=29 --filter-flags-from-output=4"
+        <<: *map_prok_dragen
       acc2taxid: "data/human.acc2taxid.gz"
-
-  filter:
-    saturated_reads:
-      activate: true
-      n_alns: 500
-
-  unicorn:
-    refstats:
-      params: "--minrefl 1 --minreads 1 --rank genus"
-    taxstats:
-      params: "-k 17 --minrefl  1 --minreads 1 --minmani 0 --minalnas -Inf --maxdust 100"
-
-  metadmg:
-    damage:
-      params: "--print_length 15"
-
-    lca:
-      params: "--fix_ncbi 0 --how_many 25 --weight_type 1 --edit_dist_max 10000 --lca_rank genus"
-
-    dfit:
-      params: "--nopt 5 --showfits 2"
-
-
-euk:
-  taxonomy:
-    nodes: "data/taxdump/nodes.dmp"
-    names: "data/taxdump/names.dmp"
-
-  ref:
     refseq_mitoch:
       n_shards: 1
       path: "/staging/hash_tables/refseq_mitochondrion.genomic/"

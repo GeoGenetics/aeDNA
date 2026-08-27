@@ -33,27 +33,11 @@ module workflow_derep:
 use rule * from workflow_derep as derep_*
 
 
-module workflow_taxon_prefilter:
-    pathvars:
-        reads="prefilter_reads",
-        shards="prefilter_shards",
-        aligns="prefilter_aligns",
-        metadmg="prefilter_metadmg",
-        reports="prefilter_reports",
-    snakefile:
-        github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.12.0")
-    config:
-        {"units": units, "cfg": config["prefilter"]}
-
-
-use rule * from workflow_taxon_prefilter as taxon_prefilter_*
-
-
 module workflow_taxon:
     snakefile:
         github("GeoGenetics/ngs-taxon", path="workflow/Snakefile", tag="v0.12.0")
     config:
-        {"units": units, "cfg": config["euk"]}
+        {"units": units, "cfg": config["taxon"]}
 
 
 use rule * from workflow_taxon as taxon_*
@@ -64,9 +48,6 @@ pathvars:
     temp="temp",
     reads="reads",
     shards="shards",
-
-
-include: "rules/prefilter.smk"
 
 
 onsuccess:
@@ -211,13 +192,6 @@ use rule multiqc_derep as multiqc_taxon with:
     input:
         rules.trim_multiqc.input,
         rules.derep_multiqc.input,
-        # FastQC of prefiltered read
-        expand(
-            rules.prefilter_fastqc.output.zip,
-            zip,
-            **units.assign(read_type_map="collapsed").to_dict("list"),
-        ),
-        rules.taxon_prefilter_multiqc.input,
         rules.taxon_multiqc.input,
         config=base_dir / "resources/multiqc_config.yaml",
     output:
@@ -233,7 +207,6 @@ rule target_taxon:
     default_target: True
     input:
         rules.multiqc_taxon.output,
-        rules.taxon_prefilter_all.input.res,
         rules.taxon_all.input.res,
     message:
         "Taxonomic assignment finished successfully!"
