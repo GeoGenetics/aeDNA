@@ -87,18 +87,16 @@ from snakemake.logging import logger
 
 base_dir = Path(workflow.basedir).resolve(strict=True)
 repo = git.Repo(base_dir.parent)
-tag_recent = [
-    [tag.name, commit.hexsha]
-    for commit in repo.iter_commits()
-    for tag in repo.tags
-    if commit.hexsha == tag.commit.hexsha
-][0]
+# Latest reachable tag
+tag_recent = repo.git.describe("--tags", "--abbrev=0")
 logger.info(
     "Git commit: {commit_hash} [{tag_flag}{commit_tag}] ({commit_time})".format(
         commit_hash=repo.head.commit.hexsha,
         commit_time=repo.head.commit.committed_datetime.strftime("%Y-%m-%d %H:%M:%S"),
-        tag_flag="" if tag_recent[1] == repo.head.commit.hexsha else ">",
-        commit_tag=tag_recent[0],
+        tag_flag=(
+            "" if repo.commit(tag_recent).hexsha == repo.head.commit.hexsha else ">"
+        ),
+        commit_tag=tag_recent,
     )
 )
 config_json = json.dumps(config, sort_keys=True).encode("utf-8")
@@ -150,7 +148,7 @@ rule multiqc_trim_upload:
         rules.target_trim.input,
         zip=rules.multiqc_trim.output.data,
     output:
-        "stats/reports/multiqc_trim.upload.flag",
+        temp("temp/reports/multiqc_trim.upload.log"),
     log:
         "logs/reports/multiqc_trim.upload.log",
     localrule: True
@@ -199,7 +197,7 @@ use rule multiqc_trim_upload as multiqc_derep_upload with:
         rules.target_derep.input,
         zip=rules.multiqc_derep.output.data,
     output:
-        touch("stats/reports/multiqc_derep.upload.flag"),
+        temp("temp/reports/multiqc_derep.upload.log"),
     log:
         "logs/reports/multiqc_derep.upload.log",
 
@@ -244,6 +242,6 @@ use rule multiqc_trim_upload as multiqc_taxon_upload with:
         rules.target_taxon.input,
         zip=rules.multiqc_taxon.output.data,
     output:
-        touch("stats/reports/multiqc_taxon.upload.flag"),
+        temp("temp/reports/multiqc_taxon.upload.log"),
     log:
         "logs/reports/multiqc_taxon.upload.log",
