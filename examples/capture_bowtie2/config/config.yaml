@@ -41,9 +41,7 @@ derep:
 #############
 ### ALIGN ###
 #############
-prefilter:
-  taxa: "Bacteria,Archaea,Viruses"
-
+taxon:
   taxonomy:
     nodes: "data/taxdump/nodes.dmp"
     names: "data/taxdump/names.dmp"
@@ -65,35 +63,6 @@ prefilter:
         params: "-k 10 -L 22 -i S,1,1.15 --mp 1,1 --rdg 0,1 --rfg 0,1 --score-min L,0,-0.1 --no-unal"
         bt2l: False
       acc2taxid: "data/virus.acc2taxid.gz"
-
-  filter:
-    saturated_reads:
-      activate: true
-      n_alns: 10
-
-  unicorn:
-    refstats:
-      params: "--minrefl 1 --minreads 1 --rank genus"
-    taxstats:
-      params: "-k 17 --minrefl  1 --minreads 1 --minmani 0 --minalnas -Inf --maxdust 100"
-
-  metadmg:
-    damage:
-      params: "--print_length 15"
-
-    lca:
-      params: "--fix_ncbi 0 --how_many 25 --weight_type 1 --edit_dist_max 10000 --lca_rank genus"
-
-    dfit:
-      params: "--nopt 5 --showfits 2"
-
-
-euk:
-  taxonomy:
-    nodes: "data/taxdump/nodes.dmp"
-    names: "data/taxdump/names.dmp"
-
-  ref:
     mitoch:
       n_shards: 1
       path: "data/mitoch.1-of-1.fas.gz"
