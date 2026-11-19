@@ -55,7 +55,7 @@ jobs:
           locked: false
 
       - name: Set strict conda channel priority
-        run: conda config --set channel_priority strict
+        run: pixi run -e test conda config --set channel_priority strict
 
       - name: Run examples
         run: pixi run -e test env --chdir ./examples/ ./make_dags.sh
