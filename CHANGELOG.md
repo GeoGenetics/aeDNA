@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/GeoGenetics/aeDNA/compare/v1.1.0...v1.1.1) (2026-11-19)
+
+
+### Bug Fixes
+
+* Small tweaks ([#31](https://github.com/GeoGenetics/aeDNA/issues/31)) ([95a4321](https://github.com/GeoGenetics/aeDNA/commit/95a432107ea115f4a412bec281d09dff4d29a489))
+
 ## [1.1.0](https://github.com/GeoGenetics/aeDNA/compare/v1.0.8...v1.1.0) (2026-08-24)
 
 
